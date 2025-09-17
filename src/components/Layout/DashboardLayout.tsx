@@ -343,15 +343,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             <div className="min-w-0">
               <h1 className="text-lg font-bold text-gray-900 truncate">OHNA12 Lottery Tickets</h1>
               <p className="text-xs text-gray-500 truncate">Quản lý vé số</p>
+            </div>
           </div>
-          </div>
-          <IconButton
-            onClick={handleSidebarToggle}
-            className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 p-1"
-            size="small"
-          >
-            {sidebarOpen ? <MenuOpenIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
-          </IconButton>
         </div>
       </div>
 
@@ -486,24 +479,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           borderBottom: '1px solid #e5e7eb',
         }}
       >
-        <Toolbar className="justify-between px-2 sm:px-4">
+        <Toolbar className="justify-between px-2 sm:px-4" sx={{ paddingBottom: '10px', paddingTop: '10px' }}>
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 1, display: { sm: 'none' } }}
-            >
-              <MenuIcon />
-            </IconButton>
             <IconButton
               color="inherit"
               aria-label="toggle sidebar"
               edge="start"
               onClick={handleSidebarToggle}
               size="small"
-              sx={{ mr: 1, display: { xs: 'none', sm: 'block' } }}
+              sx={{ mr: 1 }}
             >
               {sidebarOpen ? <MenuOpenIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
             </IconButton>

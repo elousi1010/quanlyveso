@@ -155,7 +155,7 @@ const SellerManagement = () => {
   const averageTickets = sellers.reduce((sum, s) => sum + s.averageTicketsPerDay, 0) / sellers.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-2">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="px-6 py-4">

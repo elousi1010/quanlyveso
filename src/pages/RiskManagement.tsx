@@ -508,7 +508,7 @@ const RiskManagement: React.FC = () => {
         <GridActionsCellItem
           icon={<EditIcon />}
           label="Sửa"
-          onClick={() => handleEditAssessment(params.row)}
+          onClick={() => handleEditAssessment()}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon />}

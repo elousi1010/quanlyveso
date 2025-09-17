@@ -261,7 +261,7 @@ const TicketImport = () => {
   }, {} as Record<string, { provinceName: string; quantity: number; totalImportValue: number; totalSellValue: number; profit: number }>);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-2">
       {/* Header */}
       <div className="bg-gradient-to-r from-white to-gray-50 shadow-sm border-b border-gray-200">
         <div className="px-4 sm:px-6 py-4">

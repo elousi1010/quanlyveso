@@ -196,7 +196,7 @@ const ExchangeManagement = () => {
   const totalQuantity = exchanges.reduce((sum, e) => sum + e.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-2">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="px-6 py-4">

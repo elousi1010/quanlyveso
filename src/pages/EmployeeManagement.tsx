@@ -179,7 +179,7 @@ const EmployeeManagement = () => {
   const totalSalary = employees.reduce((sum, e) => sum + e.salary, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 mt-2">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="px-6 py-4">
