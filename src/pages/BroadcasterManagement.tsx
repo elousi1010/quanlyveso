@@ -211,7 +211,6 @@ const BroadcasterManagement: React.FC = () => {
     { field: 'name', headerName: 'Tên nhà đài', width: 200, flex: 2 },
     { field: 'address', headerName: 'Địa chỉ', width: 200, flex: 2 },
     { field: 'phone', headerName: 'Số điện thoại', width: 150, flex: 1 },
-    { field: 'email', headerName: 'Email', width: 200, flex: 2 },
     { field: 'defaultTicketPrice', headerName: 'Giá vé mặc định', width: 150, renderCell: (params) => 
       `${params.value.toLocaleString()}đ`
     },

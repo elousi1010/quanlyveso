@@ -28,6 +28,10 @@ import {
   SwapHoriz as ExchangeIcon,
   Receipt as TransactionIcon,
   Person as EmployeeIcon,
+  Description as DescriptionIcon,
+  AttachMoney as AttachMoneyIcon,
+  LocalShipping as ShippingIcon,
+  Security as SecurityIcon,
   Business as PartnerIcon,
   Schedule as ShiftIcon,
   Assessment as AssessmentIcon,
@@ -42,6 +46,7 @@ import {
   Logout as LogoutIcon,
   Notifications as NotificationIcon,
   Settings as SettingsIcon,
+  Message as MessageIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -201,6 +206,72 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
               icon: <MoneyIcon />,
               path: '/prices',
               permission: PERMISSIONS.MANAGE_TICKETS,
+            },
+          ]
+        },
+        {
+          id: 'agentmanagement',
+          title: 'Quản lý đại lý nâng cao',
+          items: [
+            {
+              text: 'Hợp đồng',
+              icon: <DescriptionIcon />,
+              path: '/contracts',
+              permission: PERMISSIONS.MANAGE_PARTNERS,
+            },
+            {
+              text: 'Tín dụng & Công nợ',
+              icon: <DebtIcon />,
+              path: '/credit-debt',
+              permission: PERMISSIONS.MANAGE_DEBTS,
+            },
+            {
+              text: 'Hiệu suất đại lý',
+              icon: <AssessmentIcon />,
+              path: '/agent-performance',
+              permission: PERMISSIONS.VIEW_REPORTS,
+            },
+            {
+              text: 'Quản lý khu vực',
+              icon: <ProvinceIcon />,
+              path: '/territories',
+              permission: PERMISSIONS.MANAGE_PARTNERS,
+            },
+            {
+              text: 'Hoa hồng',
+              icon: <AttachMoneyIcon />,
+              path: '/commissions',
+              permission: PERMISSIONS.MANAGE_PARTNERS,
+            },
+            {
+              text: 'Dashboard Đại lý',
+              icon: <DashboardIcon />,
+              path: '/agent-dashboard',
+              permission: PERMISSIONS.MANAGE_PARTNERS,
+            },
+            {
+              text: 'Phân phối vé',
+              icon: <ShippingIcon />,
+              path: '/ticket-distribution',
+              permission: PERMISSIONS.MANAGE_TICKETS,
+            },
+            {
+              text: 'Phân tích đại lý',
+              icon: <AssessmentIcon />,
+              path: '/agent-analytics',
+              permission: PERMISSIONS.VIEW_REPORTS,
+            },
+            {
+              text: 'Quản lý rủi ro',
+              icon: <SecurityIcon />,
+              path: '/risk-management',
+              permission: PERMISSIONS.MANAGE_PARTNERS,
+            },
+            {
+              text: 'Liên lạc & Hỗ trợ',
+              icon: <MessageIcon />,
+              path: '/agent-communication',
+              permission: PERMISSIONS.MANAGE_PARTNERS,
             },
           ]
         },

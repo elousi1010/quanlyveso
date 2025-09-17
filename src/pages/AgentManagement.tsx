@@ -220,6 +220,7 @@ const AgentManagement: React.FC = () => {
   const handleDeleteAgent = (id: string) => {
     setAgents(prev => prev.filter(a => a.id !== id));
     setAlert({ type: 'success', message: 'Xóa đại lý thành công' });
+    setAlert({ type: 'success', message: 'Xóa đại lý thành công' });
   };
 
   const handleTypeChange = (type: string) => {
@@ -241,33 +242,11 @@ const AgentManagement: React.FC = () => {
     return status === 'active' ? 'Hoạt động' : 'Ngừng hoạt động';
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'level1': return 'primary';
-      case 'level2': return 'secondary';
-      case 'level3': return 'info';
-      case 'retail': return 'warning';
-      default: return 'default';
-    }
-  };
-
-  const getTypeText = (type: string) => {
-    const agentType = agentTypes.find(t => t.value === type);
-    return agentType ? agentType.label : type;
-  };
-
   const columns: GridColDef[] = [
     { field: 'code', headerName: 'Mã đại lý', width: 120, flex: 1 },
     { field: 'name', headerName: 'Tên đại lý', width: 200, flex: 2 },
-    { field: 'type', headerName: 'Loại', width: 100, renderCell: (params) => (
-      <Chip label={getTypeText(params.value)} color={getTypeColor(params.value)} size="small" />
-    )},
     { field: 'contactPerson', headerName: 'Người liên hệ', width: 150, flex: 1 },
     { field: 'phone', headerName: 'Số điện thoại', width: 150, flex: 1 },
-    { field: 'email', headerName: 'Email', width: 200, flex: 2 },
-    { field: 'commissionRate', headerName: 'Hoa hồng (%)', width: 120, renderCell: (params) => 
-      `${params.value}%`
-    },
     { field: 'status', headerName: 'Trạng thái', width: 120, renderCell: (params) => (
       <Chip label={getStatusText(params.value)} color={getStatusColor(params.value)} size="small" />
     )},

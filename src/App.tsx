@@ -29,6 +29,16 @@ import BroadcasterManagement from './pages/BroadcasterManagement.tsx';
 import AgentManagement from './pages/AgentManagement.tsx';
 import PriceManagement from './pages/PriceManagement.tsx';
 import NumberPairAnalysis from './pages/NumberPairAnalysis.tsx';
+import ContractManagement from './pages/ContractManagement.tsx';
+import CreditDebtManagement from './pages/CreditDebtManagement.tsx';
+import AgentPerformanceManagement from './pages/AgentPerformanceManagement.tsx';
+import TerritoryManagement from './pages/TerritoryManagement.tsx';
+import CommissionManagement from './pages/CommissionManagement.tsx';
+import AgentDashboard from './pages/AgentDashboard.tsx';
+import TicketDistributionManagement from './pages/TicketDistributionManagement.tsx';
+import AgentAnalytics from './pages/AgentAnalytics.tsx';
+import RiskManagement from './pages/RiskManagement.tsx';
+import AgentCommunication from './pages/AgentCommunication.tsx';
 import 'dayjs/locale/vi';
 
 const theme = createTheme({
@@ -72,10 +82,20 @@ const AppContent: React.FC = () => {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/financial" element={<FinancialManagement />} />
         <Route path="/scratch-tickets" element={<ScratchTicketManagement />} />
-            <Route path="/broadcasters" element={<BroadcasterManagement />} />
-            <Route path="/agents" element={<AgentManagement />} />
-            <Route path="/prices" element={<PriceManagement />} />
-            <Route path="/number-analysis" element={<NumberPairAnalysis />} />
+        <Route path="/broadcasters" element={<BroadcasterManagement />} />
+        <Route path="/agents" element={<AgentManagement />} />
+        <Route path="/prices" element={<PriceManagement />} />
+        <Route path="/number-analysis" element={<NumberPairAnalysis />} />
+        <Route path="/contracts" element={<ContractManagement />} />
+        <Route path="/credit-debt" element={<CreditDebtManagement />} />
+        <Route path="/agent-performance" element={<AgentPerformanceManagement />} />
+        <Route path="/territories" element={<TerritoryManagement />} />
+        <Route path="/commissions" element={<CommissionManagement />} />
+        <Route path="/agent-dashboard" element={<AgentDashboard />} />
+        <Route path="/ticket-distribution" element={<TicketDistributionManagement />} />
+        <Route path="/agent-analytics" element={<AgentAnalytics />} />
+        <Route path="/risk-management" element={<RiskManagement />} />
+        <Route path="/agent-communication" element={<AgentCommunication />} />
           </Routes>
     </DashboardLayout>
   );
