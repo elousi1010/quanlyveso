@@ -1,46 +1,69 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   TextField,
   Button,
   Alert,
-  FormControl,
-  Select,
-  MenuItem,
   Card,
   CardContent,
-  Divider,
+  Tabs,
+  Tab,
+  Box,
 } from '@mui/material';
 import {
   AccountBalance as BankIcon,
   Person as PersonIcon,
   Store as StoreIcon,
   Login as LoginIcon,
+  PersonAdd as SignupIcon,
 } from '@mui/icons-material';
-import { useAuth } from '../../hooks/useAuth';
+import { useLogin, useSignup } from '../../hooks/useAuthApi';
+import { debugJWT, logJWTInfo } from '../../utils/debugJWT';
 
 const LoginForm: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'owner' | 'employee' | 'seller'>('owner');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [tabValue, setTabValue] = useState(0);
+  const [formData, setFormData] = useState({
+    name: '',
+    phone_number: '',
+    password: '',
+  });
+  
+  // Sử dụng API hooks
+  const loginMutation = useLogin();
+  const signupMutation = useSignup();
+
+  // Debug JWT token khi login thành công
+  useEffect(() => {
+    if (loginMutation.isSuccess || signupMutation.isSuccess) {
+      console.log('=== Login/Signup Success - Debug JWT ===');
+      debugJWT();
+      logJWTInfo();
+    }
+  }, [loginMutation.isSuccess, signupMutation.isSuccess]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
-
-    try {
-      const success = await login(username, password);
-      if (!success) {
-        setError('Tên đăng nhập hoặc mật khẩu không đúng');
-      }
-    } catch {
-      setError('Đã xảy ra lỗi, vui lòng thử lại');
-    } finally {
-      setIsLoading(false);
+    
+    if (tabValue === 0) {
+      // Login
+      loginMutation.mutate({
+        phone_number: formData.phone_number,
+        password: formData.password,
+      });
+    } else {
+      // Signup
+      signupMutation.mutate({
+        name: formData.name,
+        phone_number: formData.phone_number,
+        password: formData.password,
+      });
     }
+  };
+
+  const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
   };
 
   const getRoleInfo = (role: string) => {
@@ -76,7 +99,7 @@ const LoginForm: React.FC = () => {
     }
   };
 
-  const roleInfo = getRoleInfo(role);
+  const roleInfo = getRoleInfo('owner');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-2 sm:p-4">
@@ -88,7 +111,7 @@ const LoginForm: React.FC = () => {
               <BankIcon className="text-white text-3xl lg:text-4xl" />
             </div>
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3 lg:mb-4">
-              Hệ thống quản lý vé số
+              System Management Lottery Ohna12
             </h1>
             <p className="text-lg lg:text-xl text-gray-600 max-w-md mx-auto">
               Quản lý toàn diện hoạt động kinh doanh vé số với giao diện hiện đại và tính năng mạnh mẽ
@@ -140,71 +163,62 @@ const LoginForm: React.FC = () => {
             <CardContent className="p-4 sm:p-6 lg:p-8">
               <div className="text-center mb-6 sm:mb-8">
                 <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r ${roleInfo.color} rounded-2xl mb-3 sm:mb-4`}>
-                  {roleInfo.icon}
+                  {tabValue === 0 ? roleInfo.icon : <SignupIcon className="text-blue-600" />}
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                  Đăng nhập hệ thống
+                  {tabValue === 0 ? 'Đăng nhập hệ thống' : 'Đăng ký tài khoản'}
                 </h2>
-                <p className="text-sm sm:text-base text-gray-600">
-                  Chọn vai trò và đăng nhập để tiếp tục
-                </p>
               </div>
 
+              {/* Tabs */}
+              <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} centered>
+                  <Tab 
+                    icon={<LoginIcon />} 
+                    label="Đăng nhập" 
+                    iconPosition="start"
+                    sx={{ minHeight: 48 }}
+                  />
+                  <Tab 
+                    icon={<SignupIcon />} 
+                    label="Đăng ký" 
+                    iconPosition="start"
+                    sx={{ minHeight: 48 }}
+                  />
+                </Tabs>
+              </Box>
+
               <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                {/* Role Selection */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Vai trò
-                  </label>
-                  <FormControl fullWidth>
-                    <Select
-                      value={role}
-                      onChange={(e) => setRole(e.target.value as 'owner' | 'employee' | 'seller')}
+                {/* Role Selection - chỉ hiển thị khi login */}
+
+                {/* Name field - chỉ hiển thị khi signup */}
+                {tabValue === 1 && (
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
+                      Họ và tên
+                    </label>
+                    <TextField
+                      fullWidth
+                      value={formData.name}
+                      onChange={handleInputChange('name')}
+                      placeholder="Nhập họ và tên"
                       className="rounded-lg"
-                    >
-                      <MenuItem value="owner">
-                        <div className="flex items-center space-x-2 sm:space-x-3">
-                          <BankIcon className="text-blue-600 text-sm sm:text-base" />
-                          <div>
-                            <div className="font-medium text-sm sm:text-base">Chủ cửa hàng</div>
-                            <div className="text-xs sm:text-sm text-gray-500">Toàn quyền truy cập</div>
-                          </div>
-                        </div>
-                      </MenuItem>
-                      <MenuItem value="employee">
-                        <div className="flex items-center space-x-2 sm:space-x-3">
-                          <PersonIcon className="text-green-600 text-sm sm:text-base" />
-                          <div>
-                            <div className="font-medium text-sm sm:text-base">Nhân viên quầy</div>
-                            <div className="text-xs sm:text-sm text-gray-500">Quản lý bán hàng</div>
-                          </div>
-                        </div>
-                      </MenuItem>
-                      <MenuItem value="seller">
-                        <div className="flex items-center space-x-2 sm:space-x-3">
-                          <StoreIcon className="text-purple-600 text-sm sm:text-base" />
-                          <div>
-                            <div className="font-medium text-sm sm:text-base">Người bán vé dạo</div>
-                            <div className="text-xs sm:text-sm text-gray-500">Bán vé và cập nhật</div>
-                          </div>
-                        </div>
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
+                      size="small"
+                      required
+                    />
+                  </div>
+                )}
 
-                <Divider />
-
-                {/* Username */}
+                {/* Phone Number */}
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Tên đăng nhập
+                    Số điện thoại
                   </label>
                   <TextField
                     fullWidth
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Nhập tên đăng nhập"
+                    value={formData.phone_number}
+                    onChange={handleInputChange('phone_number')}
+                    placeholder="Nhập số điện thoại"
                     className="rounded-lg"
                     size="small"
                     required
@@ -219,8 +233,8 @@ const LoginForm: React.FC = () => {
                   <TextField
                     fullWidth
                     type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={handleInputChange('password')}
                     placeholder="Nhập mật khẩu"
                     className="rounded-lg"
                     size="small"
@@ -228,35 +242,44 @@ const LoginForm: React.FC = () => {
                   />
                 </div>
 
-                {/* Error Message */}
-                {error && (
+                {/* Error Messages */}
+                {(loginMutation.error || signupMutation.error) && (
                   <Alert severity="error" className="rounded-lg">
-                    {error}
+                    {loginMutation.error?.message || signupMutation.error?.message || 'Đã xảy ra lỗi, vui lòng thử lại'}
                   </Alert>
                 )}
 
-                {/* Login Button */}
+                {/* Success Message */}
+                {(loginMutation.isSuccess || signupMutation.isSuccess) && (
+                  <Alert severity="success" className="rounded-lg">
+                    {tabValue === 0 ? 'Đăng nhập thành công!' : 'Đăng ký thành công!'}
+                    <Button 
+                      onClick={() => {
+                        debugJWT();
+                        logJWTInfo();
+                      }}
+                      size="small"
+                      className="ml-2"
+                    >
+                      Debug JWT
+                    </Button>
+                  </Alert>
+                )}
+
+                {/* Submit Button */}
                 <Button
                   type="submit"
                   fullWidth
                   variant="contained"
-                  disabled={isLoading}
+                  disabled={loginMutation.isPending || signupMutation.isPending}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base shadow-lg"
-                  startIcon={<LoginIcon />}
+                  startIcon={tabValue === 0 ? <LoginIcon /> : <SignupIcon />}
                 >
-                  {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                  {loginMutation.isPending || signupMutation.isPending
+                    ? (tabValue === 0 ? 'Đang đăng nhập...' : 'Đang đăng ký...')
+                    : (tabValue === 0 ? 'Đăng nhập' : 'Đăng ký')}
                 </Button>
               </form>
-
-              {/* Demo Credentials */}
-              <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Thông tin demo:</h4>
-                <div className="space-y-1 text-xs sm:text-sm text-gray-600">
-                  <p><strong>Chủ cửa hàng:</strong> owner / password</p>
-                  <p><strong>Nhân viên:</strong> employee / password</p>
-                  <p><strong>Người bán:</strong> seller / password</p>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </div>

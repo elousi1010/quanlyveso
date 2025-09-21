@@ -1,0 +1,496 @@
+# Cursor Rules for Quan Ly Daily Project
+
+## 🎯 Project Overview
+This is a React + TypeScript + Vite project for daily management system with authentication, role-based access control, and ticket management.
+
+## 📱 Responsive Design Guidelines
+**IMPORTANT**: This application is primarily designed for small laptop screens (13-inch laptops). When designing UI components, prioritize:
+- ✅ **Compact layouts** - Use space efficiently for small screens
+- ✅ **Readable text sizes** - Ensure text is legible on small displays
+- ✅ **Touch-friendly elements** - Make buttons and interactive elements appropriately sized
+- ✅ **Horizontal scrolling** - Use horizontal scroll for tables/lists when needed
+- ✅ **Collapsible sections** - Implement collapsible/expandable UI elements
+- ✅ **Mobile-first approach** - Design for small screens first, then scale up
+- ✅ **Efficient use of vertical space** - Minimize vertical scrolling
+- ✅ **Compact forms** - Design forms to fit well on small screens
+- ✅ **Responsive tables** - Use horizontal scroll or card layouts for data tables
+- ✅ **Optimized spacing** - Use appropriate padding/margins for small screens
+
+## 📋 Core Rules
+
+### 1. TypeScript & Type Safety
+- ❌ NEVER use `any` type - always use proper TypeScript types
+- ✅ Use strict type checking with proper interfaces and types
+- ✅ Define interfaces for all API responses and component props
+- ✅ Use type guards and proper type assertions when needed
+- ✅ Use generic types for reusable components and hooks
+- ✅ Use `type` imports: `import { type User } from './types'`
+
+### 2. Code Organization & Structure
+- ✅ Use import aliases with `@` prefix: `@/components`, `@/hooks`, `@/utils`
+- ✅ Group imports: React imports first, then third-party, then local imports
+- ✅ Use absolute imports instead of relative imports
+- ✅ Create reusable components for duplicated UI patterns
+- ✅ Extract business logic into custom hooks
+- ✅ Separate concerns: UI components, business logic, data fetching
+
+### 3. Component Architecture
+- ✅ Create small, focused, single-responsibility components
+- ✅ Use composition over inheritance
+- ✅ Extract common UI patterns into shared components
+- ✅ Use proper component naming: PascalCase for components
+- ✅ Use proper file naming: PascalCase for components, camelCase for utilities
+- ✅ Create component variants using props instead of duplicating code
+
+#### 3.1 Common Components (src/components/common/)
+- ✅ **ALWAYS use Common Components** for consistent UI patterns
+- ✅ **CommonFormDialog**: For create/edit forms with validation
+- ✅ **CommonViewEditDialog**: For view/edit unified modals
+- ✅ **CommonDetailDialog**: For read-only detail views
+- ✅ **CommonDeleteDialog**: For delete confirmations
+- ✅ **CommonDataTable**: For data grids with pagination, sorting, filtering
+- ✅ **CommonSearchAndFilter**: For search and filter functionality
+- ✅ **CommonHeader**: For page headers with actions
+- ✅ **CommonSnackbar**: For notifications and alerts
+- ✅ **ErrorBoundary**: For error handling
+- ✅ **LoadingScreen**: For loading states
+
+#### 3.2 Module Structure (for pages with APIs)
+Each page module should follow this structure:
+```
+pages/ModuleName/
+├── api/                 # API functions
+│   ├── index.ts        # Export all API functions
+│   └── moduleApi.ts    # API implementation
+├── components/         # Module-specific components
+│   ├── ModuleDataGrid.tsx
+│   ├── ModuleDeleteDialog.tsx
+│   ├── ModuleHeader.tsx
+│   ├── ModuleSearchAndFilter.tsx
+│   ├── ModuleSnackbar.tsx
+│   └── index.ts        # Export all components
+├── constants/          # Module constants and configs
+│   ├── index.ts
+│   ├── moduleConstants.ts
+│   ├── moduleDialogConfig.ts
+│   ├── moduleSearchConfig.ts
+│   └── moduleTableConfig.tsx
+├── hooks/              # Module-specific hooks
+│   ├── index.ts
+│   ├── useModule.ts
+│   ├── useModuleApi.ts
+│   └── useModuleMutations.ts
+├── types/              # Module-specific types
+│   ├── index.ts
+│   └── moduleTypes.ts
+├── utils/              # Module-specific utilities
+│   ├── index.ts
+│   └── moduleHelpers.ts
+├── index.ts            # Export main module
+└── ModuleManagement.tsx # Main page component
+```
+
+### 4. Performance Optimization
+- ✅ Use React.memo() for expensive components
+- ✅ Use useMemo() and useCallback() for expensive calculations and functions
+- ✅ Implement proper dependency arrays in useEffect
+- ✅ Use lazy loading for route components
+- ✅ Optimize bundle size with dynamic imports
+- ✅ Use proper key props for list rendering
+- ✅ Avoid unnecessary re-renders
+
+### 5. State Management
+- ✅ Use Zustand for global state management
+- ✅ Use React Query for server state
+- ✅ Use local state for component-specific data
+- ✅ Create custom hooks for complex state logic
+- ✅ Avoid prop drilling - use context or state management
+
+### 6. Code Quality & Best Practices
+- ✅ Write clean, readable, and self-documenting code
+- ✅ Use meaningful variable and function names
+- ✅ Keep functions small and focused (max 20-30 lines)
+- ✅ Use early returns to reduce nesting
+- ✅ Handle errors gracefully with proper error boundaries
+- ✅ Use consistent code formatting and indentation
+- ❌ **NEVER create .md files** - No README, documentation, or summary files
+- ✅ **NO BUILD REQUIRED** - Vite dev server auto-reloads, no need to run `npm run build` for development
+
+### 7. Constants & Configuration
+- ✅ Create constants files for magic numbers and strings
+- ✅ Use enums for fixed sets of values
+- ✅ Create configuration objects for API endpoints and settings
+- ✅ Use environment variables for different environments
+- ✅ Create type-safe constants with `as const`
+
+### 8. API & Data Fetching
+- ✅ Use React Query for all API calls
+- ✅ Create custom hooks for API operations
+- ✅ Implement proper error handling and loading states
+- ✅ Use proper TypeScript interfaces for API responses
+- ✅ Implement retry logic and optimistic updates
+
+#### 8.1 Common Components Usage Rules
+- ✅ **NEVER create custom dialogs** - Always use CommonFormDialog, CommonViewEditDialog, CommonDetailDialog, CommonDeleteDialog
+- ✅ **NEVER create custom data tables** - Always use CommonDataTable with proper configuration
+- ✅ **NEVER create custom search/filter** - Always use CommonSearchAndFilter
+- ✅ **NEVER create custom headers** - Always use CommonHeader
+- ✅ **NEVER create custom snackbars** - Always use CommonSnackbar
+- ✅ **ALWAYS configure Common Components** through constants files (dialogConfig, tableConfig, searchConfig)
+- ✅ **ALWAYS use proper TypeScript types** for Common Component props
+- ✅ **ALWAYS follow the module structure** when creating new pages with APIs
+
+### 9. Authentication & Authorization
+- ✅ Use role-based access control (RBAC)
+- ✅ Implement proper route protection
+- ✅ Use JWT tokens with proper validation
+- ✅ Implement token refresh logic
+- ✅ Use permission-based UI rendering
+
+### 10. File Structure & Naming
+```
+src/
+├── components/          # Reusable UI components
+│   ├── common/         # Shared components (CommonFormDialog, CommonViewEditDialog, etc.)
+│   │   ├── CommonDataTable.tsx
+│   │   ├── CommonDeleteDialog.tsx
+│   │   ├── CommonDetailDialog.tsx
+│   │   ├── CommonFormDialog.tsx
+│   │   ├── CommonHeader.tsx
+│   │   ├── CommonSearchAndFilter.tsx
+│   │   ├── CommonSnackbar.tsx
+│   │   ├── CommonViewEditDialog.tsx
+│   │   ├── ErrorBoundary.tsx
+│   │   ├── LoadingScreen.tsx
+│   │   └── index.ts
+│   ├── Auth/           # Authentication components
+│   │   ├── AuthGuard.tsx
+│   │   ├── LoginForm.tsx
+│   │   └── ProtectedRoute.tsx
+│   ├── Layout/         # Layout components
+│   │   └── DashboardLayout.tsx
+│   └── Routing/        # Routing components
+│       └── AppRoutes.tsx
+├── hooks/              # Custom hooks
+│   ├── useAuth.ts
+│   ├── useAuthApi.ts
+│   ├── useAuthState.ts
+│   ├── useTokenRefresh.ts
+│   └── index.ts
+├── stores/             # Zustand stores
+│   └── authStore.ts
+├── api/                # API functions
+│   ├── authApi.ts
+│   ├── partnerApi.ts
+│   └── userApi.ts
+├── types/              # TypeScript types
+│   ├── auth.ts
+│   ├── partner.ts
+│   ├── index.ts
+│   └── ...
+├── utils/              # Utility functions
+│   ├── api.ts
+│   ├── format.ts
+│   ├── jwt.ts
+│   ├── roleMapping.ts
+│   ├── validation.ts
+│   └── index.ts
+├── constants/          # Constants and config
+│   └── index.ts
+├── contexts/           # React contexts
+│   └── AuthContext.tsx
+├── data/               # Mock data (only for development)
+│   └── mockData.ts
+└── pages/              # Page components (only pages with real APIs)
+    ├── Partners/       # Partner management module
+    │   ├── api/
+    │   │   ├── index.ts
+    │   │   └── partnerApi.ts
+    │   ├── components/
+    │   │   ├── PartnerDataGrid.tsx
+    │   │   ├── PartnerDeleteDialog.tsx
+    │   │   ├── PartnerHeader.tsx
+    │   │   ├── PartnerSearchAndFilter.tsx
+    │   │   ├── PartnerSnackbar.tsx
+    │   │   └── index.ts
+    │   ├── constants/
+    │   │   ├── index.ts
+    │   │   ├── partnerConstants.ts
+    │   │   ├── partnerDialogConfig.ts
+    │   │   ├── partnerSearchConfig.ts
+    │   │   └── partnerTableConfig.tsx
+    │   ├── hooks/
+    │   │   ├── index.ts
+    │   │   ├── usePartner.ts
+    │   │   ├── usePartnerMutations.ts
+    │   │   └── usePartners.ts
+    │   ├── types/
+    │   │   ├── index.ts
+    │   │   └── partnerTypes.ts
+    │   ├── utils/
+    │   │   ├── index.ts
+    │   │   └── partnerHelpers.ts
+    │   ├── index.ts
+    │   └── PartnerManagement.tsx
+    ├── Users/          # User management module
+    │   ├── api/
+    │   │   ├── index.ts
+    │   │   └── userApi.ts
+    │   ├── components/
+    │   │   ├── UserDataGrid.tsx
+    │   │   ├── UserDeleteDialog.tsx
+    │   │   ├── UserHeader.tsx
+    │   │   ├── UserSearchAndFilter.tsx
+    │   │   ├── UserSnackbar.tsx
+    │   │   └── index.ts
+    │   ├── constants/
+    │   │   ├── index.ts
+    │   │   ├── userConstants.ts
+    │   │   ├── userDialogConfig.ts
+    │   │   ├── userSearchConfig.ts
+    │   │   └── userTableConfig.tsx
+    │   ├── hooks/
+    │   │   ├── index.ts
+    │   │   ├── useUser.ts
+    │   │   ├── useUserApi.ts
+    │   │   └── useUserMutations.ts
+    │   ├── types/
+    │   │   ├── index.ts
+    │   │   └── userTypes.ts
+    │   ├── utils/
+    │   │   └── index.ts
+    │   ├── index.ts
+    │   └── UserManagement.tsx
+    └── Unauthorized.tsx
+```
+
+### 11. UI/UX Guidelines for Small Laptop Screens (13-inch)
+- ✅ **Table Design**: Use horizontal scroll for data tables, compact column widths
+- ✅ **Form Layout**: Use single-column layouts, compact spacing, smaller input fields
+- ✅ **Navigation**: Use collapsible sidebar, compact menu items, breadcrumbs
+- ✅ **Typography**: Use smaller font sizes (12-14px for body text, 16-18px for headings)
+- ✅ **Spacing**: Use smaller padding/margins (8px, 12px, 16px instead of 16px, 24px, 32px)
+- ✅ **Modal/Dialog**: Use smaller max-width (sm, md instead of lg, xl)
+- ✅ **Cards**: Use compact card designs with minimal padding
+- ✅ **Buttons**: Use smaller button sizes (small, medium instead of large)
+- ✅ **Icons**: Use smaller icon sizes (16-20px instead of 24-32px)
+- ✅ **Grid Layout**: Use fewer columns (1-2 columns instead of 3-4)
+- ✅ **Responsive Breakpoints**: Focus on xs (0px) and sm (600px) breakpoints
+
+## 🚫 What NOT to do
+
+### Avoid These Patterns
+- ❌ Don't use `any` type
+- ❌ **NEVER create .md files** - No README, documentation, or summary files
+- ❌ Don't create test files unless specifically requested
+- ❌ Don't duplicate code - extract to shared components
+- ❌ Don't use relative imports (`../` or `./`)
+- ❌ Don't create large, monolithic components
+- ❌ Don't use inline styles - use CSS modules or styled-components
+- ❌ Don't ignore TypeScript errors
+- ❌ Don't use console.log in production code
+- ❌ Don't create unused variables or imports
+- ❌ **Don't design for large screens first** - Always start with small laptop screens
+- ❌ **Don't use large spacing/padding** - Avoid 24px, 32px, 48px spacing on small screens
+- ❌ **Don't use large font sizes** - Avoid 20px+ body text, 24px+ headings
+- ❌ **Don't use wide modals/dialogs** - Avoid lg, xl max-width for small screens
+- ❌ **Don't use multi-column layouts** - Avoid 3+ columns on small screens
+- ❌ **Don't use large buttons/icons** - Avoid large size variants
+- ❌ **Don't ignore horizontal scroll** - Tables should scroll horizontally when needed
+
+### Common Components Violations
+- ❌ **NEVER create custom dialogs** - Use CommonFormDialog, CommonViewEditDialog, CommonDetailDialog, CommonDeleteDialog
+- ❌ **NEVER create custom data tables** - Use CommonDataTable
+- ❌ **NEVER create custom search/filter** - Use CommonSearchAndFilter
+- ❌ **NEVER create custom headers** - Use CommonHeader
+- ❌ **NEVER create custom snackbars** - Use CommonSnackbar
+- ❌ **NEVER create pages without APIs** - Only create pages with real API integration
+- ❌ **NEVER create pages outside module structure** - Follow the established module pattern
+
+### Code Smells to Avoid
+- ❌ Functions longer than 30 lines
+- ❌ Components with more than 5 props
+- ❌ Deeply nested conditional logic
+- ❌ Repeated code patterns
+- ❌ Magic numbers and strings
+- ❌ Unclear variable names
+- ❌ Creating .md files for documentation
+
+## ✅ What TO do
+
+### Preferred Patterns
+- ✅ Use TypeScript strictly
+- ✅ Create reusable components
+- ✅ Use custom hooks for logic
+- ✅ Implement proper error handling
+- ✅ Use constants for configuration
+- ✅ Optimize for performance
+- ✅ Write clean, readable code
+- ✅ Use proper naming conventions
+- ✅ Implement proper state management
+- ✅ Use proper TypeScript types
+- ✅ Write self-documenting code instead of .md files
+- ✅ **NO BUILD REQUIRED** - Vite dev server auto-reloads, no need to run `npm run build` for development
+
+### Creating New Pages (Only with Real APIs)
+When creating a new page module, follow this exact structure:
+
+1. **Create module directory**: `src/pages/ModuleName/`
+2. **Create subdirectories**: `api/`, `components/`, `constants/`, `hooks/`, `types/`, `utils/`
+3. **Create configuration files**:
+   - `constants/moduleDialogConfig.ts` - Form and detail field configurations
+   - `constants/moduleTableConfig.tsx` - Table columns and actions
+   - `constants/moduleSearchConfig.ts` - Search and filter configurations
+   - `constants/moduleConstants.ts` - Module-specific constants
+4. **Create API files**:
+   - `api/moduleApi.ts` - API functions
+   - `api/index.ts` - Export all API functions
+5. **Create type files**:
+   - `types/moduleTypes.ts` - Module-specific types
+   - `types/index.ts` - Export all types
+6. **Create hook files**:
+   - `hooks/useModule.ts` - Single item hook
+   - `hooks/useModuleApi.ts` - API hooks
+   - `hooks/useModuleMutations.ts` - Mutation hooks
+   - `hooks/index.ts` - Export all hooks
+7. **Create component files**:
+   - `components/ModuleDataGrid.tsx` - Data table component
+   - `components/ModuleDeleteDialog.tsx` - Delete confirmation
+   - `components/ModuleHeader.tsx` - Page header
+   - `components/ModuleSearchAndFilter.tsx` - Search and filter
+   - `components/ModuleSnackbar.tsx` - Notifications
+   - `components/index.ts` - Export all components
+8. **Create main page**: `ModuleManagement.tsx`
+9. **Create index file**: `index.ts` - Export main module
+10. **Update AppRoutes.tsx** - Add new route
+11. **Update DashboardLayout.tsx** - Add new menu item
+
+### Common Components Usage
+- ✅ **ALWAYS use CommonFormDialog** for create/edit forms
+- ✅ **ALWAYS use CommonViewEditDialog** for view/edit unified modals
+- ✅ **ALWAYS use CommonDetailDialog** for read-only details
+- ✅ **ALWAYS use CommonDeleteDialog** for delete confirmations
+- ✅ **ALWAYS use CommonDataTable** for data grids
+- ✅ **ALWAYS use CommonSearchAndFilter** for search/filter
+- ✅ **ALWAYS use CommonHeader** for page headers
+- ✅ **ALWAYS use CommonSnackbar** for notifications
+
+## 🎨 Code Style Guidelines
+
+### Naming Conventions
+- **Components**: PascalCase (`UserProfile`, `LoginForm`)
+- **Hooks**: camelCase starting with `use` (`useAuth`, `useUserData`)
+- **Functions**: camelCase (`getUserData`, `handleSubmit`)
+- **Variables**: camelCase (`userName`, `isLoading`)
+- **Constants**: UPPER_SNAKE_CASE (`API_BASE_URL`, `MAX_RETRY_ATTEMPTS`)
+- **Types/Interfaces**: PascalCase (`User`, `ApiResponse`)
+
+### Import Organization
+```typescript
+// 1. React imports
+import React, { useState, useEffect } from 'react';
+
+// 2. Third-party imports
+import { useQuery } from '@tanstack/react-query';
+import { Button } from '@mui/material';
+
+// 3. Local imports with aliases
+import { useAuth } from '@/hooks/useAuth';
+import { User } from '@/types/user';
+import { API_ENDPOINTS } from '@/constants/api';
+```
+
+### Component Structure
+```typescript
+// 1. Imports
+// 2. Types/Interfaces
+// 3. Constants
+// 4. Component definition
+// 5. Custom hooks
+// 6. Event handlers
+// 7. Render logic
+// 8. Export
+```
+
+## 🔧 Performance Guidelines
+
+### React Optimization
+- Use `React.memo()` for components that receive stable props
+- Use `useMemo()` for expensive calculations
+- Use `useCallback()` for event handlers passed to child components
+- Implement proper dependency arrays in `useEffect`
+- Use `React.lazy()` for code splitting
+
+### Bundle Optimization
+- Use dynamic imports for route components
+- Avoid importing entire libraries when only specific functions are needed
+- Use tree shaking friendly imports
+- Optimize images and assets
+
+## 🛡️ Security Guidelines
+
+### Authentication
+- Always validate JWT tokens
+- Implement proper token refresh
+- Use secure storage for sensitive data
+- Implement proper logout functionality
+
+### Data Handling
+- Sanitize user inputs
+- Validate API responses
+- Use proper error handling
+- Implement rate limiting for API calls
+
+## 📝 Documentation
+
+### Code Comments
+- Write self-documenting code
+- Add comments for complex business logic
+- Document API interfaces and types
+- Use JSDoc for public functions
+
+### Type Documentation
+- Use descriptive type names
+- Add JSDoc comments for complex types
+- Use generic types for reusable patterns
+- Document API response structures
+
+## 🚀 Best Practices Summary
+
+1. **Type Safety**: Always use proper TypeScript types
+2. **Component Reusability**: Create shared components for common patterns
+3. **Performance**: Optimize for speed and efficiency
+4. **Code Quality**: Write clean, readable, maintainable code
+5. **Architecture**: Use proper separation of concerns
+6. **Constants**: Extract magic numbers and strings
+7. **Error Handling**: Implement proper error boundaries
+8. **State Management**: Use appropriate state management solutions
+9. **Import Aliases**: Use `@` prefix for clean imports
+10. **Senior Level**: Write code like a senior developer
+11. **No Documentation Files**: Write self-documenting code, never create .md files
+12. **No Build Required**: Vite dev server auto-reloads, no need to run `npm run build` for development
+
+## 🎯 Success Metrics
+
+- Zero `any` types in codebase
+- Reusable components for common patterns
+- Proper TypeScript coverage
+- Clean, readable code structure
+- Optimized performance
+- Proper error handling
+- Consistent code style
+- No duplicate code
+- Proper separation of concerns
+- Senior-level code quality
+- **Zero .md files** - No documentation files created
+- **No build required** - Vite dev server auto-reloads for development
+- **Small screen optimized** - All UI components work perfectly on 13-inch laptop screens
+- **Responsive design** - Components adapt well to small screen constraints
+- **Compact layouts** - Efficient use of limited screen real estate
+- **Touch-friendly** - All interactive elements are appropriately sized for small screens
+- **Common Components Usage** - All dialogs, tables, forms use Common Components
+- **Module Structure Compliance** - All pages follow the established module structure
+- **API Integration Only** - No pages without real API integration
+- **Consistent UI Patterns** - All UI follows the same patterns and components
+
+Remember: Write code that you'd be proud to show to other senior developers. Focus on maintainability, readability, and performance.

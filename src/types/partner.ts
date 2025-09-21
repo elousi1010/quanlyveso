@@ -1,23 +1,77 @@
 // Partner and agent management types
 
-export interface Partner {
+export interface Organization {
   id: string;
+  created_at: string;
+  created_by: string | null;
+  updated_at: string;
+  updated_by: string | null;
+  deleted_at: string | null;
+  is_active: boolean;
   name: string;
-  type: 'agent' | 'distributor' | 'wholesaler';
-  contactPerson: string;
-  email: string;
-  phone: string;
-  address: string;
-  provinces: string[]; // Array of province IDs
-  commission: number; // Phần trăm hoa hồng
-  creditLimit: number; // Hạn mức tín dụng
-  currentDebt: number; // Nợ hiện tại
-  isActive: boolean;
-  contractStartDate: Date;
-  contractEndDate?: Date;
-  notes?: string;
+  address: string | null;
+  owner_id: string;
 }
 
+export interface Partner {
+  id: string;
+  created_at: string;
+  created_by: string;
+  updated_at: string;
+  updated_by: string | null;
+  deleted_at: string | null;
+  is_active: boolean;
+  name: string;
+  phone_number: string;
+  type: 'agent' | 'seller' | 'customer' | 'supplier' | 'other';
+  address: string;
+  level: number;
+  debt: number;
+  organization_id: string;
+  organization: Organization;
+}
+
+export interface CreatePartnerRequest {
+  name: string;
+  address: string;
+  phone_number: string;
+  type: 'agent' | 'seller' | 'customer' | 'supplier' | 'other';
+  level: number;
+}
+
+export interface UpdatePartnerRequest {
+  name: string;
+  address: string;
+  phone_number: string;
+  type: 'agent' | 'seller' | 'customer' | 'supplier' | 'other';
+  level: number;
+}
+
+export interface PartnerListResponse {
+  message: string;
+  error: string;
+  statusCode: number;
+  data: Partner[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface PartnerResponse {
+  message: string;
+  error: string;
+  statusCode: number;
+  data: Partner;
+}
+
+export interface CreatePartnerResponse {
+  message: string;
+  error: string;
+  statusCode: number;
+  data: Partner;
+}
+
+// Legacy types for backward compatibility
 export interface PartnerPerformance {
   partnerId: string;
   period: 'daily' | 'weekly' | 'monthly';

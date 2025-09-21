@@ -20,37 +20,26 @@ import {
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
-  TrendingUp as ProfitIcon,
   ConfirmationNumber as TicketIcon,
-  AccountBalance as DebtIcon,
-  LocationOn as ProvinceIcon,
-  People as SellerIcon,
-  SwapHoriz as ExchangeIcon,
   Receipt as TransactionIcon,
-  Person as EmployeeIcon,
-  Description as DescriptionIcon,
-  AttachMoney as AttachMoneyIcon,
-  LocalShipping as ShippingIcon,
-  Security as SecurityIcon,
+  Person as PersonIcon,
   Business as PartnerIcon,
-  Schedule as ShiftIcon,
-  Assessment as AssessmentIcon,
+  BusinessCenter as OrganizationIcon,
+  Security as PermissionIcon,
+  LocationOn as StationIcon,
   Inventory as InventoryIcon,
-  AttachMoney as MoneyIcon,
-  Casino as CasinoIcon,
-  Radio as RadioIcon,
-  Numbers as NumbersIcon,
+  Assessment as AssessmentIcon,
   MenuOpen as MenuOpenIcon,
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
   Logout as LogoutIcon,
   Notifications as NotificationIcon,
   Settings as SettingsIcon,
-  Message as MessageIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuthState } from '../../hooks/useAuthState';
 import { PERMISSIONS } from '../../types/auth';
+import { getRoleDisplayName } from '../../utils/roleMapping';
 
 const drawerWidth = 320;
 
@@ -68,9 +57,77 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     system: false,
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { user, logout, hasPermission } = useAuth();
+  const { user, logout } = useAuthState();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Helper function to check permissions (for backward compatibility)
+  const hasPermission = (permission: string): boolean => {
+    if (!user) return false;
+    
+    // Admin và User có tất cả quyền
+    if (user.role === 'admin' || user.role === 'user') return true;
+    
+    // Map permissions to roles
+    const rolePermissions: Record<string, string[]> = {
+      admin: [
+        // Admin có tất cả quyền
+        PERMISSIONS.VIEW_DASHBOARD,
+        PERMISSIONS.VIEW_PROFIT,
+        PERMISSIONS.MANAGE_TICKETS,
+        PERMISSIONS.MANAGE_DEBTS,
+        PERMISSIONS.MANAGE_PROVINCES,
+        PERMISSIONS.MANAGE_SELLERS,
+        PERMISSIONS.MANAGE_EXCHANGES,
+        PERMISSIONS.MANAGE_TRANSACTIONS,
+        PERMISSIONS.MANAGE_EMPLOYEES,
+        PERMISSIONS.MANAGE_PARTNERS,
+        PERMISSIONS.VIEW_REPORTS,
+        PERMISSIONS.MANAGE_SHIFTS,
+      ],
+      user: [
+        // User có tất cả quyền như admin
+        PERMISSIONS.VIEW_DASHBOARD,
+        PERMISSIONS.VIEW_PROFIT,
+        PERMISSIONS.MANAGE_TICKETS,
+        PERMISSIONS.MANAGE_DEBTS,
+        PERMISSIONS.MANAGE_PROVINCES,
+        PERMISSIONS.MANAGE_SELLERS,
+        PERMISSIONS.MANAGE_EXCHANGES,
+        PERMISSIONS.MANAGE_TRANSACTIONS,
+        PERMISSIONS.MANAGE_EMPLOYEES,
+        PERMISSIONS.MANAGE_PARTNERS,
+        PERMISSIONS.VIEW_REPORTS,
+        PERMISSIONS.MANAGE_SHIFTS,
+      ],
+      owner: [
+        PERMISSIONS.VIEW_DASHBOARD,
+        PERMISSIONS.VIEW_PROFIT,
+        PERMISSIONS.MANAGE_TICKETS,
+        PERMISSIONS.MANAGE_DEBTS,
+        PERMISSIONS.MANAGE_PROVINCES,
+        PERMISSIONS.MANAGE_SELLERS,
+        PERMISSIONS.MANAGE_EXCHANGES,
+        PERMISSIONS.MANAGE_TRANSACTIONS,
+        PERMISSIONS.MANAGE_EMPLOYEES,
+        PERMISSIONS.MANAGE_PARTNERS,
+        PERMISSIONS.VIEW_REPORTS,
+        PERMISSIONS.MANAGE_SHIFTS,
+      ],
+      employee: [
+        PERMISSIONS.MANAGE_TICKETS,
+        PERMISSIONS.MANAGE_TRANSACTIONS,
+        PERMISSIONS.VIEW_DASHBOARD,
+      ],
+      seller: [
+        PERMISSIONS.MANAGE_TICKETS,
+        PERMISSIONS.VIEW_DASHBOARD,
+      ],
+    };
+
+    const userPermissions = rolePermissions[user.role] || [];
+    return userPermissions.includes(permission);
+  };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -102,213 +159,45 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   const menuGroups = [
     {
-      id: 'dashboard',
-      title: 'Tổng quan',
+      id: 'management',
+      title: 'Quản lý hệ thống',
       items: [
-    {
-      text: 'Dashboard',
-      icon: <DashboardIcon />,
-      path: '/',
-      permission: PERMISSIONS.VIEW_DASHBOARD,
-    },
-    {
-      text: 'Tính lợi nhuận',
-      icon: <ProfitIcon />,
-      path: '/profit',
-      permission: PERMISSIONS.VIEW_PROFIT,
-    },
-      ]
-    },
         {
-          id: 'tickets',
-          title: 'Quản lý vé',
-          items: [
-    {
-      text: 'Quản lý vé',
-      icon: <TicketIcon />,
-      path: '/tickets',
-      permission: PERMISSIONS.MANAGE_TICKETS,
-    },
-    {
-              text: 'Vé số cào',
-              icon: <CasinoIcon />,
-              path: '/scratch-tickets',
-              permission: PERMISSIONS.MANAGE_TICKETS,
-            },
-            {
-              text: 'Nhập vé vào kho',
-              icon: <InventoryIcon />,
-              path: '/ticket-import',
-              permission: PERMISSIONS.MANAGE_TICKETS,
-            },
-            {
-              text: 'Trao đổi vé',
-              icon: <ExchangeIcon />,
-              path: '/exchanges',
-              permission: PERMISSIONS.MANAGE_EXCHANGES,
-            },
-          ]
+          text: 'Quản lý người dùng',
+          icon: <PersonIcon />,
+          path: '/users',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
         {
-          id: 'management',
-          title: 'Quản lý hệ thống',
-          items: [
-    {
-      text: 'Quản lý tỉnh',
-      icon: <ProvinceIcon />,
-      path: '/provinces',
-      permission: PERMISSIONS.MANAGE_PROVINCES,
-    },
-    {
-      text: 'Quản lý người bán',
-      icon: <SellerIcon />,
-      path: '/sellers',
-      permission: PERMISSIONS.MANAGE_SELLERS,
-    },
-    {
-      text: 'Quản lý nhân viên',
-      icon: <EmployeeIcon />,
-      path: '/employees',
-      permission: PERMISSIONS.MANAGE_EMPLOYEES,
-    },
-    {
-      text: 'Đối tác',
-      icon: <PartnerIcon />,
-      path: '/partners',
-      permission: PERMISSIONS.MANAGE_PARTNERS,
-    },
-    {
-      text: 'Ca làm việc',
-      icon: <ShiftIcon />,
-      path: '/shifts',
-      permission: PERMISSIONS.MANAGE_SHIFTS,
-            },
-          ]
+          text: 'Đối tác',
+          icon: <PartnerIcon />,
+          path: '/partners',
+          permission: PERMISSIONS.MANAGE_PARTNERS,
         },
         {
-          id: 'masterdata',
-          title: 'Master Data',
-          items: [
-            {
-              text: 'Nhà đài',
-              icon: <RadioIcon />,
-              path: '/broadcasters',
-              permission: PERMISSIONS.MANAGE_TICKETS,
-            },
-            {
-              text: 'Đại lý',
-              icon: <PartnerIcon />,
-              path: '/agents',
-              permission: PERMISSIONS.MANAGE_TICKETS,
-            },
-            {
-              text: 'Giá vé',
-              icon: <MoneyIcon />,
-              path: '/prices',
-              permission: PERMISSIONS.MANAGE_TICKETS,
-            },
-          ]
+          text: 'Tổ chức',
+          icon: <OrganizationIcon />,
+          path: '/organizations',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
         {
-          id: 'agentmanagement',
-          title: 'Quản lý đại lý nâng cao',
-          items: [
-            {
-              text: 'Hợp đồng',
-              icon: <DescriptionIcon />,
-              path: '/contracts',
-              permission: PERMISSIONS.MANAGE_PARTNERS,
-            },
-            {
-              text: 'Tín dụng & Công nợ',
-              icon: <DebtIcon />,
-              path: '/credit-debt',
-              permission: PERMISSIONS.MANAGE_DEBTS,
-            },
-            {
-              text: 'Hiệu suất đại lý',
-              icon: <AssessmentIcon />,
-              path: '/agent-performance',
-              permission: PERMISSIONS.VIEW_REPORTS,
-            },
-            {
-              text: 'Quản lý khu vực',
-              icon: <ProvinceIcon />,
-              path: '/territories',
-              permission: PERMISSIONS.MANAGE_PARTNERS,
-            },
-            {
-              text: 'Hoa hồng',
-              icon: <AttachMoneyIcon />,
-              path: '/commissions',
-              permission: PERMISSIONS.MANAGE_PARTNERS,
-            },
-            {
-              text: 'Dashboard Đại lý',
-              icon: <DashboardIcon />,
-              path: '/agent-dashboard',
-              permission: PERMISSIONS.MANAGE_PARTNERS,
-            },
-            {
-              text: 'Phân phối vé',
-              icon: <ShippingIcon />,
-              path: '/ticket-distribution',
-              permission: PERMISSIONS.MANAGE_TICKETS,
-            },
-            {
-              text: 'Phân tích đại lý',
-              icon: <AssessmentIcon />,
-              path: '/agent-analytics',
-              permission: PERMISSIONS.VIEW_REPORTS,
-            },
-            {
-              text: 'Quản lý rủi ro',
-              icon: <SecurityIcon />,
-              path: '/risk-management',
-              permission: PERMISSIONS.MANAGE_PARTNERS,
-            },
-            {
-              text: 'Liên lạc & Hỗ trợ',
-              icon: <MessageIcon />,
-              path: '/agent-communication',
-              permission: PERMISSIONS.MANAGE_PARTNERS,
-            },
-          ]
+          text: 'Quyền hạn',
+          icon: <PermissionIcon />,
+          path: '/permissions',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
         {
-          id: 'reports',
-          title: 'Báo cáo & Phân tích',
-          items: [
-            {
-              text: 'Báo cáo bán vé',
-              icon: <AssessmentIcon />,
-              path: '/daily-sales',
-              permission: PERMISSIONS.VIEW_PROFIT,
-            },
-            {
-              text: 'Phân tích & Báo cáo',
-              icon: <AssessmentIcon />,
-              path: '/analytics',
-              permission: PERMISSIONS.VIEW_PROFIT,
-            },
-            {
-              text: 'Quản lý tài chính',
-              icon: <MoneyIcon />,
-              path: '/financial',
-              permission: PERMISSIONS.VIEW_PROFIT,
-            },
-            {
-              text: 'Phân tích cặp số',
-              icon: <NumbersIcon />,
-              path: '/number-analysis',
-              permission: PERMISSIONS.VIEW_PROFIT,
-            },
-          ]
+          text: 'Trạm',
+          icon: <StationIcon />,
+          path: '/stations',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
-    {
-      id: 'transactions',
-      title: 'Giao dịch',
-      items: [
+        {
+          text: 'Vé số',
+          icon: <TicketIcon />,
+          path: '/tickets',
+          permission: PERMISSIONS.MANAGE_TICKETS,
+        },
         {
           text: 'Giao dịch',
           icon: <TransactionIcon />,
@@ -316,10 +205,22 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           permission: PERMISSIONS.MANAGE_TRANSACTIONS,
         },
         {
-          text: 'Quản lý công nợ',
-          icon: <DebtIcon />,
-          path: '/debts',
-          permission: PERMISSIONS.MANAGE_DEBTS,
+          text: 'Kho',
+          icon: <InventoryIcon />,
+          path: '/inventory',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
+        },
+      ]
+    },
+    {
+      id: 'testing',
+      title: 'Testing & Debug',
+      items: [
+        {
+          text: 'Token Refresh Test',
+          icon: <SettingsIcon />,
+          path: '/token-test',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
       ]
     },
@@ -353,16 +254,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <div className="flex items-center space-x-2">
           <Avatar className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500">
             <span className="text-white text-sm font-semibold">
-              {user?.fullName?.charAt(0) || 'U'}
+              {user?.name?.charAt(0) || 'U'}
             </span>
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.fullName || 'Người dùng'}
+              {user?.name || 'Người dùng'}
             </p>
             <p className="text-xs text-gray-500 truncate">
-              {user?.role === 'owner' ? 'Chủ cửa hàng' : 
-               user?.role === 'employee' ? 'Nhân viên' : 'Người bán'}
+              {getRoleDisplayName(user?.role || 'user')}
             </p>
           </div>
         </div>
@@ -521,10 +421,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             {/* Profile Menu */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="text-right hidden lg:block">
-                <p className="text-sm font-medium text-gray-900 truncate max-w-24">{user?.fullName}</p>
+                <p className="text-sm font-medium text-gray-900 truncate max-w-24">{user?.name}</p>
                 <p className="text-xs text-gray-500 truncate">
-                  {user?.role === 'owner' ? 'Chủ cửa hàng' : 
-                   user?.role === 'employee' ? 'Nhân viên' : 'Người bán'}
+                  {getRoleDisplayName(user?.role || 'user')}
                 </p>
               </div>
               <IconButton
@@ -532,7 +431,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 className="p-1"
               >
                 <Avatar className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-indigo-500">
-                  {user?.fullName?.charAt(0) || 'U'}
+                  {user?.name?.charAt(0) || 'U'}
                 </Avatar>
               </IconButton>
             </div>
@@ -553,11 +452,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <MenuItem onClick={handleProfileMenuClose} className="py-3">
           <div className="flex items-center space-x-3">
             <Avatar className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500">
-              {user?.fullName?.charAt(0) || 'U'}
+              {user?.name?.charAt(0) || 'U'}
             </Avatar>
             <div>
-              <p className="font-medium text-gray-900">{user?.fullName}</p>
-              <p className="text-sm text-gray-500">{user?.email}</p>
+              <p className="font-medium text-gray-900">{user?.name}</p>
+              <p className="text-sm text-gray-500">{user?.phone_number}</p>
             </div>
           </div>
         </MenuItem>
@@ -609,14 +508,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 0,
+          p: 2,
           width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
           transition: 'width 0.3s ease-in-out',
           minHeight: '100vh',
+          bgcolor: '#fafafa',
         }}
       >
         <Toolbar />
-        {children}
+        <Box sx={{ mt: 2 }}>
+          {children}
+        </Box>
       </Box>
     </Box>
   );

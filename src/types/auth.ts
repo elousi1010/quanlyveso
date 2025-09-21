@@ -1,6 +1,6 @@
 // Authentication and authorization types
 
-export type UserRole = 'owner' | 'employee' | 'seller';
+export type UserRole = 'admin' | 'owner' | 'employee' | 'seller' | 'user';
 
 export interface User {
   id: string;
@@ -18,6 +18,7 @@ export interface AuthContextType {
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
+  isLoading?: boolean;
 }
 
 export interface Permission {
@@ -43,6 +44,21 @@ export const PERMISSIONS = {
 } as const;
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
+  admin: [
+    // Admin có tất cả quyền
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.VIEW_PROFIT,
+    PERMISSIONS.MANAGE_TICKETS,
+    PERMISSIONS.MANAGE_DEBTS,
+    PERMISSIONS.MANAGE_PROVINCES,
+    PERMISSIONS.MANAGE_SELLERS,
+    PERMISSIONS.MANAGE_EXCHANGES,
+    PERMISSIONS.MANAGE_TRANSACTIONS,
+    PERMISSIONS.MANAGE_EMPLOYEES,
+    PERMISSIONS.MANAGE_PARTNERS,
+    PERMISSIONS.VIEW_REPORTS,
+    PERMISSIONS.MANAGE_SHIFTS,
+  ],
   owner: [
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_PROFIT,
@@ -65,5 +81,20 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   seller: [
     PERMISSIONS.MANAGE_TICKETS,
     PERMISSIONS.VIEW_DASHBOARD,
+  ],
+  user: [
+    // User có tất cả quyền như admin
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.VIEW_PROFIT,
+    PERMISSIONS.MANAGE_TICKETS,
+    PERMISSIONS.MANAGE_DEBTS,
+    PERMISSIONS.MANAGE_PROVINCES,
+    PERMISSIONS.MANAGE_SELLERS,
+    PERMISSIONS.MANAGE_EXCHANGES,
+    PERMISSIONS.MANAGE_TRANSACTIONS,
+    PERMISSIONS.MANAGE_EMPLOYEES,
+    PERMISSIONS.MANAGE_PARTNERS,
+    PERMISSIONS.VIEW_REPORTS,
+    PERMISSIONS.MANAGE_SHIFTS,
   ],
 };
