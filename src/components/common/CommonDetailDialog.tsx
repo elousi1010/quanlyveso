@@ -11,7 +11,6 @@ import {
   Divider,
   Avatar,
   Stack,
-  Paper,
   Skeleton,
   Alert,
 } from '@mui/material';
@@ -21,7 +20,7 @@ import { formatDate } from '../../utils/format';
 export interface DetailField {
   key: string;
   label: string;
-  render?: (value: any, item: any) => React.ReactNode;
+  render?: (value: unknown, item: unknown) => React.ReactNode;
   chip?: {
     color: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'default';
     variant?: 'filled' | 'outlined';
@@ -31,9 +30,9 @@ export interface DetailField {
 interface CommonDetailDialogProps {
   open: boolean;
   onClose: () => void;
-  onEdit?: (item: any) => void;
+  onEdit?: (item: unknown) => void;
   title: string;
-  item?: any;
+  item?: unknown;
   fields: DetailField[];
   isLoading?: boolean;
   error?: string;
@@ -58,7 +57,7 @@ const CommonDetailDialog: React.FC<CommonDetailDialogProps> = ({
   maxWidth = 'sm',
   fullWidth = true,
 }) => {
-  const getTypeColor = (value: any): 'primary' | 'secondary' | 'success' | 'warning' | 'default' => {
+  const getTypeColor = (value: unknown): 'primary' | 'secondary' | 'success' | 'warning' | 'default' => {
     if (typeof value === 'boolean') {
       return value ? 'success' : 'warning';
     }
@@ -73,7 +72,7 @@ const CommonDetailDialog: React.FC<CommonDetailDialogProps> = ({
     return 'default';
   };
 
-  const renderFieldValue = (field: DetailField, value: any) => {
+  const renderFieldValue = (field: DetailField, value: unknown) => {
     if (field.render) {
       return field.render(value, item);
     }
@@ -84,7 +83,7 @@ const CommonDetailDialog: React.FC<CommonDetailDialogProps> = ({
     if (field.chip) {
       return (
         <Chip
-          label={isDateField && value ? formatDate(value) : value}
+          label={isDateField && value ? formatDate(value as string) : value as string}
           color={field.chip.color}
           variant={field.chip.variant || 'filled'}
           size="small"
@@ -103,7 +102,7 @@ const CommonDetailDialog: React.FC<CommonDetailDialogProps> = ({
       );
     }
 
-    return isDateField && value ? formatDate(value) : (value || 'N/A');
+    return isDateField && value ? formatDate(value as string) : (value as string || 'N/A');
   };
 
   return (
@@ -168,7 +167,7 @@ const CommonDetailDialog: React.FC<CommonDetailDialogProps> = ({
                   </Avatar>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {item.name || item.title || 'Chi tiết'}
+                      {(item as Record<string, unknown>).name as string || (item as Record<string, unknown>).title as string || 'Chi tiết'}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Thông tin chi tiết
@@ -183,7 +182,7 @@ const CommonDetailDialog: React.FC<CommonDetailDialogProps> = ({
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                 {fields.map((field, index) => {
                   const value = field.render ? field.render(item[field.key], item) : item[field.key];
-                  if ((field as any).hideIfEmpty && (!value || (Array.isArray(value) && value.length === 0))) {
+                  if ((field as unknown as DetailField) && (!value || (Array.isArray(value) && value.length === 0))) {
                     return null;
                   }
                   

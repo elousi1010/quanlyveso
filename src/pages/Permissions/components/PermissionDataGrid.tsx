@@ -4,8 +4,11 @@ import { permissionTableConfig } from '../constants';
 import type { Permission } from '../types';
 
 interface PermissionDataGridProps {
-  item: Permission[];
+  data: Permission[];
   loading: boolean;
+  onEdit: (permission: Permission) => void;
+  onDelete: (permission: Permission) => void;
+  onView: (permission: Permission) => void;
   selectedRows: Permission[];
   onSelectionChange: (permissions: Permission[]) => void;
 }

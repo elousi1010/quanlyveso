@@ -10,16 +10,13 @@ interface TicketHeaderProps {
 export const TicketHeader: React.FC<TicketHeaderProps> = ({
   onCreate,
   onRefresh,
-  selectedCount,
-  onDeleteSelected,
 }) => {
   return (
     <CommonHeader
       title={TICKET_CONSTANTS.MODULE_TITLE}
+      subtitle="Quản lý các vé số"
       onCreate={onCreate}
       onRefresh={onRefresh}
-      selectedCount={selectedCount}
-      onDeleteSelected={onDeleteSelected}
     />
   );
 };

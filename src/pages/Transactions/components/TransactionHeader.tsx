@@ -10,16 +10,13 @@ interface TransactionHeaderProps {
 export const TransactionHeader: React.FC<TransactionHeaderProps> = ({
   onCreate,
   onRefresh,
-  selectedCount,
-  onDeleteSelected,
 }) => {
   return (
     <CommonHeader
       title={TRANSACTION_CONSTANTS.MODULE_TITLE}
+      subtitle="Quản lý các giao dịch"
       onCreate={onCreate}
       onRefresh={onRefresh}
-      selectedCount={selectedCount}
-      onDeleteSelected={onDeleteSelected}
     />
   );
 };

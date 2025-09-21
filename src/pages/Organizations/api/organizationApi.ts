@@ -1,9 +1,13 @@
 import { api } from '@/utils/api';
 import type { 
-  Organization, 
   CreateOrganizationDto, 
+  UpdateOrganizationDto,
   UpdateMyOrganizationDto, 
-  OrganizationResponse, 
+  OrganizationListResponse,
+  OrganizationResponse,
+  CreateOrganizationResponse,
+  UpdateOrganizationResponse,
+  DeleteOrganizationResponse,
   OrganizationSearchParams 
 } from '../types';
 
@@ -11,7 +15,7 @@ const API_BASE = 'https://lottery.esimvn.net/api/v1';
 
 export const organizationApi = {
   // Get all organizations with pagination and search
-  getAll: async (params: OrganizationSearchParams = {}): Promise<OrganizationResponse> => {
+  getAll: async (params: OrganizationSearchParams = {}): Promise<OrganizationListResponse> => {
     const searchParams = new URLSearchParams();
     
     if (params.searchKey) searchParams.append('searchKey', params.searchKey);
@@ -20,25 +24,41 @@ export const organizationApi = {
     if (params.sortBy) searchParams.append('sortBy', params.sortBy);
     if (params.sortOrder) searchParams.append('sortOrder', params.sortOrder);
 
-    const response = await api.get<OrganizationResponse>(`${API_BASE}/organizations?${searchParams.toString()}`);
+    const response = await api.get<OrganizationListResponse>(`${API_BASE}/organizations?${searchParams.toString()}`);
     return response;
   },
 
   // Get organization by ID
-  getById: async (id: string): Promise<Organization> => {
-    const response = await api.get<Organization>(`${API_BASE}/organizations/${id}`);
+  getById: async (id: string): Promise<OrganizationResponse> => {
+    const response = await api.get<OrganizationResponse>(`${API_BASE}/organizations/${id}`);
     return response;
   },
 
   // Create new organization
-  create: async (data: CreateOrganizationDto): Promise<Organization> => {
-    const response = await api.post<Organization>(`${API_BASE}/organizations`, data);
+  create: async (data: CreateOrganizationDto): Promise<CreateOrganizationResponse> => {
+    // Filter out undefined values to avoid sending owner_id if not provided
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([, value]) => value !== undefined)
+    );
+    const response = await api.post<CreateOrganizationResponse>(`${API_BASE}/organizations`, filteredData);
     return response;
   },
 
   // Update organization
-  update: async (id: string, data: UpdateMyOrganizationDto): Promise<Organization> => {
-    const response = await api.patch<Organization>(`${API_BASE}/organizations/${id}`, data);
+  update: async (id: string, data: UpdateOrganizationDto): Promise<UpdateOrganizationResponse> => {
+    const response = await api.patch<UpdateOrganizationResponse>(`${API_BASE}/organizations/${id}`, data);
+    return response;
+  },
+
+  // Update my organization
+  updateMy: async (data: UpdateMyOrganizationDto): Promise<UpdateOrganizationResponse> => {
+    const response = await api.patch<UpdateOrganizationResponse>(`${API_BASE}/organizations/my`, data);
+    return response;
+  },
+
+  // Delete organization
+  delete: async (id: string): Promise<DeleteOrganizationResponse> => {
+    const response = await api.delete<DeleteOrganizationResponse>(`${API_BASE}/organizations/${id}`);
     return response;
   },
 };

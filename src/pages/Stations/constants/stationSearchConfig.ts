@@ -5,7 +5,7 @@ export const stationSearchFields: SearchFieldConfig[] = [
     key: 'searchKey',
     label: 'Tìm kiếm',
     type: 'text',
-    placeholder: 'Tìm kiếm theo tên, mã, địa chỉ...',
+    placeholder: 'Tìm kiếm theo tên, mã, địa chỉ, số điện thoại...',
   },
 ];
 
@@ -18,6 +18,7 @@ export const stationFilterFields: SearchFieldConfig[] = [
       { value: 'name', label: 'Tên trạm' },
       { value: 'code', label: 'Mã trạm' },
       { value: 'address', label: 'Địa chỉ' },
+      { value: 'phone_number', label: 'Số điện thoại' },
       { value: 'created_at', label: 'Ngày tạo' },
     ],
     fullWidth: false,

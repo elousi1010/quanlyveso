@@ -10,16 +10,13 @@ interface InventoryHeaderProps {
 export const InventoryHeader: React.FC<InventoryHeaderProps> = ({
   onCreate,
   onRefresh,
-  selectedCount,
-  onDeleteSelected,
 }) => {
   return (
     <CommonHeader
       title={INVENTORY_CONSTANTS.MODULE_TITLE}
+      subtitle={INVENTORY_CONSTANTS.MODULE_TITLE}
       onCreate={onCreate}
       onRefresh={onRefresh}
-      selectedCount={selectedCount}
-      onDeleteSelected={onDeleteSelected}
     />
   );
 };

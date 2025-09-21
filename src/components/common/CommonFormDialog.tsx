@@ -33,7 +33,7 @@ interface CommonFormDialogProps {
 const CommonFormDialog: React.FC<CommonFormDialogProps> = ({
   open,
   onClose,
-  onSubmit,
+  onSave,
   title,
   fields,
   initialData = {},
@@ -87,7 +87,7 @@ const CommonFormDialog: React.FC<CommonFormDialogProps> = ({
 
   const handleSubmit = () => {
     if (validateForm()) {
-      onSubmit(formData);
+      onSave(formData);
     }
   };
 

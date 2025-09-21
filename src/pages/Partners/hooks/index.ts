@@ -5,5 +5,6 @@ export {
   useCreatePartner, 
   useUpdatePartner, 
   useDeletePartner, 
-  useTogglePartnerStatus 
+  useTogglePartnerStatus,
+  usePartnerMutations
 } from './usePartnerMutations';

@@ -4,7 +4,7 @@ import { Snackbar, Alert } from '@mui/material';
 interface PartnerSnackbarProps {
   open: boolean;
   message: string;
-  severity: 'success' | 'error';
+  severity: 'success' | 'error' | 'warning' | 'info';
   onClose: () => void;
 }
 
@@ -30,4 +30,4 @@ const PartnerSnackbar: React.FC<PartnerSnackbarProps> = ({
   );
 };
 
-export default PartnerSnackbar;
+export { PartnerSnackbar };

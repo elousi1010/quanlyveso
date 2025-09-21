@@ -4,8 +4,8 @@ import { permissionSearchFields, permissionFilterFields } from '../constants';
 import type { PermissionSearchParams } from '../types';
 
 interface PermissionSearchAndFilterProps {
-  searchParams: Record<string, unknown>;
-  onSearchChange: (params: Record<string, unknown>) => void;
+  searchParams: PermissionSearchParams;
+  onSearchChange: (params: PermissionSearchParams) => void;
   onReset: () => void;
 }
 

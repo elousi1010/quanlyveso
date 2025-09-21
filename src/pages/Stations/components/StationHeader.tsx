@@ -10,15 +10,13 @@ interface StationHeaderProps {
 export const StationHeader: React.FC<StationHeaderProps> = ({
   onCreate,
   onRefresh,
-  selectedCount,
-  onDeleteSelected,
 }) => {
   return (
     <CommonHeader
       title={STATION_CONSTANTS.MODULE_TITLE}
+      subtitle="Quản lý các trạm xổ số"
       onCreate={onCreate}
       onRefresh={onRefresh}
-      onDeleteSelected={onDeleteSelected}
     />
   );
 };

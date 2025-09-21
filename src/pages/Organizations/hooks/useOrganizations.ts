@@ -11,7 +11,7 @@ export const useOrganizations = (params: OrganizationSearchParams = {}) => {
 
   return {
     ...query,
-    organizations: query.data?.data || [],
-    total: query.data?.total || 0,
+    organizations: query.data?.data.data || [],
+    total: query.data?.data.total || 0,
   };
 };

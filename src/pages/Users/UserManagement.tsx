@@ -196,7 +196,7 @@ const UserManagement: React.FC = () => {
 
       <Paper sx={{ p: 3 }}>
         <CommonDataTable
-          data={usersResponse?.data?.data}
+          data={usersResponse?.data?.data as unknown as Record<string, unknown>[]}
           columns={USER_TABLE_COLUMNS}
           actions={tableActions}
           isLoading={isLoading}
@@ -211,12 +211,12 @@ const UserManagement: React.FC = () => {
       <CommonFormDialog
         open={isCreateDialogOpen}
         onClose={closeAllDialogs}
-        onSubmit={handleCreateUserWithSnackbar}
+        onSave={handleCreateUserWithSnackbar}
         title="Thêm người dùng mới"
         fields={USER_FORM_FIELDS}
         initialData={createFormData as unknown as Record<string, unknown>}
-        isSubmitting={createUserMutation.isPending}
-        submitButtonText="Tạo người dùng"
+        loading={createUserMutation.isPending}
+        submitText="Tạo người dùng"
       />
 
       <CommonViewEditDialog
@@ -227,7 +227,7 @@ const UserManagement: React.FC = () => {
         item={(userDetail || selectedUser || {}) as unknown as Record<string, unknown>}
         formFields={USER_FORM_FIELDS.filter(field => field.key !== 'password')}
         detailFields={USER_DETAIL_FIELDS as unknown as import('../../components/common/types').DetailField[]}
-        isSubmitting={updateUserMutation.isPending}
+        loading={updateUserMutation.isPending}
         avatar={{
           text: selectedUser?.name?.charAt(0)?.toUpperCase() || 'U',
           color: 'primary.main',

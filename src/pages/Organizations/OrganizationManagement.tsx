@@ -21,7 +21,7 @@ import {
 import type { 
   Organization, 
   CreateOrganizationDto, 
-  UpdateMyOrganizationDto, 
+  UpdateOrganizationDto, 
   OrganizationSearchParams 
 } from './types';
 
@@ -31,7 +31,6 @@ export const OrganizationManagement: React.FC = () => {
     page: 1,
     limit: 10,
   });
-  const [selectedRows, setSelectedRows] = useState<Organization[]>([]);
   const [dialogState, setDialogState] = useState({
     create: false,
     edit: false,
@@ -54,8 +53,12 @@ export const OrganizationManagement: React.FC = () => {
     setSearchParams(prev => ({ ...prev, ...params, page: 1 }));
   }, []);
 
-  const handleReset = useCallback(() => {
-    setSearchParams({ page: 1, limit: 10 });
+  const handleSort = useCallback((sortBy: string) => {
+    setSearchParams(prev => ({ ...prev, sortBy, page: 1 }));
+  }, []);
+
+  const handleFilter = useCallback((filters: Record<string, string>) => {
+    setSearchParams(prev => ({ ...prev, filters, page: 1 }));
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -77,18 +80,6 @@ export const OrganizationManagement: React.FC = () => {
     setSelectedOrganization(organization);
     setDialogState(prev => ({ ...prev, delete: true }));
   }, []);
-
-  const handleDeleteSelected = useCallback(() => {
-    if (selectedRows.length > 0) {
-      // Implement bulk delete logic here
-      setSnackbar({
-        open: true,
-        message: `Đã xóa ${selectedRows.length} tổ chức`,
-        severity: 'success',
-      });
-      setSelectedRows([]);
-    }
-  }, [selectedRows]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -117,7 +108,7 @@ export const OrganizationManagement: React.FC = () => {
     }
   }, [createMutation, handleCloseDialog]);
 
-  const handleUpdateSubmit = useCallback(async (data: UpdateMyOrganizationDto) => {
+  const handleUpdateSubmit = useCallback(async (data: UpdateOrganizationDto) => {
     if (!selectedOrganization) return;
     
     try {
@@ -167,32 +158,33 @@ export const OrganizationManagement: React.FC = () => {
       <OrganizationHeader
         onCreate={handleCreate}
         onRefresh={handleRefresh}
-        selectedCount={selectedRows.length}
-        onDeleteSelected={handleDeleteSelected}
       />
 
       <Box sx={{ mt: 2 }}>
         <OrganizationSearchAndFilter
           searchParams={searchParams}
-          onSearchChange={handleSearchChange}
-          onReset={handleReset}
+          onSearch={handleSearchChange as (query: string) => void}
+          onSort={handleSort}
+          onFilter={handleFilter}
+          onRefresh={handleRefresh}
+          loading={isLoading}
         />
       </Box>
 
       <Box sx={{ mt: 2 }}>
         <OrganizationDataGrid
-          data={organizations}
+          data={organizations as Organization[]}
           loading={isLoading}
           error={error}
           onRefresh={refetch}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onView={handleView}
-          page={searchParams.page || 0}
+          page={(searchParams.page || 1) - 1}
           rowsPerPage={searchParams.limit || 10}
           total={total}
-          onPageChange={(page) => setSearchParams(prev => ({ ...prev, page }))}
-          onRowsPerPageChange={(limit) => setSearchParams(prev => ({ ...prev, limit, page: 0 }))}
+          onPageChange={(page) => setSearchParams(prev => ({ ...prev, page: page + 1 }))}
+          onRowsPerPageChange={(limit) => setSearchParams(prev => ({ ...prev, limit, page: 1 }))}
         />
       </Box>
 
@@ -200,23 +192,23 @@ export const OrganizationManagement: React.FC = () => {
       <CommonFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
-        onSubmit={(data: Record<string, unknown>) => handleCreateSubmit(data as unknown as CreateOrganizationDto)}
+        onSave={(data: Record<string, unknown>) => handleCreateSubmit(data as unknown as CreateOrganizationDto)}
         title="Tạo Tổ chức Mới"
         fields={organizationCreateFields}
-        submitButtonText="Tạo"
-        isSubmitting={createMutation.isPending}
+        submitText="Tạo"
+        loading={createMutation.isPending}
       />
 
       {/* Edit Dialog */}
       <CommonViewEditDialog
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
-        onSave={(data: Record<string, unknown>) => handleUpdateSubmit(data as unknown as UpdateMyOrganizationDto)}
+        onSave={(data: Record<string, unknown>) => handleUpdateSubmit(data as unknown as UpdateOrganizationDto)}
         title="Chỉnh sửa Tổ chức"
         item={selectedOrganization as unknown as Record<string, unknown>}
         formFields={organizationUpdateFields}
         detailFields={organizationDetailFields}
-        isSubmitting={updateMutation.isPending}
+        loading={updateMutation.isPending}
       />
 
       {/* View Dialog */}

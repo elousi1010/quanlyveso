@@ -7,5 +7,11 @@ export const useStations = (params: StationSearchParams = {}) => {
     queryKey: ['stations', params],
     queryFn: () => stationApi.getAll(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    select: (data) => ({
+      stations: data.data.data,
+      total: data.data.total,
+      isLoading: false,
+      error: null,
+    }),
   });
 };

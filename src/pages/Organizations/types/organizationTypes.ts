@@ -1,16 +1,21 @@
+import { type ApiListResponse, type ApiItemResponse, type ApiDeleteResponse } from '@/types';
+
 export interface Organization {
   id: string;
   name: string;
-  address: string;
+  address: string | null;
   owner_id: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export interface CreateOrganizationDto {
   name: string;
-  address: string;
-  owner_id: string;
+  address?: string;
+  owner_id?: string;
+}
+
+export interface UpdateOrganizationDto {
+  name: string;
+  address?: string;
 }
 
 export interface UpdateMyOrganizationDto {
@@ -18,12 +23,11 @@ export interface UpdateMyOrganizationDto {
   address?: string;
 }
 
-export interface OrganizationResponse {
-  data: Organization[];
-  total: number;
-  page: number;
-  limit: number;
-}
+export type OrganizationListResponse = ApiListResponse<Organization>;
+export type OrganizationResponse = ApiItemResponse<Organization>;
+export type CreateOrganizationResponse = ApiItemResponse<Organization>;
+export type UpdateOrganizationResponse = ApiItemResponse<Organization>;
+export type DeleteOrganizationResponse = ApiDeleteResponse;
 
 export interface OrganizationSearchParams {
   searchKey?: string;

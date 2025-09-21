@@ -20,7 +20,7 @@ interface PartnerDeleteDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   partner: Partner | null;
-  isDeleting: boolean;
+  loading?: boolean;
 }
 
 const PartnerDeleteDialog: React.FC<PartnerDeleteDialogProps> = ({
@@ -28,7 +28,7 @@ const PartnerDeleteDialog: React.FC<PartnerDeleteDialogProps> = ({
   onClose,
   onConfirm,
   partner,
-  isDeleting,
+  loading = false,
 }) => {
   return (
     <Dialog 
@@ -110,13 +110,13 @@ const PartnerDeleteDialog: React.FC<PartnerDeleteDialogProps> = ({
           onClick={onConfirm}
           color="error"
           variant="contained"
-          disabled={isDeleting}
+          disabled={loading}
         >
-          {isDeleting ? 'Đang xóa...' : 'Xóa'}
+          {loading ? 'Đang xóa...' : 'Xóa'}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default PartnerDeleteDialog;
+export { PartnerDeleteDialog };

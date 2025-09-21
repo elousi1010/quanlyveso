@@ -68,3 +68,18 @@ export const useTogglePartnerStatus = () => {
     },
   });
 };
+
+// Combined mutations hook
+export const usePartnerMutations = () => {
+  const createMutation = useCreatePartner();
+  const updateMutation = useUpdatePartner();
+  const deleteMutation = useDeletePartner();
+  const toggleStatusMutation = useTogglePartnerStatus();
+
+  return {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    toggleStatusMutation,
+  };
+};

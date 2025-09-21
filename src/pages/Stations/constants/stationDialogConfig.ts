@@ -13,21 +13,21 @@ export const stationCreateFields: DialogFieldConfig<CreateStationDto>[] = [
     key: 'code',
     label: 'Mã trạm',
     type: 'text',
-    required: false,
+    required: true,
     placeholder: 'Nhập mã trạm',
   },
   {
     key: 'address',
     label: 'Địa chỉ',
     type: 'text',
-    required: false,
+    required: true,
     placeholder: 'Nhập địa chỉ',
   },
   {
     key: 'phone_number',
     label: 'Số điện thoại',
     type: 'text',
-    required: false,
+    required: true,
     placeholder: 'Nhập số điện thoại',
   },
   {
@@ -51,28 +51,28 @@ export const stationUpdateFields: DialogFieldConfig<UpdateStationDto>[] = [
     key: 'name',
     label: 'Tên trạm',
     type: 'text',
-    required: false,
+    required: true,
     placeholder: 'Nhập tên trạm',
   },
   {
     key: 'code',
     label: 'Mã trạm',
     type: 'text',
-    required: false,
+    required: true,
     placeholder: 'Nhập mã trạm',
   },
   {
     key: 'address',
     label: 'Địa chỉ',
     type: 'text',
-    required: false,
+    required: true,
     placeholder: 'Nhập địa chỉ',
   },
   {
     key: 'phone_number',
     label: 'Số điện thoại',
     type: 'text',
-    required: false,
+    required: true,
     placeholder: 'Nhập số điện thoại',
   },
   {
@@ -92,12 +92,6 @@ export const stationUpdateFields: DialogFieldConfig<UpdateStationDto>[] = [
 ];
 
 export const stationDetailFields: DialogFieldConfig[] = [
-  {
-    key: 'id',
-    label: 'ID',
-    type: 'text',
-    readonly: true,
-  },
   {
     key: 'name',
     label: 'Tên trạm',
@@ -131,6 +125,12 @@ export const stationDetailFields: DialogFieldConfig[] = [
   {
     key: 'website',
     label: 'Website',
+    type: 'text',
+    readonly: true,
+  },
+  {
+    key: 'is_active',
+    label: 'Trạng thái',
     type: 'text',
     readonly: true,
   },

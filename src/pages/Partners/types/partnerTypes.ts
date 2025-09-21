@@ -67,3 +67,13 @@ export interface CreatePartnerResponse {
   statusCode: number;
   data: Partner;
 }
+
+export interface PartnerSearchParams {
+  page: number;
+  limit: number;
+  search?: string;
+  type?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}

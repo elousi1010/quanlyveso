@@ -1,28 +1,9 @@
 import type { TableColumn } from '@/components/common/CommonDataTable';
-import type { Organization } from '../types';
 
 export const organizationTableColumns: TableColumn[] = [
   {
-    key: 'id',
-    label: 'ID',
-    minWidth: 200,
-    align: 'left',
-  },
-  {
     key: 'name',
     label: 'Tên tổ chức',
-    minWidth: 200,
-    align: 'left',
-  },
-  {
-    key: 'address',
-    label: 'Địa chỉ',
-    minWidth: 250,
-    align: 'left',
-  },
-  {
-    key: 'owner_id',
-    label: 'ID Chủ sở hữu',
     minWidth: 200,
     align: 'left',
   },
@@ -33,7 +14,7 @@ export const organizationTableColumns: TableColumn[] = [
     align: 'left',
     render: (value) => {
       if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
+      return new Date(value as string).toLocaleDateString('vi-VN');
     },
   },
   {
@@ -43,7 +24,7 @@ export const organizationTableColumns: TableColumn[] = [
     align: 'left',
     render: (value) => {
       if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
+      return new Date(value as string).toLocaleDateString('vi-VN');
     },
   },
 ];

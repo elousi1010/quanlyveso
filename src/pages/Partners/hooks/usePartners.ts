@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { partnerApi } from '../api';
+import type { PartnerSearchParams } from '../types';
 
 // Query keys for Partners
 export const partnerKeys = {
@@ -11,17 +12,11 @@ export const partnerKeys = {
 };
 
 // Page-specific hook for Partners list
-export const usePartners = (params?: {
-  searchKey?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}) => {
+export const usePartners = (searchParams?: PartnerSearchParams) => {
   return useQuery({
-    queryKey: partnerKeys.list(params || {}),
+    queryKey: partnerKeys.list((searchParams || {}) as Record<string, unknown>),
     queryFn: async () => {
-      const response = await partnerApi.getPartners(params);
+      const response = await partnerApi.getPartners(searchParams);
       console.log('Partners API Response:', response);
       return response;
     },

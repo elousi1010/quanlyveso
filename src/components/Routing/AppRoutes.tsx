@@ -5,8 +5,8 @@ import Unauthorized from '../../pages/Unauthorized';
 import DashboardLayout from '../Layout/DashboardLayout';
 
 // Import pages with real APIs
-import PartnerManagement from '../../pages/PartnerManagement';
-import UserManagement from '../../pages/UserManagement';
+import PartnerManagement from '../../pages/Partners/PartnerManagement';
+import UserManagement from '../../pages/Users/UserManagement';
 import { OrganizationManagement } from '../../pages/Organizations';
 import { PermissionManagement } from '../../pages/Permissions';
 import { StationManagement } from '../../pages/Stations';

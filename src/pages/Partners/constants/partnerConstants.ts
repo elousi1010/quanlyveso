@@ -1,4 +1,8 @@
 // Partners page-specific constants
+export const PARTNER_CONSTANTS = {
+  MODULE_TITLE: 'Quản lý đối tác',
+} as const;
+
 export const PARTNER_TYPES = {
   agent: 'Đại lý',
   seller: 'Người bán',

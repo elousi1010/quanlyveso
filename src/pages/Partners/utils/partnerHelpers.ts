@@ -1,33 +1,40 @@
-import { PARTNER_TYPES } from '../constants';
+import type { Partner, CreatePartnerRequest, UpdatePartnerRequest } from '../types';
 
-// Helper functions for Partners page
-export const getPartnerTypeLabel = (type: keyof typeof PARTNER_TYPES): string => {
-  return PARTNER_TYPES[type] || type;
+export const formDataToUpdateDto = (data: Record<string, unknown>): UpdatePartnerRequest => {
+  return {
+    name: data.name as string,
+    address: data.address as string,
+    phone_number: data.phone_number as string,
+    type: data.type as 'agent' | 'seller' | 'customer' | 'supplier' | 'other',
+    level: data.level as number,
+  };
 };
 
-export const getPartnerTypeColor = (type: string): 'primary' | 'secondary' | 'success' | 'warning' | 'default' => {
-  switch (type) {
-    case 'agent':
-      return 'primary';
-    case 'seller':
-      return 'secondary';
-    case 'customer':
-      return 'success';
-    case 'supplier':
-      return 'warning';
-    default:
-      return 'default';
-  }
+export const partnerToFormData = (partner: Partner | null): Record<string, unknown> => {
+  if (!partner) return {};
+  
+  return {
+    name: partner.name,
+    address: partner.address,
+    phone_number: partner.phone_number,
+    type: partner.type,
+    level: partner.level,
+  };
 };
 
-export const formatPartnerDebt = (debt: number): string => {
-  return debt.toLocaleString('vi-VN') + ' VNĐ';
-};
-
-export const getPartnerStatusColor = (isActive: boolean): 'success' | 'error' => {
-  return isActive ? 'success' : 'error';
-};
-
-export const getPartnerStatusLabel = (isActive: boolean): string => {
-  return isActive ? 'Hoạt động' : 'Không hoạt động';
+export const partnerToDisplayData = (partner: Partner | null): Record<string, unknown> => {
+  if (!partner) return {};
+  
+  return {
+    name: partner.name,
+    address: partner.address,
+    phone_number: partner.phone_number,
+    type: partner.type,
+    level: partner.level,
+    debt: partner.debt,
+    organization: partner.organization?.name || 'N/A',
+    created_at: partner.created_at,
+    updated_at: partner.updated_at,
+    is_active: partner.is_active,
+  };
 };

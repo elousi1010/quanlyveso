@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog, 
   CommonViewEditDialog, 
   CommonDetailDialog 
 } from '@/components/common';
@@ -11,17 +10,21 @@ import {
   PermissionSearchAndFilter,
   PermissionDeleteDialog,
   PermissionSnackbar,
+  PermissionFormDialog,
 } from './components';
 import { usePermissions, usePermissionMutations } from './hooks';
 import { 
-  permissionCreateFields, 
   permissionUpdateFields, 
   permissionDetailFields 
 } from './constants';
+import { 
+  formDataToUpdateDto, 
+  permissionToFormData, 
+  permissionToDisplayData 
+} from './utils/permissionHelpers';
 import type { 
   Permission, 
   CreatePermissionDto, 
-  UpdatePermissionDto, 
   PermissionSearchParams 
 } from './types';
 
@@ -108,7 +111,7 @@ export const PermissionManagement: React.FC = () => {
         severity: 'success',
       });
       handleCloseDialog('create');
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Có lỗi xảy ra khi tạo quyền hạn',
@@ -117,18 +120,50 @@ export const PermissionManagement: React.FC = () => {
     }
   }, [createMutation, handleCloseDialog]);
 
-  const handleUpdateSubmit = useCallback(async (data: UpdatePermissionDto) => {
+  // Function to create the specific permission with provided data
+  const handleCreateSpecificPermission = useCallback(async () => {
+    const permissionData: CreatePermissionDto = {
+      name: "Permission 1",
+      code: "permission_1",
+      actions: {
+        user: [
+          "read",
+          "create",
+          "update",
+          "delete"
+        ]
+      }
+    };
+
+    try {
+      await createMutation.mutateAsync(permissionData);
+      setSnackbar({
+        open: true,
+        message: 'Tạo quyền hạn "Permission 1" thành công',
+        severity: 'success',
+      });
+    } catch {
+      setSnackbar({
+        open: true,
+        message: 'Có lỗi xảy ra khi tạo quyền hạn "Permission 1"',
+        severity: 'error',
+      });
+    }
+  }, [createMutation]);
+
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>) => {
     if (!selectedPermission) return;
     
     try {
-      await updateMutation.mutateAsync({ id: selectedPermission.id, data });
+      const updateData = formDataToUpdateDto(data);
+      await updateMutation.mutateAsync({ id: selectedPermission.id, data: updateData });
       setSnackbar({
         open: true,
         message: 'Cập nhật quyền hạn thành công',
         severity: 'success',
       });
       handleCloseDialog('edit');
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Có lỗi xảy ra khi cập nhật quyền hạn',
@@ -148,7 +183,7 @@ export const PermissionManagement: React.FC = () => {
         severity: 'success',
       });
       handleCloseDialog('delete');
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Có lỗi xảy ra khi xóa quyền hạn',
@@ -170,11 +205,12 @@ export const PermissionManagement: React.FC = () => {
         onRefresh={handleRefresh}
         selectedCount={selectedRows.length}
         onDeleteSelected={handleDeleteSelected}
+        onCreateSpecific={handleCreateSpecificPermission}
       />
 
       <Box sx={{ mt: 2 }}>
         <PermissionSearchAndFilter
-          searchParams={searchParams}
+          searchParams={searchParams} 
           onSearchChange={handleSearchChange}
           onReset={handleReset}
         />
@@ -193,13 +229,11 @@ export const PermissionManagement: React.FC = () => {
       </Box>
 
       {/* Create Dialog */}
-      <CommonFormDialog
+      <PermissionFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
-        onSubmit={handleCreateSubmit}
+        onSave={handleCreateSubmit}
         title="Tạo Quyền hạn Mới"
-        fields={permissionCreateFields}
-        submitText="Tạo"
         loading={createMutation.isPending}
       />
 
@@ -207,15 +241,11 @@ export const PermissionManagement: React.FC = () => {
       <CommonViewEditDialog
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
-        onSubmit={handleUpdateSubmit}
-        onView={() => {
-          handleCloseDialog('edit');
-          setDialogState(prev => ({ ...prev, view: true }));
-        }}
+        onSave={handleUpdateSubmit}
         title="Chỉnh sửa Quyền hạn"
-        fields={permissionUpdateFields}
-        data={selectedPermission}
-        submitText="Cập nhật"
+        formFields={permissionUpdateFields}
+        detailFields={permissionDetailFields}
+        item={permissionToFormData(selectedPermission)}
         loading={updateMutation.isPending}
       />
 
@@ -229,7 +259,7 @@ export const PermissionManagement: React.FC = () => {
         }}
         title="Chi tiết Quyền hạn"
         fields={permissionDetailFields}
-        data={selectedPermission}
+        item={permissionToDisplayData(selectedPermission)}
       />
 
       {/* Delete Dialog */}

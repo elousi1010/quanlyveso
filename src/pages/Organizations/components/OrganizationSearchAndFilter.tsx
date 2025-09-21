@@ -1,26 +1,32 @@
 import React from 'react';
-import { CommonSearchAndFilter } from '@/components/common';
-import { organizationSearchFields, organizationFilterFields } from '../constants';
+import { CommonSearchAndFilter, type SearchAndFilterConfig } from '@/components/common';
+import { organizationSearchFields } from '../constants';
 import type { OrganizationSearchParams } from '../types';
 
 interface OrganizationSearchAndFilterProps {
-  searchParams: Record<string, unknown>;
-  onSearchChange: (params: Record<string, unknown>) => void;
-  onReset: () => void;
+  searchParams: OrganizationSearchParams;
+  onSearch: (query: string) => void;
+  onSort: (sortBy: string) => void;
+  onFilter: (filters: Record<string, string>) => void;
+  onRefresh: () => void;
+  loading: boolean;
 }
 
 export const OrganizationSearchAndFilter: React.FC<OrganizationSearchAndFilterProps> = ({
-  searchParams,
-  onSearchChange,
-  onReset,
+  onSearch,
+  onSort,
+  onFilter,
+  onRefresh,
+  loading,
 }) => {
   return (
     <CommonSearchAndFilter
-      searchFields={organizationSearchFields}
-      filterFields={organizationFilterFields}
-      searchParams={searchParams}
-      onSearchChange={onSearchChange}
-      onReset={onReset}
+      config={organizationSearchFields as SearchAndFilterConfig}
+      onSearch={onSearch}
+      onSort={onSort}
+      onFilter={onFilter}
+      onRefresh={onRefresh}
+      loading={loading}
     />
   );
 };

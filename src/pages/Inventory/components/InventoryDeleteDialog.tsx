@@ -23,8 +23,8 @@ export const InventoryDeleteDialog: React.FC<InventoryDeleteDialogProps> = ({
       onClose={onClose}
       onConfirm={onConfirm}
       title="Xóa Kho"
-      content={`Bạn có chắc chắn muốn xóa kho "${inventory?.id}"?`}
-      loading={loading}
+      itemName={`Bạn có chắc chắn muốn xóa kho "${inventory?.id}"?`}
+      isDeleting={loading}
     />
   );
 };

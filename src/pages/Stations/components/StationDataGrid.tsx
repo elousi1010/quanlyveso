@@ -6,8 +6,14 @@ import type { Station } from '../types';
 interface StationDataGridProps {
   data: Station[];
   loading: boolean;
-  selectedRows: Station[];
-  onSelectionChange: (stations: Station[]) => void;
+  onEdit: (station: Station) => void;
+  onDelete: (station: Station) => void;
+  onView: (station: Station) => void;
+  page: number;
+  rowsPerPage: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onRowsPerPageChange: (rowsPerPage: number) => void;
 }
 
 export const StationDataGrid: React.FC<StationDataGridProps> = ({
@@ -16,13 +22,12 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
-  selectedRows,
-  onSelectionChange,
+  page,
+  rowsPerPage,
+  total,
+  onPageChange,
+  onRowsPerPageChange,
 }) => {
-  const handleRowClick = (station: Station) => {
-    onView(station);
-  };
-
   const handleEdit = (station: Station) => {
     onEdit(station);
   };
@@ -33,15 +38,19 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
 
   return (
     <CommonDataTable
-      data={data}
-      isLoading={loading}
+      data={data as unknown as Record<string, unknown>[]}
       columns={stationTableConfig.columns}
-      onRowClick={handleRowClick}
+      isLoading={loading}
+      error={undefined}
+      onRefresh={() => {}}
       onEdit={handleEdit}
       onDelete={handleDelete}
-      selectedRows={selectedRows}
-      onSelectionChange={onSelectionChange}
-      config={stationTableConfig}
+      onRowClick={onView}
+      page={page}
+      rowsPerPage={rowsPerPage}
+      total={total}
+      onPageChange={onPageChange}
+      onRowsPerPageChange={onRowsPerPageChange}
     />
   );
 };

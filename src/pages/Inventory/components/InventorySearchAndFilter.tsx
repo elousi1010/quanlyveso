@@ -1,26 +1,30 @@
 import React from 'react';
-import { CommonSearchAndFilter } from '@/components/common';
-import { inventorySearchFields, inventoryFilterFields } from '../constants';
-import type { InventorySearchParams } from '../types';
+import { CommonSearchAndFilter, type SearchAndFilterConfig } from '@/components/common';
+import { inventorySearchFields } from '../constants';
 
 interface InventorySearchAndFilterProps {
-  searchParams: Record<string, unknown>;
-  onSearchChange: (params: Record<string, unknown>) => void;
-  onReset: () => void;
+  onSearch: (query: string) => void;
+  onSort: (sortBy: string) => void;
+  onFilter: (filters: Record<string, string>) => void;
+  onRefresh: () => void;
+  loading: boolean;
 }
 
 export const InventorySearchAndFilter: React.FC<InventorySearchAndFilterProps> = ({
-  searchParams,
-  onSearchChange,
-  onReset,
+  onSearch,
+  onSort,
+  onFilter,
+  onRefresh,
+  loading = false,
 }) => {
   return (
     <CommonSearchAndFilter
-      searchFields={inventorySearchFields}
-      filterFields={inventoryFilterFields}
-      searchParams={searchParams}
-      onSearchChange={onSearchChange}
-      onReset={onReset}
+      config={inventorySearchFields as SearchAndFilterConfig}
+      onSearch={onSearch as (query: string) => void}
+      onSort={onSort as (sortBy: string) => void}
+      onFilter={onFilter as (filters: Record<string, string>) => void}
+      onRefresh={onRefresh as () => void}
+      loading={loading}
     />
   );
 };

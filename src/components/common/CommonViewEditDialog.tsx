@@ -30,7 +30,7 @@ const CommonViewEditDialog = <T = Record<string, unknown>>({
   item,
   formFields,
   detailFields,
-  isSubmitting = false,
+  loading = false,
   maxWidth = 'sm',
   fullWidth = true,
   avatar,
@@ -42,7 +42,7 @@ const CommonViewEditDialog = <T = Record<string, unknown>>({
   item: T | null;
   formFields: FormField[];
   detailFields: DetailField[];
-  isSubmitting?: boolean;
+  loading?: boolean;
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   fullWidth?: boolean;
   avatar?: {
@@ -98,7 +98,14 @@ const CommonViewEditDialog = <T = Record<string, unknown>>({
 
   const handleSave = () => {
     if (validateForm() && onSave) {
-      onSave(formData);
+      // Only send the form fields, not the entire item data
+      const formFieldsData: Record<string, unknown> = {};
+      formFields.forEach(field => {
+        if (formData[field.key] !== undefined) {
+          formFieldsData[field.key] = formData[field.key];
+        }
+      });
+      onSave(formFieldsData);
     }
   };
 
@@ -121,7 +128,7 @@ const CommonViewEditDialog = <T = Record<string, unknown>>({
 
   const renderField = (field: FormField) => {
     const fieldValue = formData[field.key] || '';
-    const isDisabled = !isEditMode || field.disabled || isSubmitting;
+    const isDisabled = !isEditMode || field.disabled || loading;
     
     const commonProps = {
       fullWidth: true,
@@ -288,7 +295,7 @@ const CommonViewEditDialog = <T = Record<string, unknown>>({
           <>
             <Button
               onClick={handleCancel}
-              disabled={isSubmitting}
+              disabled={loading}
               sx={{ textTransform: 'none' }}
               startIcon={<Cancel />}
             >
@@ -296,7 +303,7 @@ const CommonViewEditDialog = <T = Record<string, unknown>>({
             </Button>
             <LoadingButton
               onClick={handleSave}
-              loading={isSubmitting}
+              loading={loading}
               variant="contained"
               sx={{ textTransform: 'none' }}
               startIcon={<Save />}

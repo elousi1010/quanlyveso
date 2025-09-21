@@ -54,8 +54,12 @@ export const InventoryManagement: React.FC = () => {
     setSearchParams(prev => ({ ...prev, ...params, page: 1 }));
   }, []);
 
-  const handleReset = useCallback(() => {
-    setSearchParams({ page: 1, limit: 10 });
+  const handleSort = useCallback((sortBy: string) => {
+    setSearchParams(prev => ({ ...prev, sortBy, page: 1 }));
+  }, []);
+
+  const handleFilter = useCallback((filters: Record<string, string>) => {
+    setSearchParams(prev => ({ ...prev, filters, page: 1 }));
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -77,18 +81,6 @@ export const InventoryManagement: React.FC = () => {
     setSelectedInventory(inventory);
     setDialogState(prev => ({ ...prev, delete: true }));
   }, []);
-
-  const handleDeleteSelected = useCallback(() => {
-    if (selectedRows.length > 0) {
-      // Implement bulk delete logic here
-      setSnackbar({
-        open: true,
-        message: `Đã xóa ${selectedRows.length} kho`,
-        severity: 'success',
-      });
-      setSelectedRows([]);
-    }
-  }, [selectedRows]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -168,15 +160,15 @@ export const InventoryManagement: React.FC = () => {
       <InventoryHeader
         onCreate={handleCreate}
         onRefresh={handleRefresh}
-        selectedCount={selectedRows.length}
-        onDeleteSelected={handleDeleteSelected}
       />
 
       <Box sx={{ mt: 2 }}>
         <InventorySearchAndFilter
-          searchParams={searchParams}
-          onSearchChange={handleSearchChange}
-          onReset={handleReset}
+          onSearch={handleSearchChange as (query: string) => void}
+          onSort={handleSort as (sortBy: string) => void}
+          onFilter={handleFilter as (filters: Record<string, string>) => void}
+          onRefresh={handleRefresh}
+          loading={isLoading}
         />
       </Box>
 
@@ -196,11 +188,11 @@ export const InventoryManagement: React.FC = () => {
       <CommonFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
-        onSubmit={handleCreateSubmit}
+        onSave={handleCreateSubmit}
         title="Tạo Kho Mới"
         fields={inventoryCreateFields}
-        submitButtonText="Tạo"
-        isSubmitting={createMutation.isPending}
+        submitText="Tạo"
+        loading={createMutation.isPending}
       />
 
       {/* Edit Dialog */}
@@ -209,10 +201,10 @@ export const InventoryManagement: React.FC = () => {
         onClose={() => handleCloseDialog('edit')}
         onSave={handleUpdateSubmit}
         title="Chỉnh sửa Kho"
-        item={selectedInventory}
+        item={selectedInventory as unknown as Record<string, unknown>}
         formFields={inventoryUpdateFields}
         detailFields={inventoryDetailFields}
-        isSubmitting={updateMutation.isPending}
+        loading={updateMutation.isPending}
       />
 
       {/* View Dialog */}
@@ -225,7 +217,7 @@ export const InventoryManagement: React.FC = () => {
         }}
         title="Chi tiết Kho"
         fields={inventoryDetailFields}
-        item={selectedInventory}
+        item={selectedInventory as unknown as Record<string, unknown>}
       />
 
       {/* Delete Dialog */}

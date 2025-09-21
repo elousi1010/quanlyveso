@@ -31,7 +31,6 @@ export const StationManagement: React.FC = () => {
     page: 1,
     limit: 10,
   });
-  const [selectedRows, setSelectedRows] = useState<Station[]>([]);
   const [dialogState, setDialogState] = useState({
     create: false,
     edit: false,
@@ -48,15 +47,16 @@ export const StationManagement: React.FC = () => {
   // API hooks
   const { data: stationsData, isLoading, refetch } = useStations(searchParams);
   const { createMutation, updateMutation, deleteMutation } = useStationMutations();
+  
+  // Extract data from response
+  const stations = stationsData?.stations || [];
+  const total = stationsData?.total || 0;
 
   // Event handlers
   const handleSearchChange = useCallback((params: StationSearchParams) => {
     setSearchParams(prev => ({ ...prev, ...params, page: 1 }));
   }, []);
 
-  const handleReset = useCallback(() => {
-    setSearchParams({ page: 1, limit: 10 });
-  }, []);
 
   const handleCreate = useCallback(() => {
     setSelectedStation(null);
@@ -78,17 +78,6 @@ export const StationManagement: React.FC = () => {
     setDialogState(prev => ({ ...prev, delete: true }));
   }, []);
 
-  const handleDeleteSelected = useCallback(() => {
-    if (selectedRows.length > 0) {
-      // Implement bulk delete logic here
-      setSnackbar({
-        open: true,
-        message: `Đã xóa ${selectedRows.length} trạm`,
-        severity: 'success',
-      });
-      setSelectedRows([]);
-    }
-  }, [selectedRows]);
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -108,7 +97,7 @@ export const StationManagement: React.FC = () => {
         severity: 'success',
       });
       handleCloseDialog('create');
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Có lỗi xảy ra khi tạo trạm',
@@ -128,7 +117,7 @@ export const StationManagement: React.FC = () => {
         severity: 'success',
       });
       handleCloseDialog('edit');
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Có lỗi xảy ra khi cập nhật trạm',
@@ -148,7 +137,7 @@ export const StationManagement: React.FC = () => {
         severity: 'success',
       });
       handleCloseDialog('delete');
-    } catch (error) {
+    } catch {
       setSnackbar({
         open: true,
         message: 'Có lỗi xảy ra khi xóa trạm',
@@ -161,22 +150,19 @@ export const StationManagement: React.FC = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-  const stations = stationsData?.data || [];
-
   return (
     <Box sx={{ p: 2 }}>
       <StationHeader
         onCreate={handleCreate}
         onRefresh={handleRefresh}
-        selectedCount={selectedRows.length}
-        onDeleteSelected={handleDeleteSelected}
       />
 
       <Box sx={{ mt: 2 }}>
         <StationSearchAndFilter
           searchParams={searchParams}
           onSearchChange={handleSearchChange}
-          onReset={handleReset}
+          onRefresh={handleRefresh}
+          loading={isLoading}
         />
       </Box>
 
@@ -184,11 +170,14 @@ export const StationManagement: React.FC = () => {
         <StationDataGrid
           data={stations}
           loading={isLoading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={handleEdit as (station: Station) => void}
+          onDelete={handleDelete as (station: Station) => void}
           onView={handleView}
-          selectedRows={selectedRows}
-          onSelectionChange={setSelectedRows}
+          page={(searchParams.page || 1) - 1}
+          rowsPerPage={searchParams.limit || 10}
+          total={total}
+          onPageChange={(page) => setSearchParams(prev => ({ ...prev, page: page + 1 }))}
+          onRowsPerPageChange={(limit) => setSearchParams(prev => ({ ...prev, limit, page: 1 }))}
         />
       </Box>
 
@@ -196,7 +185,7 @@ export const StationManagement: React.FC = () => {
       <CommonFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
-        onSubmit={handleCreateSubmit}
+        onSave={handleCreateSubmit}
         title="Tạo Trạm Mới"
         fields={stationCreateFields}
         submitText="Tạo"
@@ -207,15 +196,11 @@ export const StationManagement: React.FC = () => {
       <CommonViewEditDialog
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
-        onSave={handleUpdateSubmit}
-        onView={() => {
-          handleCloseDialog('edit');
-          setDialogState(prev => ({ ...prev, view: true }));
-        }}
+        onSave={(data: Record<string, unknown>) => handleUpdateSubmit(data as unknown as UpdateStationDto)}
         title="Chỉnh sửa Trạm"
         formFields={stationUpdateFields}
-        item={(selectedStation || {}) as Record<string, unknown>}
-        submitText="Cập nhật"
+        item={(selectedStation || {}) as unknown as Record<string, unknown>}
+        detailFields={stationDetailFields}
         loading={updateMutation.isPending}
       />
 
@@ -223,13 +208,10 @@ export const StationManagement: React.FC = () => {
       <CommonDetailDialog
         open={dialogState.view}
         onClose={() => handleCloseDialog('view')}
-        onEdit={() => {
-          handleCloseDialog('view');
-          setDialogState(prev => ({ ...prev, edit: true }));
-        }}
+        onEdit={() => handleCloseDialog('view')}
         title="Chi tiết Trạm"
         fields={stationDetailFields}
-        item={(selectedStation || {}) as Record<string, unknown>}
+        item={(selectedStation || {}) as unknown as Record<string, unknown>}
       />
 
       {/* Delete Dialog */}
@@ -237,7 +219,7 @@ export const StationManagement: React.FC = () => {
         open={dialogState.delete}
         onClose={() => handleCloseDialog('delete')}
         onConfirm={handleDeleteConfirm}
-        station={selectedStation}
+        station={selectedStation as unknown as Station}
         loading={deleteMutation.isPending}
       />
 

@@ -36,4 +36,5 @@ export interface PermissionSearchParams {
   limit?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  [key: string]: unknown;
 }

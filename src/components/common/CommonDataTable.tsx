@@ -4,7 +4,6 @@ import {
   Alert, 
   Button, 
   Typography, 
-  Chip, 
   Paper, 
   Table,
   TableBody,
@@ -16,18 +15,14 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material';
-import { 
-  Edit as EditIcon, 
-  Delete as DeleteIcon, 
-  Visibility as ViewIcon
-} from '@mui/icons-material';
 
 export interface TableColumn {
   key: string;
   label: string;
   minWidth?: number;
+  maxWidth?: number;
   align?: 'left' | 'center' | 'right';
-  render?: (value: any, row: any) => React.ReactNode;
+  render?: (value: unknown, row: unknown) => React.ReactNode;
 }
 
 export interface TableAction {
@@ -35,10 +30,10 @@ export interface TableAction {
   label: string;
   icon: React.ReactNode;
   color?: string;
-  onClick: (row: any) => void;
+  onClick: (row: unknown) => void;
 }
 
-interface CommonDataTableProps<T = any> {
+interface CommonDataTableProps<T = unknown> {
   data: T[] | undefined;
   columns: TableColumn[];
   actions?: TableAction[];
@@ -52,9 +47,15 @@ interface CommonDataTableProps<T = any> {
   total?: number;
   onPageChange?: (page: number) => void;
   onRowsPerPageChange?: (rowsPerPage: number) => void;
+  onRowClick?: (row: unknown) => void;
+  onEdit?: (row: unknown) => void;
+  onDelete?: (row: unknown) => void;
+  selectedRows?: unknown[];
+  onSelectionChange?: (rows: unknown[]) => void;
+  config?: Record<string, unknown>;
 }
 
-const CommonDataTable = <T extends Record<string, any>>({
+const CommonDataTable = <T extends Record<string, unknown>>({
   data,
   columns,
   actions = [],
@@ -68,6 +69,7 @@ const CommonDataTable = <T extends Record<string, any>>({
   total = 0,
   onPageChange,
   onRowsPerPageChange,
+  config,
 }: CommonDataTableProps<T>) => {
   const [internalPage, setInternalPage] = React.useState(0);
   const [internalRowsPerPage, setInternalRowsPerPage] = React.useState(10);
@@ -153,7 +155,7 @@ const CommonDataTable = <T extends Record<string, any>>({
   return (
     <Box>
       <TableContainer component={Paper} sx={{ maxHeight: 600, mt: 2 }}>
-        <Table stickyHeader>
+        <Table stickyHeader {...config}>
           <TableHead>
             <TableRow>
               {columns.map((column) => (
@@ -178,7 +180,7 @@ const CommonDataTable = <T extends Record<string, any>>({
           <TableBody>
             {paginatedData.map((row, index) => (
               <TableRow 
-                key={row.id || index} 
+                key={row.id as string || index} 
                 hover
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
@@ -188,8 +190,8 @@ const CommonDataTable = <T extends Record<string, any>>({
                     sx={{ textAlign: column.align || 'left' }}
                   >
                     {column.render 
-                      ? column.render(row[column.key], row)
-                      : row[column.key]
+                      ? column.render(row[column.key], row) as React.ReactNode
+                      : row[column.key] as React.ReactNode
                     }
                   </TableCell>
                 ))}
@@ -200,7 +202,7 @@ const CommonDataTable = <T extends Record<string, any>>({
                         <Tooltip key={action.key} title={action.label}>
                           <IconButton
                             size="small"
-                            onClick={() => action.onClick(row)}
+                            onClick={() => action.onClick(row as unknown)}
                             sx={{ color: action.color || 'primary.main' }}
                           >
                             {action.icon}

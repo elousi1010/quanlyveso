@@ -7,21 +7,94 @@ export const permissionCreateFields: DialogFieldConfig<CreatePermissionDto>[] = 
     label: 'Tên quyền',
     type: 'text',
     required: true,
-    placeholder: 'Nhập tên quyền',
+    placeholder: 'Nhập tên quyền (VD: Permission 1)',
   },
   {
     key: 'code',
     label: 'Mã quyền',
     type: 'text',
     required: true,
-    placeholder: 'Nhập mã quyền (VD: user_read)',
+    placeholder: 'Nhập mã quyền (VD: permission_1)',
   },
   {
-    key: 'actions',
-    label: 'Hành động',
-    type: 'json',
-    required: true,
-    placeholder: '{"user": ["read", "create"], "organization": ["read"]}',
+    key: 'user_read',
+    label: 'Quyền đọc User',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'user_create',
+    label: 'Quyền tạo User',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'user_update',
+    label: 'Quyền cập nhật User',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'user_delete',
+    label: 'Quyền xóa User',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'organization_read',
+    label: 'Quyền đọc Organization',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'organization_create',
+    label: 'Quyền tạo Organization',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'organization_update',
+    label: 'Quyền cập nhật Organization',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'organization_delete',
+    label: 'Quyền xóa Organization',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
   },
 ];
 
@@ -41,11 +114,84 @@ export const permissionUpdateFields: DialogFieldConfig<UpdatePermissionDto>[] = 
     placeholder: 'Nhập mã quyền',
   },
   {
-    key: 'actions',
-    label: 'Hành động',
-    type: 'json',
+    key: 'user_read',
+    label: 'Quyền đọc User',
+    type: 'select',
     required: false,
-    placeholder: '{"user": ["read", "create"], "organization": ["read"]}',
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'user_create',
+    label: 'Quyền tạo User',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'user_update',
+    label: 'Quyền cập nhật User',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'user_delete',
+    label: 'Quyền xóa User',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'organization_read',
+    label: 'Quyền đọc Organization',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'organization_create',
+    label: 'Quyền tạo Organization',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'organization_update',
+    label: 'Quyền cập nhật Organization',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
+  },
+  {
+    key: 'organization_delete',
+    label: 'Quyền xóa Organization',
+    type: 'select',
+    required: false,
+    options: [
+      { value: true, label: 'Có' },
+      { value: false, label: 'Không' },
+    ],
   },
 ];
 
@@ -69,9 +215,15 @@ export const permissionDetailFields: DialogFieldConfig[] = [
     readonly: true,
   },
   {
-    key: 'actions',
-    label: 'Hành động',
-    type: 'json',
+    key: 'user_permissions',
+    label: 'Quyền User',
+    type: 'text',
+    readonly: true,
+  },
+  {
+    key: 'organization_permissions',
+    label: 'Quyền Organization',
+    type: 'text',
     readonly: true,
   },
   {

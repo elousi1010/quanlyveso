@@ -104,3 +104,27 @@ export interface DashboardStats {
 }
 
 export type TimeRange = 'day' | 'week' | 'month' | 'year';
+
+// Common API Response Interfaces
+export interface BaseApiResponse {
+  message: string;
+  error: string;
+  statusCode: number;
+}
+
+export interface ApiListResponse<T> extends BaseApiResponse {
+  data: {
+    data: T[];
+    total: number;
+  };
+}
+
+export interface ApiItemResponse<T> extends BaseApiResponse {
+  data: T;
+}
+
+export interface ApiDeleteResponse extends BaseApiResponse {
+  data: {
+    id: string;
+  };
+}

@@ -10,16 +10,13 @@ interface OrganizationHeaderProps {
 export const OrganizationHeader: React.FC<OrganizationHeaderProps> = ({
   onCreate,
   onRefresh,
-  selectedCount,
-  onDeleteSelected,
 }) => {
   return (
     <CommonHeader
       title={ORGANIZATION_CONSTANTS.MODULE_TITLE}
+      subtitle={ORGANIZATION_CONSTANTS.MODULE_TITLE}
       onCreate={onCreate}
       onRefresh={onRefresh}
-      selectedCount={selectedCount}
-      onDeleteSelected={onDeleteSelected}
     />
   );
 };

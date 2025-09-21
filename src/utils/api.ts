@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type  AxiosResponse } from 'axios';
 
 // Base URL cho API
-const BASE_URL = 'https://lottery.esimvn.net';
+const BASE_URL = 'https://api.ohna12.netlify.app';
 
 // Tạo axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -60,6 +60,7 @@ apiClient.interceptors.response.use(
           // Retry request gốc với token mới
           return apiClient(originalRequest);
         } catch (refreshError) {
+          console.error('Refresh token failed:', refreshError);
           // Nếu refresh thất bại, chỉ clear auth, không redirect
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');

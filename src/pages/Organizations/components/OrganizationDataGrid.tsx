@@ -4,7 +4,7 @@ import { organizationTableConfig } from '../constants';
 import type { Organization } from '../types';
 
 interface OrganizationDataGridProps {
-  item: Organization[];
+  data: Organization[];
   loading: boolean;
   error: unknown;
   onRefresh: () => void;
@@ -13,6 +13,9 @@ interface OrganizationDataGridProps {
   total?: number;
   onPageChange?: (page: number) => void;
   onRowsPerPageChange?: (rowsPerPage: number) => void;
+  onEdit?: (item: Organization) => void;
+  onDelete?: (item: Organization) => void;
+  onView?: (item: Organization) => void;
 }
 
 export const OrganizationDataGrid: React.FC<OrganizationDataGridProps> = ({
@@ -20,14 +23,14 @@ export const OrganizationDataGrid: React.FC<OrganizationDataGridProps> = ({
   loading,
   error,
   onRefresh,
-  onEdit,
-  onDelete,
-  onView,
   page = 0,
   rowsPerPage = 10,
   total = 0,
   onPageChange,
   onRowsPerPageChange,
+  onEdit,
+  onDelete,
+  onView,
 }) => {
   const actions = [
     {
@@ -35,27 +38,27 @@ export const OrganizationDataGrid: React.FC<OrganizationDataGridProps> = ({
       label: 'Chỉnh sửa',
       icon: <span>✏️</span>,
       color: 'primary',
-      onClick: onEdit,
+      onClick: (item: Organization) => onEdit(item),
     },
     {
       key: 'delete',
       label: 'Xóa',
       icon: <span>🗑️</span>,
       color: 'error',
-      onClick: onDelete,
+      onClick: (item: Organization) => onDelete(item),
     },
     {
       key: 'view',
       label: 'Xem',
       icon: <span>👁️</span>,
       color: 'info',
-      onClick: onView,
+      onClick: (item: Organization) => onView(item),
     },
   ];
 
   return (
     <CommonDataTable
-      data={data}
+      data={(data || []) as unknown as Record<string, unknown>[]}
       columns={organizationTableConfig.columns}
       actions={actions}
       isLoading={loading}

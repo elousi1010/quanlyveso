@@ -23,8 +23,8 @@ export const OrganizationDeleteDialog: React.FC<OrganizationDeleteDialogProps> =
       onClose={onClose}
       onConfirm={onConfirm}
       title="Xóa Tổ chức"
-      content={`Bạn có chắc chắn muốn xóa tổ chức "${organization?.name}"?`}
-      loading={loading}
+      message={`Bạn có chắc chắn muốn xóa tổ chức "${organization?.name}"?`}
+      isDeleting={loading}
     />
   );
 };
