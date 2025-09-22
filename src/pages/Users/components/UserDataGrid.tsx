@@ -31,6 +31,8 @@ interface UserDataGridProps {
   error: unknown;
   onRefresh: () => void;
   onViewDetail: (user: User) => void;
+  onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
 }
 
 const UserDataGrid: React.FC<UserDataGridProps> = ({

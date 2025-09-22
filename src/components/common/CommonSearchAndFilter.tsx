@@ -66,7 +66,7 @@ const CommonSearchAndFilter: React.FC<CommonSearchAndFilterProps> = ({
       elevation={0}
       sx={{ 
         p: 2, 
-        mb: 2, 
+        mb: 0, 
         background: 'white',
         border: '1px solid #e0e0e0',
         borderRadius: 2

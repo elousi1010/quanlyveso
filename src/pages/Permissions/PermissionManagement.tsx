@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { Box } from '@mui/material';
+import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
 import { 
-  CommonViewEditDialog, 
-  CommonDetailDialog 
-} from '@/components/common';
+  Security,
+  Cancel,
+  Edit
+} from '@mui/icons-material';
 import {
   PermissionHeader,
   PermissionDataGrid,
@@ -11,17 +12,9 @@ import {
   PermissionDeleteDialog,
   PermissionSnackbar,
   PermissionFormDialog,
+  PermissionDetailView,
 } from './components';
 import { usePermissions, usePermissionMutations } from './hooks';
-import { 
-  permissionUpdateFields, 
-  permissionDetailFields 
-} from './constants';
-import { 
-  formDataToUpdateDto, 
-  permissionToFormData, 
-  permissionToDisplayData 
-} from './utils/permissionHelpers';
 import type { 
   Permission, 
   CreatePermissionDto, 
@@ -126,12 +119,7 @@ export const PermissionManagement: React.FC = () => {
       name: "Permission 1",
       code: "permission_1",
       actions: {
-        user: [
-          "read",
-          "create",
-          "update",
-          "delete"
-        ]
+        user: ["read", "create", "update", "delete"]
       }
     };
 
@@ -151,18 +139,21 @@ export const PermissionManagement: React.FC = () => {
     }
   }, [createMutation]);
 
-  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>) => {
+  const handleUpdateSubmit = useCallback(async (data: CreatePermissionDto) => {
     if (!selectedPermission) return;
     
     try {
-      const updateData = formDataToUpdateDto(data);
-      await updateMutation.mutateAsync({ id: selectedPermission.id, data: updateData });
+      // Use data directly instead of converting it again
+      await updateMutation.mutateAsync({ id: selectedPermission.id, data: data });
       setSnackbar({
         open: true,
         message: 'Cập nhật quyền hạn thành công',
         severity: 'success',
       });
-      handleCloseDialog('edit');
+      // Close dialog after a short delay to show success message
+      setTimeout(() => {
+        handleCloseDialog('edit');
+      }, 1000);
     } catch {
       setSnackbar({
         open: true,
@@ -198,8 +189,9 @@ export const PermissionManagement: React.FC = () => {
 
   const permissions = permissionsData?.data || [];
 
+
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ mt: 0 }}>
       <PermissionHeader
         onCreate={handleCreate}
         onRefresh={handleRefresh}
@@ -208,7 +200,7 @@ export const PermissionManagement: React.FC = () => {
         onCreateSpecific={handleCreateSpecificPermission}
       />
 
-      <Box sx={{ mt: 2 }}>
+      <Box>
         <PermissionSearchAndFilter
           searchParams={searchParams} 
           onSearchChange={handleSearchChange}
@@ -216,7 +208,7 @@ export const PermissionManagement: React.FC = () => {
         />
       </Box>
 
-      <Box sx={{ mt: 2 }}>
+      <Box>
         <PermissionDataGrid
           data={permissions}
           loading={isLoading}
@@ -238,29 +230,80 @@ export const PermissionManagement: React.FC = () => {
       />
 
       {/* Edit Dialog */}
-      <CommonViewEditDialog
+      <PermissionFormDialog
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
         onSave={handleUpdateSubmit}
         title="Chỉnh sửa Quyền hạn"
-        formFields={permissionUpdateFields}
-        detailFields={permissionDetailFields}
-        item={permissionToFormData(selectedPermission)}
+        permission={selectedPermission}
         loading={updateMutation.isPending}
       />
 
       {/* View Dialog */}
-      <CommonDetailDialog
+      <Dialog
         open={dialogState.view}
         onClose={() => handleCloseDialog('view')}
-        onEdit={() => {
-          handleCloseDialog('view');
-          setDialogState(prev => ({ ...prev, edit: true }));
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            minHeight: '700px',
+            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+          }
         }}
-        title="Chi tiết Quyền hạn"
-        fields={permissionDetailFields}
-        item={permissionToDisplayData(selectedPermission)}
-      />
+      >
+        <DialogTitle sx={{ pb: 2, textAlign: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
+            <Security sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
+            <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+              Chi tiết Quyền hạn
+            </Typography>
+          </Box>
+          <Typography variant="body1" color="text.secondary">
+            Xem thông tin chi tiết và phân quyền
+          </Typography>
+        </DialogTitle>
+
+        <DialogContent sx={{ pt: 1 }}>
+          {selectedPermission && <PermissionDetailView permission={selectedPermission} />}
+        </DialogContent>
+
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button
+            onClick={() => handleCloseDialog('view')}
+            startIcon={<Cancel />}
+            size="large"
+            sx={{ 
+              borderRadius: 2,
+              px: 3,
+              py: 1
+            }}
+          >
+            Đóng
+          </Button>
+          <Button
+            onClick={() => {
+              handleCloseDialog('view');
+              setDialogState(prev => ({ ...prev, edit: true }));
+            }}
+            startIcon={<Edit />}
+            variant="contained"
+            size="large"
+            sx={{ 
+              borderRadius: 2,
+              px: 4,
+              py: 1,
+              background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+              }
+            }}
+          >
+            Chỉnh sửa
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Delete Dialog */}
       <PermissionDeleteDialog

@@ -1,6 +1,5 @@
 import { api } from '@/utils/api';
 import type { 
-  Station, 
   CreateStationDto, 
   UpdateStationDto, 
   StationListResponse,
@@ -11,7 +10,7 @@ import type {
   StationSearchParams
 } from '../types';
 
-const API_BASE = 'https://api.ohna12.netlify.app/api/v1';
+const API_BASE = 'https://lottery.esimvn.net/api/v1';
 
 export const stationApi = {
   // Get all stations with pagination and search

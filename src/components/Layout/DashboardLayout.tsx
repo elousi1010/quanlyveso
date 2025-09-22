@@ -26,6 +26,7 @@ import {
   Business as PartnerIcon,
   BusinessCenter as OrganizationIcon,
   Security as PermissionIcon,
+  Assignment as AssignmentIcon,
   LocationOn as StationIcon,
   Inventory as InventoryIcon,
   Assessment as AssessmentIcon,
@@ -184,6 +185,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           text: 'Quyền hạn',
           icon: <PermissionIcon />,
           path: '/permissions',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
+        },
+        {
+          text: 'Gán quyền',
+          icon: <AssignmentIcon />,
+          path: '/assign-permissions',
           permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
         {

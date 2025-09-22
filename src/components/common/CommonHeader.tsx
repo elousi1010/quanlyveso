@@ -27,7 +27,6 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
     <Paper 
       elevation={0}
       sx={{ 
-        p: 2, 
         mb: 2, 
         background: 'white',
         border: '1px solid #e0e0e0',

@@ -1,7 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog, 
   CommonViewEditDialog, 
   CommonDetailDialog 
 } from '@/components/common';
@@ -11,10 +10,10 @@ import {
   InventorySearchAndFilter,
   InventoryDeleteDialog,
   InventorySnackbar,
+  InventoryFormDialog,
 } from './components';
 import { useInventories, useInventoryMutations } from './hooks';
 import { 
-  inventoryCreateFields, 
   inventoryUpdateFields, 
   inventoryDetailFields 
 } from './constants';
@@ -185,13 +184,10 @@ export const InventoryManagement: React.FC = () => {
       </Box>
 
       {/* Create Dialog */}
-      <CommonFormDialog
+      <InventoryFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
         onSave={handleCreateSubmit}
-        title="Tạo Kho Mới"
-        fields={inventoryCreateFields}
-        submitText="Tạo"
         loading={createMutation.isPending}
       />
 

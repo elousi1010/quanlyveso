@@ -140,10 +140,6 @@ const CommonDataTable = <T extends Record<string, unknown>>({
     );
   }
 
-  // Debug logging
-  console.log('CommonDataTable data:', data);
-  console.log('CommonDataTable data type:', typeof data);
-  console.log('CommonDataTable isArray:', Array.isArray(data));
 
   // Pagination
   const startIndex = currentPage * currentRowsPerPage;
@@ -180,7 +176,7 @@ const CommonDataTable = <T extends Record<string, unknown>>({
           <TableBody>
             {paginatedData.map((row, index) => (
               <TableRow 
-                key={row.id as string || index} 
+                key={index} 
                 hover
                 sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
               >
@@ -191,7 +187,7 @@ const CommonDataTable = <T extends Record<string, unknown>>({
                   >
                     {column.render 
                       ? column.render(row[column.key], row) as React.ReactNode
-                      : row[column.key] as React.ReactNode
+                      : (row[column.key] as React.ReactNode) || '-'
                     }
                   </TableCell>
                 ))}

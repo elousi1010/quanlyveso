@@ -9,6 +9,7 @@ import PartnerManagement from '../../pages/Partners/PartnerManagement';
 import UserManagement from '../../pages/Users/UserManagement';
 import { OrganizationManagement } from '../../pages/Organizations';
 import { PermissionManagement } from '../../pages/Permissions';
+import { AssignPermissionManagement } from '../../pages/Permissions/AssignPermissionManagement';
 import { StationManagement } from '../../pages/Stations';
 import { TicketManagement } from '../../pages/Tickets';
 import { TransactionManagement } from '../../pages/Transactions';
@@ -61,6 +62,14 @@ const AppRoutes: React.FC = () => {
                   element={
                     <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
                       <PermissionManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/assign-permissions"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
+                      <AssignPermissionManagement />
                     </ProtectedRoute>
                   }
                 />

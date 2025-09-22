@@ -1,17 +1,48 @@
+export interface Ticket {
+  price: number;
+  quantity: number;
+  code: string;
+  note?: string;
+}
+
 export interface Inventory {
   id: string;
-  // Note: Swagger shows empty properties for CreateInventoryDto and UpdateInventoryDto
-  // This suggests the inventory structure might be defined elsewhere or is minimal
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  created_by: string;
+  updated_at: string;
+  updated_by: string;
+  deleted_at: string | null;
+  is_active: boolean;
+  ticket_id: string;
+  code: string;
+  avg_cost: number;
+  quantity: number;
+  draw_date: string;
+  organization_id: string;
 }
 
 export interface CreateInventoryDto {
-  // Empty based on Swagger schema
+  draw_date: string;
+  ticket_type: string;
+  station_id: string;
+  type: 'import' | 'export';
+  sub_type: 'buy_from_agent' | 'sell_to_customer' | 'transfer' | 'return';
+  partner_id: string;
+  note?: string;
+  tickets: Ticket[];
+  is_update: boolean;
 }
 
 export interface UpdateInventoryDto {
-  // Empty based on Swagger schema
+  draw_date?: string;
+  ticket_type?: string;
+  station_id?: string;
+  type?: 'import' | 'export';
+  sub_type?: 'buy_from_agent' | 'sell_to_customer' | 'transfer' | 'return';
+  partner_id?: string;
+  note?: string;
+  tickets?: Ticket[];
+  is_update?: boolean;
 }
 
 export interface InventoryResponse {

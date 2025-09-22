@@ -5,7 +5,9 @@ import type {
   UpdatePermissionDto, 
   SetPermissionsForUserDto,
   PermissionResponse, 
-  PermissionSearchParams 
+  PermissionSearchParams,
+  BasePermissionsResponse,
+  ApiResponse
 } from '../types';
 
 const API_BASE = 'https://lottery.esimvn.net/api/v1';
@@ -22,31 +24,36 @@ export const permissionApi = {
     if (params.sortOrder) searchParams.append('sortOrder', params.sortOrder);
 
     const response = await api.get(`${API_BASE}/permissions?${searchParams.toString()}`);
-    return (response as any).data;
+    const apiResponse = response as ApiResponse<PermissionResponse>;
+    return apiResponse.data;
   },
 
   // Get all base permissions
-  getBasePermissions: async (): Promise<Permission[]> => {
+  getBasePermissions: async (): Promise<BasePermissionsResponse> => {
     const response = await api.get(`${API_BASE}/permissions/base`);
-    return (response as any).data;
+    const apiResponse = response as ApiResponse<BasePermissionsResponse>;
+    return apiResponse.data;
   },
 
   // Get permission by ID
   getById: async (id: string): Promise<Permission> => {
     const response = await api.get(`${API_BASE}/permissions/${id}`);
-    return (response as any).data;
+    const apiResponse = response as ApiResponse<Permission>;
+    return apiResponse.data;
   },
 
   // Create new permission
   create: async (data: CreatePermissionDto): Promise<Permission> => {
     const response = await api.post(`${API_BASE}/permissions`, data);
-    return (response as any).data;
+    const apiResponse = response as ApiResponse<Permission>;
+    return apiResponse.data;
   },
 
   // Update permission
   update: async (id: string, data: UpdatePermissionDto): Promise<Permission> => {
     const response = await api.patch(`${API_BASE}/permissions/${id}`, data);
-    return (response as any).data;
+    const apiResponse = response as ApiResponse<Permission>;
+    return apiResponse.data;
   },
 
   // Delete permission

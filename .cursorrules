@@ -4,9 +4,9 @@
 This is a React + TypeScript + Vite project for daily management system with authentication, role-based access control, and ticket management.
 
 ## 🔗 API Documentation
-- **Swagger UI**: https://api.ohna12.netlify.app/api-docs
-- **API Base URL**: https://api.ohna12.netlify.app
-- **Production URL**: https://ohna12.netlify.app
+- **Swagger UI**: https://lottery.esimvn.net/api-docs
+- **API Base URL**: https://lottery.esimvn.net
+- **Production URL**: https://lottery.esimvn.net
 
 ## 📱 Responsive Design Guidelines
 **IMPORTANT**: This application is primarily designed for small laptop screens (13-inch laptops). When designing UI components, prioritize:

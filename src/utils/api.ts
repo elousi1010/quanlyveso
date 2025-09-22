@@ -1,7 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type  AxiosResponse } from 'axios';
 
 // Base URL cho API
-const BASE_URL = 'https://api.ohna12.netlify.app';
+const BASE_URL = 'https://lottery.esimvn.net';
 
 // Tạo axios instance
 const apiClient: AxiosInstance = axios.create({
