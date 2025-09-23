@@ -29,7 +29,7 @@ export const TicketManagement: React.FC = () => {
   // State management
   const [searchParams, setSearchParams] = useState<TicketSearchParams>({
     page: 1,
-    limit: 10,
+    limit: 5,
   });
   const [selectedRows, setSelectedRows] = useState<Ticket[]>([]);
   const [dialogState, setDialogState] = useState({
@@ -55,7 +55,7 @@ export const TicketManagement: React.FC = () => {
   }, []);
 
   const handleReset = useCallback(() => {
-    setSearchParams({ page: 1, limit: 10 });
+    setSearchParams({ page: 1, limit: 5 });
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -168,13 +168,11 @@ export const TicketManagement: React.FC = () => {
       <TicketHeader
         onCreate={handleCreate}
         onRefresh={handleRefresh}
-        selectedCount={selectedRows.length}
-        onDeleteSelected={handleDeleteSelected}
       />
 
       <Box sx={{ mt: 2 }}>
         <TicketSearchAndFilter
-          searchParams={searchParams}
+          searchParams={searchParams as Record<string, unknown>}
           onSearchChange={handleSearchChange}
           onReset={handleReset}
         />
@@ -196,7 +194,7 @@ export const TicketManagement: React.FC = () => {
       <CommonFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
-        onSubmit={handleCreateSubmit}
+        onSave={(data) => handleCreateSubmit(data as unknown as CreateTicketDto)}
         title="Tạo Vé số Mới"
         fields={ticketCreateFields}
         submitText="Tạo"
@@ -207,15 +205,11 @@ export const TicketManagement: React.FC = () => {
       <CommonViewEditDialog
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
-        onSubmit={handleUpdateSubmit}
-        onView={() => {
-          handleCloseDialog('edit');
-          setDialogState(prev => ({ ...prev, view: true }));
-        }}
+        onSave={(data) => handleUpdateSubmit(data as unknown as UpdateTicketDto)}
         title="Chỉnh sửa Vé số"
-        fields={ticketUpdateFields}
-        data={selectedTicket}
-        submitText="Cập nhật"
+        formFields={ticketUpdateFields}
+        item={selectedTicket as unknown as Record<string, unknown>}
+        detailFields={ticketDetailFields}
         loading={updateMutation.isPending}
       />
 
@@ -223,13 +217,10 @@ export const TicketManagement: React.FC = () => {
       <CommonDetailDialog
         open={dialogState.view}
         onClose={() => handleCloseDialog('view')}
-        onEdit={() => {
-          handleCloseDialog('view');
-          setDialogState(prev => ({ ...prev, edit: true }));
-        }}
+        onEdit={() => handleCloseDialog('view')}
         title="Chi tiết Vé số"
         fields={ticketDetailFields}
-        data={selectedTicket}
+        item={selectedTicket as unknown as Record<string, unknown>}
       />
 
       {/* Delete Dialog */}
@@ -237,7 +228,7 @@ export const TicketManagement: React.FC = () => {
         open={dialogState.delete}
         onClose={() => handleCloseDialog('delete')}
         onConfirm={handleDeleteConfirm}
-        ticket={selectedTicket}
+        ticket={selectedTicket as unknown as Ticket}
         loading={deleteMutation.isPending}
       />
 

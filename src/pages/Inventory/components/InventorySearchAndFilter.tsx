@@ -23,7 +23,6 @@ export const InventorySearchAndFilter: React.FC<InventorySearchAndFilterProps> =
       onSearch={onSearch as (query: string) => void}
       onSort={onSort as (sortBy: string) => void}
       onFilter={onFilter as (filters: Record<string, string>) => void}
-      onRefresh={onRefresh as () => void}
       loading={loading}
     />
   );

@@ -37,8 +37,8 @@ export const inventoryApi = {
   },
 
   // Update inventory
-  update: async (id: string, data: UpdateInventoryDto): Promise<Inventory> => {
-    const response = await api.patch(`${API_BASE}/inventory/${id}`, data);
+  update: async (data: UpdateInventoryDto): Promise<Inventory> => {
+    const response = await api.patch(`${API_BASE}/inventory`, data);
     return (response as any).data;
   },
 

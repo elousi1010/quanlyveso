@@ -5,6 +5,7 @@ import {
   AppBar,
   Toolbar,
   List,
+  ListItem,
   Typography,
   Divider,
   IconButton,
@@ -16,7 +17,10 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
+import { Link } from 'react-router-dom';
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -36,13 +40,18 @@ import {
   Logout as LogoutIcon,
   Notifications as NotificationIcon,
   Settings as SettingsIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
 } from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthState } from '../../hooks/useAuthState';
+import { useTheme } from '../../contexts/ThemeContext';
 import { PERMISSIONS } from '../../types/auth';
 import { getRoleDisplayName } from '../../utils/roleMapping';
 
-const drawerWidth = 320;
+const drawerWidth = 280;
+const collapsedDrawerWidth = 80;
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -59,16 +68,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { user, logout } = useAuthState();
+  const { mode, toggleMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+
 
   // Helper function to check permissions (for backward compatibility)
   const hasPermission = (permission: string): boolean => {
     if (!user) return false;
-    
+
     // Admin và User có tất cả quyền
     if (user.role === 'admin' || user.role === 'user') return true;
-    
+
     // Map permissions to roles
     const rolePermissions: Record<string, string[]> = {
       admin: [
@@ -160,77 +171,66 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   const menuGroups = [
     {
-      id: 'management',
-      title: 'Quản lý hệ thống',
+      id: 'dashboard',
+      title: 'Dashboard',
       items: [
         {
-          text: 'Quản lý người dùng',
+          text: 'Overview',
+          icon: <DashboardIcon />,
+          path: '/dashboard',
+          permission: PERMISSIONS.VIEW_DASHBOARD,
+        },
+      ]
+    },
+    {
+      id: 'management',
+      title: 'Management',
+      items: [
+        {
+          text: 'User',
           icon: <PersonIcon />,
           path: '/users',
           permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
         {
-          text: 'Đối tác',
+          text: 'Partner',
           icon: <PartnerIcon />,
           path: '/partners',
           permission: PERMISSIONS.MANAGE_PARTNERS,
         },
         {
-          text: 'Tổ chức',
-          icon: <OrganizationIcon />,
-          path: '/organizations',
-          permission: PERMISSIONS.MANAGE_EMPLOYEES,
-        },
-        {
-          text: 'Quyền hạn',
+          text: 'Permission',
           icon: <PermissionIcon />,
           path: '/permissions',
           permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
         {
-          text: 'Gán quyền',
-          icon: <AssignmentIcon />,
-          path: '/assign-permissions',
-          permission: PERMISSIONS.MANAGE_EMPLOYEES,
-        },
-        {
-          text: 'Trạm',
+          text: 'Station',
           icon: <StationIcon />,
           path: '/stations',
           permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
         {
-          text: 'Vé số',
+          text: 'Ticket',
           icon: <TicketIcon />,
           path: '/tickets',
           permission: PERMISSIONS.MANAGE_TICKETS,
         },
         {
-          text: 'Giao dịch',
+          text: 'Transaction',
           icon: <TransactionIcon />,
           path: '/transactions',
           permission: PERMISSIONS.MANAGE_TRANSACTIONS,
         },
         {
-          text: 'Kho',
+          text: 'Inventory',
           icon: <InventoryIcon />,
           path: '/inventory',
           permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
       ]
     },
-    {
-      id: 'testing',
-      title: 'Testing & Debug',
-      items: [
-        {
-          text: 'Token Refresh Test',
-          icon: <SettingsIcon />,
-          path: '/token-test',
-          permission: PERMISSIONS.MANAGE_EMPLOYEES,
-        },
-      ]
-    },
+    
   ];
 
   // Filter menu groups based on permissions
@@ -239,63 +239,252 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     items: group.items.filter(item => hasPermission(item.permission))
   })).filter(group => group.items.length > 0);
 
-  const drawer = (
-    <div className="h-full bg-white border-r border-gray-200 flex flex-col">
-      {/* Logo */}
-      <div className="p-4 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-              <DashboardIcon className="text-white text-lg" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold text-gray-900 truncate">OHNA12 Lottery Tickets</h1>
-              <p className="text-xs text-gray-500 truncate">Quản lý vé số</p>
-            </div>
-          </div>
-        </div>
-      </div>
+  // Get current page title and subtitle
+  const getCurrentPageInfo = () => {
+    const currentPath = location.pathname;
+    
+    // Find current page title from menu groups
+    for (const group of filteredMenuGroups) {
+      const item = group.items.find(item => item.path === currentPath);
+      if (item) {
+        return {
+          title: item.text,
+          subtitle: (() => {
+            if (currentPath.includes('/partners')) return 'Quản lý đối tác';
+            if (currentPath.includes('/users')) return 'Quản lý người dùng';
+            if (currentPath.includes('/permissions')) return 'Quản lý quyền hạn';
+            if (currentPath.includes('/stations')) return 'Quản lý trạm';
+            if (currentPath.includes('/tickets')) return 'Quản lý vé số';
+            if (currentPath.includes('/transactions')) return 'Quản lý giao dịch';
+            if (currentPath.includes('/inventory')) return 'Quản lý kho';
+            if (currentPath.includes('/organizations')) return 'Quản lý tổ chức';
+            return 'Hệ thống quản lý';
+          })()
+        };
+      }
+    }
+    return {
+      title: 'MANAGEMENT',
+      subtitle: 'Hệ thống quản lý'
+    };
+  };
 
-      {/* User Info */}
-      <div className="p-3 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center space-x-2">
-          <Avatar className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500">
-            <span className="text-white text-sm font-semibold">
-              {user?.name?.charAt(0) || 'U'}
-            </span>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {user?.name || 'Người dùng'}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {getRoleDisplayName(user?.role || 'user')}
-            </p>
+  const { title, subtitle } = getCurrentPageInfo();
+
+  const drawer = (
+    <motion.div 
+      className="h-full flex flex-col relative"
+      style={{
+        background: mode === 'light' ? '#ffffff' : '#1e1e1e',
+        width: '280px',
+        borderRadius: '0px',
+        borderRight: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+        position: 'relative',
+        border: 'none',
+        boxShadow: 'none',
+      }}
+      initial={{ x: -280 }}
+      animate={{ x: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+    >
+      {/* Logo */}
+      <motion.div 
+        className="flex-shrink-0"
+        style={{
+          padding: '12px 20px',
+          minHeight: '56px',
+          display: 'flex',
+          borderRadius: '0px',
+          alignItems: 'center',
+        }}
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <motion.div 
+          className="rounded-lg flex items-center justify-center w-full"
+          style={{
+            background: mode === 'light' 
+              ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+              : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            padding: '12px 20px',
+            borderRadius: '16px',
+            boxShadow: mode === 'light' 
+              ? '0 6px 20px rgba(102, 126, 234, 0.3)'
+              : '0 6px 20px rgba(79, 172, 254, 0.3)',
+            width: '100%',
+          }}
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', width: '100%', justifyContent: 'center' }}>
+            {/* Logo Icon */}
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+              }}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'
+                }}
+              >
+                <defs>
+                  <linearGradient id="sidebarLotteryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="white" stopOpacity="1" />
+                    <stop offset="100%" stopColor="rgba(255, 255, 255, 0.8)" stopOpacity="0.8" />
+                  </linearGradient>
+                </defs>
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="url(#sidebarLotteryGradient)"
+                  strokeWidth="2.5"
+                  fill="rgba(255, 255, 255, 0.1)"
+                />
+                <circle
+                  cx="8"
+                  cy="8"
+                  r="2.5"
+                  fill="url(#sidebarLotteryGradient)"
+                />
+                <circle
+                  cx="16"
+                  cy="8"
+                  r="2.5"
+                  fill="url(#sidebarLotteryGradient)"
+                />
+                <circle
+                  cx="8"
+                  cy="16"
+                  r="2.5"
+                  fill="url(#sidebarLotteryGradient)"
+                />
+                <circle
+                  cx="16"
+                  cy="16"
+                  r="2.5"
+                  fill="url(#sidebarLotteryGradient)"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3.5"
+                  fill="rgba(255, 255, 255, 0.2)"
+                  stroke="rgba(255, 255, 255, 0.5)"
+                  strokeWidth="1"
+                />
+                <text
+                  x="12"
+                  y="15"
+                  textAnchor="middle"
+                  fontSize="8"
+                  fill="white"
+                  fontWeight="bold"
+                  fontFamily="Arial, sans-serif"
+                >
+                  $
+                </text>
+              </svg>
+            </div>
+            
+            {/* Logo Text */}
+            <div>
+              <div
+                style={{
+                  color: 'white',
+                  fontWeight: '800',
+                  fontSize: '18px',
+                  lineHeight: 1,
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                  letterSpacing: '1px',
+                  fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                }}
+              >
+                Hnoa
+              </div>
+              <div
+                style={{
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  fontWeight: '600',
+                  fontSize: '10px',
+                  lineHeight: 1,
+                  letterSpacing: '2px',
+                  textTransform: 'uppercase',
+                  fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+                }}
+              >
+                Lottery
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 overflow-y-auto sidebar-scroll">
-        <List className="space-y-0.5">
-          {filteredMenuGroups.map((group) => {
+      <nav className="flex-1 px-4 py-2 overflow-y-auto sidebar-scroll">
+        <List className="space-y-1">
+          {filteredMenuGroups.map((group, groupIndex) => {
             const isGroupOpen = openGroups[group.id];
             const hasActiveItem = group.items.some(item => location.pathname === item.path);
-            
+
             return (
-              <div key={group.id} className="mb-1">
+              <motion.div 
+                key={group.id} 
+                className="mb-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: groupIndex * 0.1 }}
+              >
                 {/* Group Header */}
+                <motion.div
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                >
                 <ListItemButton
                   onClick={() => handleGroupToggle(group.id)}
-                  className={`px-2 py-1.5 rounded-lg transition-all duration-200 ${
-                    hasActiveItem
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
-                  sx={{ minHeight: 36 }}
-                >
-                  <ListItemIcon className="min-w-0 mr-2 w-6 h-6" sx={{ minWidth: 24 }}>
-                    <div className={`${hasActiveItem ? 'text-blue-600' : 'text-gray-400'} flex-shrink-0`}>
+                    sx={{ 
+                      minHeight: 48,
+                      px: 3,
+                      py: 1.5,
+                      borderRadius: 2,
+                      mb: 0.5,
+                      backgroundColor: hasActiveItem 
+                        ? (mode === 'light' ? '#f3f4f6' : '#374151')
+                        : 'transparent',
+                      color: hasActiveItem 
+                        ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                        : (mode === 'light' ? '#6b7280' : '#9ca3af'),
+                      '&:hover': {
+                        backgroundColor: mode === 'light' ? '#f9fafb' : '#374151',
+                        color: mode === 'light' ? '#7c3aed' : '#a855f7',
+                      },
+                      transition: 'all 0.2s ease-in-out',
+                    }}
+                  >
+                    <ListItemIcon className="min-w-0 mr-3 w-6 h-6" sx={{ minWidth: 24 }}>
+                      <div 
+                        className="flex-shrink-0"
+                        style={{ 
+                          color: hasActiveItem 
+                            ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                            : (mode === 'light' ? '#9ca3af' : '#6b7280')
+                        }}
+                      >
                       {group.id === 'dashboard' && <DashboardIcon fontSize="small" />}
                       {group.id === 'tickets' && <TicketIcon fontSize="small" />}
                       {group.id === 'management' && <SettingsIcon fontSize="small" />}
@@ -304,143 +493,289 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                       {group.id === 'transactions' && <TransactionIcon fontSize="small" />}
                     </div>
                   </ListItemIcon>
-                  <ListItemText 
+                  <ListItemText
                     primary={group.title}
                     primaryTypographyProps={{
-                      className: "font-semibold text-sm"
-                    }}
-                  />
-                      {isGroupOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                        className: "font-medium text-sm",
+                        style: { 
+                          color: hasActiveItem 
+                            ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                            : (mode === 'light' ? '#6b7280' : '#9ca3af')
+                        }
+                      }}
+                    />
+                    <motion.div
+                      animate={{ rotate: isGroupOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      style={{ 
+                        color: hasActiveItem 
+                          ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                          : (mode === 'light' ? '#9ca3af' : '#6b7280')
+                      }}
+                    >
+                  {isGroupOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                    </motion.div>
                 </ListItemButton>
+                </motion.div>
 
                 {/* Group Items */}
-                <Collapse in={isGroupOpen} timeout="auto" unmountOnExit>
+                <AnimatePresence>
+                  {isGroupOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    >
+                      <Box sx={{ ml: 2, position: 'relative' }}>
+                        {/* Vertical line */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: 12,
+                            top: 0,
+                            bottom: 0,
+                            width: '1px',
+                            backgroundColor: mode === 'light' ? '#e5e7eb' : '#374151',
+                          }}
+                        />
                   <List component="div" disablePadding>
-                    {group.items.map((item) => {
+                          {group.items.map((item, itemIndex) => {
                       const isActive = location.pathname === item.path;
                       return (
+                              <motion.div
+                                key={item.text}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.2, delay: itemIndex * 0.05 }}
+                                whileHover={{ scale: 1.01 }}
+                                whileTap={{ scale: 0.99 }}
+                              >
                         <ListItemButton
-                key={item.text}
-                onClick={() => {
-                  navigate(item.path);
-                  setMobileOpen(false);
-                }}
-                          className={`ml-3 px-2 py-1.5 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-                          sx={{ 
-                            minHeight: 32,
-                            pl: 2.5,
-                            ml: 1.5
+                          onClick={() => {
+                            navigate(item.path);
+                            setMobileOpen(false);
                           }}
-              >
-                          <ListItemIcon className="min-w-0 mr-2" sx={{ minWidth: 24 }}>
-                            <div className={`${isActive ? 'text-blue-600' : 'text-gray-400'} flex-shrink-0`}>
-                  {item.icon}
-                </div>
-                          </ListItemIcon>
-                          <ListItemText 
+                          sx={{
+                                    minHeight: 40,
+                                    pl: 4,
+                                    px: 3,
+                                    py: 1.5,
+                                    borderRadius: 2,
+                                    mb: 0.5,
+                                    backgroundColor: isActive 
+                                      ? (mode === 'light' ? '#f3f4f6' : '#374151')
+                                      : 'transparent',
+                                    color: isActive 
+                                      ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                                      : (mode === 'light' ? '#6b7280' : '#9ca3af'),
+                                    '&:hover': {
+                                      backgroundColor: mode === 'light' ? '#f9fafb' : '#374151',
+                                      color: mode === 'light' ? '#7c3aed' : '#a855f7',
+                                    },
+                                    transition: 'all 0.2s ease-in-out',
+                                    position: 'relative',
+                                  }}
+                                >
+                                  {/* Dot indicator */}
+                                  <Box
+                                    sx={{
+                                      position: 'absolute',
+                                      left: 8,
+                                      top: '50%',
+                                      transform: 'translateY(-50%)',
+                                      width: 6,
+                                      height: 6,
+                                      borderRadius: '50%',
+                                      backgroundColor: isActive 
+                                        ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                                        : (mode === 'light' ? '#d1d5db' : '#4b5563'),
+                                    }}
+                                  />
+                          <ListItemText
                             primary={item.text}
                             primaryTypographyProps={{
-                              className: "font-medium text-sm"
-                            }}
-                          />
-                {isActive && (
-                            <div className="w-1.5 h-1.5 bg-blue-600 rounded-full ml-auto flex-shrink-0" />
-                          )}
+                                      className: "font-medium text-sm",
+                                      style: { 
+                                        color: isActive 
+                                          ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                                          : (mode === 'light' ? '#6b7280' : '#9ca3af')
+                                      }
+                                    }}
+                                  />
                         </ListItemButton>
+                              </motion.div>
                       );
                     })}
                   </List>
-                </Collapse>
-              </div>
+                      </Box>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             );
           })}
         </List>
       </nav>
 
       {/* Footer */}
-      <div className="p-2 sm:p-4 border-t border-gray-200 flex-shrink-0">
-        <div className="text-xs text-gray-500 text-center">
-          <p className="hidden sm:block">Phiên bản 1.0.0</p>
-          <p>© 2024 Vé Số Pro</p>
+      <motion.div 
+        className="p-4 flex-shrink-0"
+        style={{
+          borderTop: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+        }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <div className="text-xs text-center" style={{ color: mode === 'light' ? '#9ca3af' : '#6b7280' }}>
+          <p>© 2024 Management System</p>
         </div>
-      </div>
-    </div>
+      </motion.div>
+
+
+    </motion.div>
   );
 
   return (
-    <Box className="flex h-screen bg-gray-50">
+    <Box 
+      className="flex h-screen"
+      sx={{
+        backgroundColor: mode === 'light' ? '#f1f5f9' : '#0f172a',
+        borderRadius: '0px',
+        boxShadow: 'none',
+        border: 'none',
+      }}
+    >
       {/* App Bar */}
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
-          ml: { sm: sidebarOpen ? `${drawerWidth}px` : 0 },
-          transition: 'all 0.3s ease-in-out',
-          bgcolor: 'white',
-          color: 'text.primary',
-          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-          borderBottom: '1px solid #e5e7eb',
+          borderRadius: '0px',
+          borderBottom: 'none',
+          width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${collapsedDrawerWidth}px)` },
+          ml: { sm: sidebarOpen ? `${drawerWidth}px` : `${collapsedDrawerWidth}px` },
+          bgcolor: mode === 'light' ? '#ffffff' : '#1e1e1e',
+          color: mode === 'light' ? '#212121' : '#ffffff',
+          boxShadow: 'none',
+          zIndex: 1200,
         }}
       >
-        <Toolbar className="justify-between px-2 sm:px-4" sx={{ paddingBottom: '10px', paddingTop: '10px' }}>
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            <IconButton
-              color="inherit"
-              aria-label="toggle sidebar"
-              edge="start"
-              onClick={handleSidebarToggle}
-              size="small"
-              sx={{ mr: 1 }}
-            >
-              {sidebarOpen ? <MenuOpenIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
-            </IconButton>
+        <Toolbar className="justify-between px-2 sm:px-4" sx={{ paddingBottom: '16px', paddingTop: '16px', minHeight: '72px', borderRadius: '0px' }}>
+          <div className="flex items-center space-x-2 sm:space-x-4 border-radius-0">
+            {/* Page Title */}
             <div className="min-w-0">
-              <Typography variant="h6" noWrap component="div" className="text-gray-900 text-sm sm:text-base">
-                {(() => {
-                  // Find current page title from menu groups
-                  for (const group of filteredMenuGroups) {
-                    const item = group.items.find(item => item.path === location.pathname);
-                    if (item) return item.text;
-                  }
-                  return 'Dashboard';
-                })()}
-              </Typography>
+              <h1 
+                className="text-lg font-bold truncate"
+                style={{ color: mode === 'light' ? '#212121' : '#ffffff' }}
+              >
+                {title}
+              </h1>
+              <p 
+                className="text-sm text-gray-500 truncate"
+                style={{ color: mode === 'light' ? '#6b7280' : '#9ca3af' }}
+              >
+                {subtitle}
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-1 sm:space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-4 border-radius-0">
+            {/* Dark Mode Toggle */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              style={{ borderRadius: '0px' }}
+            >
+              <IconButton 
+                onClick={toggleMode}
+                color="inherit" 
+                className="p-1 sm:p-2"
+                sx={{ 
+                  color: mode === 'light' ? '#616161' : '#b0b0b0',
+                  '&:hover': {
+                    color: mode === 'light' ? '#1976d2' : '#90caf9',
+                  }
+                }}
+              >
+                {mode === 'light' ? <DarkModeIcon className="text-lg sm:text-xl" /> : <LightModeIcon className="text-lg sm:text-xl" />}
+              </IconButton>
+            </motion.div>
+
             {/* Notifications */}
-            <IconButton color="inherit" className="text-gray-600 p-1 sm:p-2">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <IconButton 
+                color="inherit" 
+                className="p-1 sm:p-2"
+                sx={{ 
+                  color: mode === 'light' ? '#616161' : '#b0b0b0',
+                  '&:hover': {
+                    color: mode === 'light' ? '#1976d2' : '#90caf9',
+                  }
+                }}
+              >
               <Badge badgeContent={3} color="error">
                 <NotificationIcon className="text-lg sm:text-xl" />
               </Badge>
             </IconButton>
+            </motion.div>
 
             {/* Settings */}
-            <IconButton color="inherit" className="text-gray-600 p-1 sm:p-2">
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <IconButton 
+                color="inherit" 
+                className="p-1 sm:p-2"
+                sx={{ 
+                  color: mode === 'light' ? '#616161' : '#b0b0b0',
+                  '&:hover': {
+                    color: mode === 'light' ? '#1976d2' : '#90caf9',
+                  }
+                }}
+              >
               <SettingsIcon className="text-lg sm:text-xl" />
             </IconButton>
+            </motion.div>
 
             {/* Profile Menu */}
             <div className="flex items-center space-x-2 sm:space-x-3">
               <div className="text-right hidden lg:block">
-                <p className="text-sm font-medium text-gray-900 truncate max-w-24">{user?.name}</p>
-                <p className="text-xs text-gray-500 truncate">
+                <p 
+                  className="text-sm font-medium truncate max-w-24"
+                  style={{ color: mode === 'light' ? '#212121' : '#ffffff' }}
+                >
+                  {user?.name}
+                </p>
+                <p 
+                  className="text-xs truncate"
+                  style={{ color: mode === 'light' ? '#757575' : '#b0b0b0' }}
+                >
                   {getRoleDisplayName(user?.role || 'user')}
                 </p>
               </div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
               <IconButton
                 onClick={handleProfileMenuOpen}
                 className="p-1"
               >
-                <Avatar className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-indigo-500">
+                  <Avatar 
+                    className="w-7 h-7 sm:w-8 sm:h-8"
+                    sx={{
+                      background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+                    }}
+                  >
                   {user?.name?.charAt(0) || 'U'}
                 </Avatar>
               </IconButton>
+              </motion.div>
             </div>
           </div>
         </Toolbar>
@@ -453,22 +788,60 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         onClose={handleProfileMenuClose}
         className="mt-2"
         PaperProps={{
-          className: 'min-w-48 shadow-lg border border-gray-200',
+          className: 'min-w-48 shadow-lg border-radius-0',
+          style: {
+            backgroundColor: mode === 'light' ? '#ffffff' : '#1e1e1e',
+            border: `1px solid ${mode === 'light' ? '#e0e0e0' : '#424242'}`,
+            borderRadius: 12,
+          },
         }}
       >
-        <MenuItem onClick={handleProfileMenuClose} className="py-3">
+        <MenuItem 
+          onClick={handleProfileMenuClose} 
+          className="py-3"
+          sx={{
+            borderRadius: '0px',
+            '&:hover': {
+              backgroundColor: mode === 'light' ? '#f5f5f5' : '#2a2a2a',
+            },
+          }}
+        >
           <div className="flex items-center space-x-3">
-            <Avatar className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500">
+            <Avatar 
+              className="w-8 h-8"
+              sx={{
+                background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+              }}
+            >
               {user?.name?.charAt(0) || 'U'}
             </Avatar>
             <div>
-              <p className="font-medium text-gray-900">{user?.name}</p>
-              <p className="text-sm text-gray-500">{user?.phone_number}</p>
+              <p 
+                className="font-medium"
+                style={{ color: mode === 'light' ? '#212121' : '#ffffff' }}
+              >
+                {user?.name}
+              </p>
+              <p 
+                className="text-sm"
+                style={{ color: mode === 'light' ? '#757575' : '#b0b0b0' }}
+              >
+                {user?.phone_number}
+              </p>
             </div>
           </div>
         </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleLogout} className="py-3 text-red-600">
+        <Divider sx={{ backgroundColor: mode === 'light' ? '#e0e0e0' : '#424242' }} />
+        <MenuItem 
+          onClick={handleLogout} 
+          className="py-3"
+          sx={{
+            color: '#f44336',
+            '&:hover': {
+              backgroundColor: mode === 'light' ? '#ffebee' : '#2a1a1a',
+            },
+          }}
+        >
           <LogoutIcon className="mr-3" />
           Đăng xuất
         </MenuItem>
@@ -477,7 +850,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
       {/* Drawer */}
       <Box
         component="nav"
-        sx={{ width: { sm: sidebarOpen ? drawerWidth : 0 }, flexShrink: { sm: 0 } }}
+        sx={{ width: { sm: sidebarOpen ? drawerWidth : collapsedDrawerWidth }, flexShrink: { sm: 0 }, borderRadius: '0px' }}
       >
         <Drawer
           variant="temporary"
@@ -488,6 +861,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           }}
           sx={{
             display: { xs: 'block', sm: 'none' },
+            borderRadius: '0px',
             '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
           }}
         >
@@ -497,16 +871,230 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { 
-              boxSizing: 'border-box', 
-              width: sidebarOpen ? drawerWidth : 0, 
+            borderRadius: '0px',
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: sidebarOpen ? drawerWidth : collapsedDrawerWidth,
               transition: 'width 0.3s ease-in-out',
               overflow: 'hidden'
             },
           }}
           open
         >
-          {drawer}
+          {sidebarOpen ? drawer : (
+            <motion.div 
+              className="h-full flex flex-col relative"
+              style={{
+                background: mode === 'light' ? '#ffffff' : '#1e1e1e',
+                width: `${collapsedDrawerWidth}px`,
+                borderRight: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+                position: 'relative',
+                borderRadius: '0px',
+              }}
+              initial={{ x: -collapsedDrawerWidth }}
+              animate={{ x: 0 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+            >
+              {/* Logo - Collapsed */}
+              <motion.div 
+                className="flex-shrink-0"
+                style={{
+                  padding: '16px 12px',
+                  minHeight: '72px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '0px',
+                }}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <motion.div 
+                  className="rounded-lg flex items-center justify-center"
+                  style={{
+                    background: mode === 'light' 
+                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      : 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                    padding: '6px 8px',
+                    borderRadius: '10px',
+                    boxShadow: mode === 'light' 
+                      ? '0 3px 10px rgba(102, 126, 234, 0.3)'
+                      : '0 3px 10px rgba(79, 172, 254, 0.3)',
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {/* Logo Icon */}
+                    <div
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: '6px',
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(255, 255, 255, 0.3)',
+                      }}
+                    >
+                      <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        style={{
+                          filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2))'
+                        }}
+                      >
+                        <defs>
+                          <linearGradient id="collapsedLotteryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="white" stopOpacity="1" />
+                            <stop offset="100%" stopColor="rgba(255, 255, 255, 0.8)" stopOpacity="0.8" />
+                          </linearGradient>
+                        </defs>
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="6"
+                          stroke="url(#collapsedLotteryGradient)"
+                          strokeWidth="1.5"
+                          fill="rgba(255, 255, 255, 0.1)"
+                        />
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="1.5"
+                          fill="url(#collapsedLotteryGradient)"
+                        />
+                        <circle
+                          cx="16"
+                          cy="8"
+                          r="1.5"
+                          fill="url(#collapsedLotteryGradient)"
+                        />
+                        <circle
+                          cx="8"
+                          cy="16"
+                          r="1.5"
+                          fill="url(#collapsedLotteryGradient)"
+                        />
+                        <circle
+                          cx="16"
+                          cy="16"
+                          r="1.5"
+                          fill="url(#collapsedLotteryGradient)"
+                        />
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="2"
+                          fill="rgba(255, 255, 255, 0.2)"
+                          stroke="rgba(255, 255, 255, 0.5)"
+                          strokeWidth="0.5"
+                        />
+                        <text
+                          x="12"
+                          y="13"
+                          textAnchor="middle"
+                          fontSize="4"
+                          fill="white"
+                          fontWeight="bold"
+                          fontFamily="Arial, sans-serif"
+                        >
+                          $
+                        </text>
+                      </svg>
+                    </div>
+                    
+                    {/* Logo Text - Only show "O" in collapsed mode */}
+                    <div
+                      style={{
+                        color: 'white',
+                        fontWeight: '800',
+                        fontSize: '12px',
+                        lineHeight: 1,
+                        textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                        letterSpacing: '0.5px',
+                        fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                      }}
+                    >
+                      O
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* Navigation Icons - Collapsed */}
+              <nav className="flex-1 px-2 py-2 overflow-y-auto border-radius-0">
+                <List className="space-y-1">
+                  {filteredMenuGroups.map((group, groupIndex) => {
+                    return group.items.map((item, itemIndex) => (
+                      <motion.div
+                        key={`${groupIndex}-${itemIndex}`}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.3, delay: 0.1 + (itemIndex * 0.05) }}
+                      >
+                        <ListItem disablePadding>
+                          <ListItemButton
+                            component={Link}
+                            to={item.path}
+                            className="py-2 px-1 rounded-lg flex flex-col"
+                            sx={{
+                              minHeight: 60,
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              backgroundColor: location.pathname === item.path 
+                                ? (mode === 'light' ? '#f3f4f6' : '#374151')
+                                : 'transparent',
+                              color: location.pathname === item.path 
+                                ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                                : (mode === 'light' ? '#6b7280' : '#9ca3af'),
+                              '&:hover': {
+                                backgroundColor: mode === 'light' ? '#f8fafc' : '#2a2a2a',
+                                color: mode === 'light' ? '#374151' : '#d1d5db',
+                              },
+                              transition: 'all 0.2s ease-in-out',
+                            }}
+                          >
+                            <ListItemIcon 
+                              sx={{ 
+                                minWidth: 'auto',
+                                color: 'inherit',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginBottom: '4px',
+                              }}
+                            >
+                              {item.icon}
+                            </ListItemIcon>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: '10px',
+                                fontWeight: 500,
+                                textAlign: 'center',
+                                lineHeight: 1.2,
+                                color: 'inherit',
+                                opacity: 0.9,
+                              }}
+                            >
+                              {item.text}
+                            </Typography>
+                          </ListItemButton>
+                        </ListItem>
+                      </motion.div>
+                    ));
+                  })}
+                </List>
+              </nav>
+
+            </motion.div>
+          )}
         </Drawer>
       </Box>
 
@@ -515,18 +1103,63 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 2,
-          width: { sm: sidebarOpen ? `calc(100% - ${drawerWidth}px)` : '100%' },
-          transition: 'width 0.3s ease-in-out',
-          minHeight: '100vh',
-          bgcolor: '#fafafa',
+          height: '100vh',
+          overflow: 'hidden',
+          backgroundColor: mode === 'light' ? '#f1f5f9' : '#0f172a',
+          display: 'flex',
+          flexDirection: 'column',
+          borderRadius: '0px',
         }}
       >
         <Toolbar />
-        <Box sx={{ mt: 2 }}>
+        <Box
+          sx={{
+            flex: 1,
+            overflow: 'auto',
+            padding: '24px',
+            backgroundColor: mode === 'light' ? '#ffffff' : '#1e293b',
+            borderRadius: '0px',
+          }}
+        >
           {children}
         </Box>
       </Box>
+
+      {/* Toggle Sidebar Button - Positioned relative to sidebar */}
+      <Box
+        sx={{
+          position: 'absolute',
+          left: sidebarOpen ? `${drawerWidth - 16}px` : `${collapsedDrawerWidth - 16}px`,
+          top: '20px',
+          zIndex: 1300, // Higher than AppBar but not too high
+          transition: 'left 0.3s ease-in-out',
+          borderRadius: '0px',
+        }}
+      >
+        <IconButton
+          onClick={handleSidebarToggle}
+          className="border-radius-0"
+          sx={{
+            width: 32,
+            height: 32,
+            backgroundColor: mode === 'light' ? '#ffffff' : '#1e1e1e',
+            color: mode === 'light' ? '#6b7280' : '#9ca3af',
+            border: `2px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+            boxShadow: mode === 'light' 
+              ? '0 2px 4px rgba(0, 0, 0, 0.1)'
+              : '0 2px 4px rgba(0, 0, 0, 0.3)',
+            '&:hover': {
+              backgroundColor: mode === 'light' ? '#f8fafc' : '#2a2a2a',
+              color: mode === 'light' ? '#374151' : '#d1d5db',
+              transform: 'scale(1.05)',
+            },
+            transition: 'all 0.2s ease-in-out',
+          }}
+        >
+          {sidebarOpen ? <MenuOpenIcon fontSize="small" /> : <MenuIcon fontSize="small" />}
+        </IconButton>
+      </Box>
+
     </Box>
   );
 };

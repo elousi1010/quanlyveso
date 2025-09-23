@@ -11,7 +11,7 @@ export const PERMISSION_CONSTANTS = {
   },
   DEFAULT_PAGINATION: {
     PAGE: 1,
-    LIMIT: 10,
+    LIMIT: 5,
   },
   SORT_OPTIONS: [
     { value: 'name', label: 'Tên quyền' },

@@ -11,6 +11,7 @@ import {
   InventoryDeleteDialog,
   InventorySnackbar,
   InventoryFormDialog,
+  InventoryBulkEditDialog,
 } from './components';
 import { useInventories, useInventoryMutations } from './hooks';
 import { 
@@ -28,7 +29,7 @@ export const InventoryManagement: React.FC = () => {
   // State management
   const [searchParams, setSearchParams] = useState<InventorySearchParams>({
     page: 1,
-    limit: 10,
+    limit: 5,
   });
   const [selectedRows, setSelectedRows] = useState<Inventory[]>([]);
   const [dialogState, setDialogState] = useState({
@@ -36,6 +37,7 @@ export const InventoryManagement: React.FC = () => {
     edit: false,
     view: false,
     delete: false,
+    bulkEdit: false,
   });
   const [selectedInventory, setSelectedInventory] = useState<Inventory | null>(null);
   const [snackbar, setSnackbar] = useState({
@@ -81,6 +83,12 @@ export const InventoryManagement: React.FC = () => {
     setDialogState(prev => ({ ...prev, delete: true }));
   }, []);
 
+  const handleBulkEdit = useCallback(() => {
+    if (selectedRows.length > 0) {
+      setDialogState(prev => ({ ...prev, bulkEdit: true }));
+    }
+  }, [selectedRows]);
+
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -109,10 +117,8 @@ export const InventoryManagement: React.FC = () => {
   }, [createMutation, handleCloseDialog]);
 
   const handleUpdateSubmit = useCallback(async (data: UpdateInventoryDto) => {
-    if (!selectedInventory) return;
-    
     try {
-      await updateMutation.mutateAsync({ id: selectedInventory.id, data });
+      await updateMutation.mutateAsync(data);
       setSnackbar({
         open: true,
         message: 'Cập nhật kho thành công',
@@ -126,7 +132,7 @@ export const InventoryManagement: React.FC = () => {
         severity: 'error',
       });
     }
-  }, [selectedInventory, updateMutation, handleCloseDialog]);
+  }, [updateMutation, handleCloseDialog]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!selectedInventory) return;
@@ -148,6 +154,29 @@ export const InventoryManagement: React.FC = () => {
     }
   }, [selectedInventory, deleteMutation, handleCloseDialog]);
 
+  const handleBulkEditSubmit = useCallback(async (updates: Array<{ id: string; data: UpdateInventoryDto }>) => {
+    try {
+      // Update each inventory
+      await Promise.all(
+        updates.map(({ data }) => updateMutation.mutateAsync(data))
+      );
+      
+      setSnackbar({
+        open: true,
+        message: `Cập nhật thành công ${updates.length} kho`,
+        severity: 'success',
+      });
+      handleCloseDialog('bulkEdit');
+      setSelectedRows([]); // Clear selection after successful update
+    } catch {
+      setSnackbar({
+        open: true,
+        message: 'Có lỗi xảy ra khi cập nhật kho',
+        severity: 'error',
+      });
+    }
+  }, [updateMutation, handleCloseDialog]);
+
   const handleSnackbarClose = useCallback(() => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
@@ -159,6 +188,8 @@ export const InventoryManagement: React.FC = () => {
       <InventoryHeader
         onCreate={handleCreate}
         onRefresh={handleRefresh}
+        onBulkEdit={handleBulkEdit}
+        showBulkEdit={selectedRows.length > 0}
       />
 
       <Box sx={{ mt: 2 }}>
@@ -223,6 +254,15 @@ export const InventoryManagement: React.FC = () => {
         onConfirm={handleDeleteConfirm}
         inventory={selectedInventory}
         loading={deleteMutation.isPending}
+      />
+
+      {/* Bulk Edit Dialog */}
+      <InventoryBulkEditDialog
+        open={dialogState.bulkEdit}
+        onClose={() => handleCloseDialog('bulkEdit')}
+        onSave={handleBulkEditSubmit}
+        selectedInventories={selectedRows}
+        loading={updateMutation.isPending}
       />
 
       {/* Snackbar */}

@@ -1,11 +1,22 @@
 import React from 'react';
-import { CommonDataTable } from '@/components/common';
+import { 
+  CommonDataTable, 
+  type TableAction 
+} from '@/components/common';
+import { 
+  Visibility as ViewIcon, 
+  Edit as EditIcon, 
+  Delete as DeleteIcon 
+} from '@mui/icons-material';
 import { transactionTableConfig } from '../constants';
 import type { Transaction } from '../types';
 
 interface TransactionDataGridProps {
-  item: Transaction[];
+  data: Transaction[];
   loading: boolean;
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (transaction: Transaction) => void;
+  onView: (transaction: Transaction) => void;
   selectedRows: Transaction[];
   onSelectionChange: (transactions: Transaction[]) => void;
 }
@@ -31,17 +42,49 @@ export const TransactionDataGrid: React.FC<TransactionDataGridProps> = ({
     onDelete(transaction);
   };
 
+  const handleView = (transaction: Transaction) => {
+    onView(transaction);
+  };
+
+  // Define actions for the table
+  const actions: TableAction[] = [
+    {
+      key: 'view',
+      label: 'Xem',
+      icon: <ViewIcon fontSize="small" />,
+      color: 'primary.main',
+      onClick: handleView,
+    },
+    {
+      key: 'edit',
+      label: 'Sửa',
+      icon: <EditIcon fontSize="small" />,
+      color: 'warning.main',
+      onClick: handleEdit,
+    },
+    {
+      key: 'delete',
+      label: 'Xóa',
+      icon: <DeleteIcon fontSize="small" />,
+      color: 'error.main',
+      onClick: handleDelete,
+    },
+  ];
+
   return (
     <CommonDataTable
-      data={data}
-      loading={loading}
+      data={data as unknown as Record<string, unknown>[]}
+      isLoading={loading}
+      error={undefined}
+      onRefresh={() => {}}
       columns={transactionTableConfig.columns}
-      onRowClick={handleRowClick}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      selectedRows={selectedRows}
-      onSelectionChange={onSelectionChange}
-      config={transactionTableConfig}
+      actions={actions}
+      onRowClick={handleRowClick as (item: Transaction) => void}
+      onEdit={handleEdit as (item: Transaction) => void}
+      onDelete={handleDelete as (item: Transaction) => void}
+      selectedRows={selectedRows as unknown as Record<string, unknown>[]}
+      onSelectionChange={onSelectionChange as (items: unknown[]) => void}
+      config={transactionTableConfig as unknown as Record<string, unknown>}
     />
   );
 };

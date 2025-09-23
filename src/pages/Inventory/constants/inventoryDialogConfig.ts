@@ -43,6 +43,25 @@ export const inventoryCreateFields: DialogFieldConfig<CreateInventoryDto>[] = [
     required: true,
   },
   {
+    key: 'sub_type',
+    label: 'Loại Phụ',
+    type: 'select',
+    required: true,
+    options: [
+      { value: 'buy_from_agent', label: 'Mua từ đại lý' },
+      { value: 'sell_to_customer', label: 'Bán cho khách hàng' },
+      { value: 'transfer', label: 'Chuyển kho' },
+      { value: 'return', label: 'Trả về' },
+    ],
+  },
+  {
+    key: 'partner_id',
+    label: 'Đối Tác',
+    type: 'text',
+    required: true,
+    placeholder: 'Nhập ID đối tác',
+  },
+  {
     key: 'organization_id',
     label: 'Tổ Chức',
     type: 'text',
@@ -98,6 +117,25 @@ export const inventoryUpdateFields: DialogFieldConfig<UpdateInventoryDto>[] = [
     label: 'Ngày Quay',
     type: 'date',
     required: false,
+  },
+  {
+    key: 'sub_type',
+    label: 'Loại Phụ',
+    type: 'select',
+    required: false,
+    options: [
+      { value: 'buy_from_agent', label: 'Mua từ đại lý' },
+      { value: 'sell_to_customer', label: 'Bán cho khách hàng' },
+      { value: 'transfer', label: 'Chuyển kho' },
+      { value: 'return', label: 'Trả về' },
+    ],
+  },
+  {
+    key: 'partner_id',
+    label: 'Đối Tác',
+    type: 'text',
+    required: false,
+    placeholder: 'Nhập ID đối tác',
   },
   {
     key: 'organization_id',
@@ -159,6 +197,27 @@ export const inventoryDetailFields: DialogFieldConfig[] = [
     readonly: true,
   },
   {
+    key: 'sub_type',
+    label: 'Loại Phụ',
+    type: 'text',
+    readonly: true,
+    valueFormatter: (value) => {
+      const typeMap: Record<string, string> = {
+        'buy_from_agent': 'Mua từ đại lý',
+        'sell_to_customer': 'Bán cho khách hàng',
+        'transfer': 'Chuyển kho',
+        'return': 'Trả về',
+      };
+      return typeMap[value] || value;
+    },
+  },
+  {
+    key: 'partner_id',
+    label: 'Đối Tác',
+    type: 'text',
+    readonly: true,
+  },
+  {
     key: 'organization_id',
     label: 'Tổ Chức',
     type: 'text',
@@ -178,7 +237,11 @@ export const inventoryDetailFields: DialogFieldConfig[] = [
     readonly: true,
     valueFormatter: (value) => {
       if (!value) return '';
-      return new Date(value).toLocaleString('vi-VN');
+      const date = new Date(value);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     },
   },
   {
@@ -194,7 +257,11 @@ export const inventoryDetailFields: DialogFieldConfig[] = [
     readonly: true,
     valueFormatter: (value) => {
       if (!value) return '';
-      return new Date(value).toLocaleString('vi-VN');
+      const date = new Date(value);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     },
   },
   {

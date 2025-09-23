@@ -1,5 +1,13 @@
 import React from 'react';
-import { CommonDataTable } from '@/components/common';
+import { 
+  CommonDataTable, 
+  type TableAction 
+} from '@/components/common';
+import { 
+  Visibility as ViewIcon, 
+  Edit as EditIcon, 
+  Delete as DeleteIcon 
+} from '@mui/icons-material';
 import { stationTableConfig } from '../constants';
 import type { Station } from '../types';
 
@@ -36,10 +44,40 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
     onDelete(station);
   };
 
+  const handleView = (station: Station) => {
+    onView(station);
+  };
+
+  // Define actions for the table
+  const actions: TableAction[] = [
+    {
+      key: 'view',
+      label: 'Xem',
+      icon: <ViewIcon fontSize="small" />,
+      color: 'primary.main',
+      onClick: handleView,
+    },
+    {
+      key: 'edit',
+      label: 'Sửa',
+      icon: <EditIcon fontSize="small" />,
+      color: 'warning.main',
+      onClick: handleEdit,
+    },
+    {
+      key: 'delete',
+      label: 'Xóa',
+      icon: <DeleteIcon fontSize="small" />,
+      color: 'error.main',
+      onClick: handleDelete,
+    },
+  ];
+
   return (
     <CommonDataTable
       data={data as unknown as Record<string, unknown>[]}
       columns={stationTableConfig.columns}
+      actions={actions}
       isLoading={loading}
       error={undefined}
       onRefresh={() => {}}

@@ -154,11 +154,11 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
         </Typography>
       )
     },
-    {
-      key: 'actions_display',
-      label: 'Quyền hạn',
-      render: (value) => value as React.ReactNode
-    },
+    // {
+    //   key: 'actions_display',
+    //   label: 'Quyền hạn',
+    //   render: (value) => value as React.ReactNode
+    // },
     {
       key: 'is_active',
       label: 'Trạng thái',

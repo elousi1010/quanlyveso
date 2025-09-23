@@ -29,7 +29,7 @@ export const StationManagement: React.FC = () => {
   // State management
   const [searchParams, setSearchParams] = useState<StationSearchParams>({
     page: 1,
-    limit: 10,
+    limit: 5,
   });
   const [dialogState, setDialogState] = useState({
     create: false,

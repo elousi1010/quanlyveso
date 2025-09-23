@@ -29,7 +29,7 @@ export const TransactionManagement: React.FC = () => {
   // State management
   const [searchParams, setSearchParams] = useState<TransactionSearchParams>({
     page: 1,
-    limit: 10,
+    limit: 5,
   });
   const [selectedRows, setSelectedRows] = useState<Transaction[]>([]);
   const [dialogState, setDialogState] = useState({
@@ -55,7 +55,7 @@ export const TransactionManagement: React.FC = () => {
   }, []);
 
   const handleReset = useCallback(() => {
-    setSearchParams({ page: 1, limit: 10 });
+    setSearchParams({ page: 1, limit: 5 });
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -168,13 +168,11 @@ export const TransactionManagement: React.FC = () => {
       <TransactionHeader
         onCreate={handleCreate}
         onRefresh={handleRefresh}
-        selectedCount={selectedRows.length}
-        onDeleteSelected={handleDeleteSelected}
       />
 
       <Box sx={{ mt: 2 }}>
         <TransactionSearchAndFilter
-          searchParams={searchParams}
+          searchParams={searchParams as Record<string, unknown>}
           onSearchChange={handleSearchChange}
           onReset={handleReset}
         />
@@ -196,7 +194,7 @@ export const TransactionManagement: React.FC = () => {
       <CommonFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
-        onSubmit={handleCreateSubmit}
+        onSave={(data) => handleCreateSubmit(data as unknown as CreateTransactionDto)}
         title="Tạo Giao dịch Mới"
         fields={transactionCreateFields}
         submitText="Tạo"
@@ -207,15 +205,11 @@ export const TransactionManagement: React.FC = () => {
       <CommonViewEditDialog
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
-        onSubmit={handleUpdateSubmit}
-        onView={() => {
-          handleCloseDialog('edit');
-          setDialogState(prev => ({ ...prev, view: true }));
-        }}
+        onSave={(data) => handleUpdateSubmit(data as unknown as UpdateTransactionDto)}
         title="Chỉnh sửa Giao dịch"
-        fields={transactionUpdateFields}
-        data={selectedTransaction}
-        submitText="Cập nhật"
+        formFields={transactionUpdateFields}
+        item={selectedTransaction as unknown as Record<string, unknown>}
+        detailFields={transactionDetailFields}
         loading={updateMutation.isPending}
       />
 
@@ -229,7 +223,7 @@ export const TransactionManagement: React.FC = () => {
         }}
         title="Chi tiết Giao dịch"
         fields={transactionDetailFields}
-        data={selectedTransaction}
+        item={selectedTransaction as unknown as Record<string, unknown>}
       />
 
       {/* Delete Dialog */}

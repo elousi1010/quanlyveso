@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, TextField, Button, FormControl, InputLabel, Select, MenuItem, InputAdornment, IconButton, Paper } from '@mui/material';
-import { Search as SearchIcon, Clear as ClearIcon, ArrowUpward as ArrowUpwardIcon } from '@mui/icons-material';
+import { Search as SearchIcon, Clear as ClearIcon, ArrowUpward as ArrowUpwardIcon, Refresh as RefreshIcon } from '@mui/icons-material';
 
 export interface FilterOption {
   value: string;
@@ -22,7 +22,6 @@ interface CommonSearchAndFilterProps {
   onSearch: (query: string) => void;
   onSort: (sortBy: string) => void;
   onFilter: (filters: Record<string, string>) => void;
-  onRefresh: () => void;
   loading?: boolean;
 }
 
@@ -31,7 +30,6 @@ const CommonSearchAndFilter: React.FC<CommonSearchAndFilterProps> = ({
   onSearch,
   onSort,
   onFilter,
-  onRefresh,
   loading = false,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -47,19 +45,12 @@ const CommonSearchAndFilter: React.FC<CommonSearchAndFilterProps> = ({
     onSearch('');
   };
 
-  const handleSort = () => {
-    onSort(sortBy);
-  };
-
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     onFilter(newFilters);
   };
 
-  const handleRefresh = () => {
-    onRefresh();
-  };
 
   return (
     <Paper 
@@ -146,26 +137,6 @@ const CommonSearchAndFilter: React.FC<CommonSearchAndFilterProps> = ({
             sx={{ textTransform: 'none' }}
           >
             Tìm kiếm
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowUpwardIcon />}
-            onClick={handleSort}
-            disabled={loading}
-            size="small"
-            sx={{ textTransform: 'none' }}
-          >
-            Sắp xếp
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<ClearIcon />}
-            onClick={handleRefresh}
-            disabled={loading}
-            size="small"
-            sx={{ textTransform: 'none' }}
-          >
-            Làm mới
           </Button>
         </Box>
       </Box>

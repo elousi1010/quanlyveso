@@ -20,6 +20,7 @@ export const usePartners = (searchParams?: PartnerSearchParams) => {
       console.log('Partners API Response:', response);
       return response;
     },
+    enabled: true, // Always enabled, let the API handle empty params
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

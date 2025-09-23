@@ -1,5 +1,14 @@
 import React from 'react';
-import { CommonDataTable, type TableColumn } from '@/components/common';
+import { 
+  CommonDataTable, 
+  type TableColumn, 
+  type TableAction 
+} from '@/components/common';
+import { 
+  Visibility as ViewIcon, 
+  Edit as EditIcon, 
+  Delete as DeleteIcon 
+} from '@mui/icons-material';
 import { inventoryTableConfig } from '../constants';
 import type { Inventory } from '../types';
 
@@ -69,7 +78,36 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
     onDelete(inventory);
   };
 
+  const handleView = (inventory: Inventory) => {
+    onView(inventory);
+  };
+
   const tableColumns = convertColumnsToTableFormat(inventoryTableConfig.columns);
+
+  // Define actions for the table
+  const actions: TableAction[] = [
+    {
+      key: 'view',
+      label: 'Xem',
+      icon: <ViewIcon fontSize="small" />,
+      color: 'primary.main',
+      onClick: handleView,
+    },
+    {
+      key: 'edit',
+      label: 'Sửa',
+      icon: <EditIcon fontSize="small" />,
+      color: 'warning.main',
+      onClick: handleEdit,
+    },
+    {
+      key: 'delete',
+      label: 'Xóa',
+      icon: <DeleteIcon fontSize="small" />,
+      color: 'error.main',
+      onClick: handleDelete,
+    },
+  ];
 
   return (
     <CommonDataTable
@@ -78,11 +116,14 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
       error={undefined}
       onRefresh={() => {}}
       columns={tableColumns}
+      actions={actions}
       onRowClick={handleRowClick as (item: Inventory) => void}
       onEdit={handleEdit as (item: Inventory) => void}
       onDelete={handleDelete as (item: Inventory) => void}
       selectedRows={selectedRows as unknown as Record<string, unknown>[]}
       onSelectionChange={onSelectionChange as (items: unknown[]) => void}
+      enableCheckbox={true}
+      getRowId={(row) => (row as unknown as Inventory).id}
       config={inventoryTableConfig as unknown as Record<string, unknown>}
     />
   );

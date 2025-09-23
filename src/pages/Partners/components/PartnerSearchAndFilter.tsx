@@ -20,7 +20,6 @@ export const PartnerSearchAndFilter: React.FC<PartnerSearchAndFilterProps> = ({
       onSearch={() => onSearchChange(searchParams)}
       onSort={() => onSearchChange(searchParams)}
       onFilter={(filters) => onSearchChange({ ...searchParams, ...filters })}
-      onRefresh={onReset}
       loading={false}
     />
   );

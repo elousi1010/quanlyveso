@@ -2,7 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
   CommonViewEditDialog, 
-  CommonDetailDialog 
+  CommonDetailDialog,
+  CommonViewEditDrawer,
+  CommonDetailDrawer
 } from '@/components/common';
 import {
   PartnerHeader,
@@ -25,14 +27,15 @@ import {
 import type { 
   Partner, 
   CreatePartnerRequest, 
-  PartnerSearchParams 
+  PartnerSearchParams,
+  PartnerListResponse
 } from './types';
 
 export const PartnerManagement: React.FC = () => {
   // State management
   const [searchParams, setSearchParams] = useState<PartnerSearchParams>({
     page: 1,
-    limit: 10,
+    limit: 5,
   });
   // const [selectedRows, setSelectedRows] = useState<Partner[]>([]);
   const [dialogState, setDialogState] = useState({
@@ -49,8 +52,14 @@ export const PartnerManagement: React.FC = () => {
   });
 
   // API hooks
-  const { data: partnersData, isLoading, refetch } = usePartners(searchParams);
+  const { data: partnersData, isLoading, refetch, error } = usePartners(searchParams);
   const { createMutation, updateMutation, deleteMutation } = usePartnerMutations();
+
+  // Debug logging
+  console.log('PartnerManagement - partnersData:', partnersData);
+  console.log('PartnerManagement - isLoading:', isLoading);
+  console.log('PartnerManagement - error:', error);
+  console.log('PartnerManagement - searchParams:', searchParams);
 
   // Event handlers
   const handleSearchChange = useCallback((params: PartnerSearchParams) => {
@@ -58,7 +67,7 @@ export const PartnerManagement: React.FC = () => {
   }, []);
 
   const handleReset = useCallback(() => {
-    setSearchParams({ page: 1, limit: 10 });
+    setSearchParams({ page: 1, limit: 5 });
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -192,10 +201,10 @@ export const PartnerManagement: React.FC = () => {
   }, []);
 
 
-  const partners = partnersData?.data || [];
+  const partners = partnersData?.data?.data || [];
 
   return (
-    <Box>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <PartnerHeader
         onCreate={handleCreate}
         onRefresh={handleRefresh}
@@ -212,13 +221,14 @@ export const PartnerManagement: React.FC = () => {
         />
       </Box>
 
-      <Box sx={{ mt: 2 }}>
+      <Box sx={{ mt: 2, flex: 1, overflow: 'hidden' }}>
         <PartnerDataGrid
-          data={partners}
+          data={partnersData as unknown as PartnerListResponse}
           loading={isLoading}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onView={handleView}
+          onSave={handleUpdateSubmit}
         />
       </Box>
 
@@ -231,29 +241,27 @@ export const PartnerManagement: React.FC = () => {
         loading={createMutation.isPending}
       />
 
-      {/* Edit Dialog */}
-      <CommonViewEditDialog
+      {/* Edit Drawer */}
+      <CommonViewEditDrawer
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
         onSave={handleUpdateSubmit}
         title="Chỉnh sửa Đối tác"
-        formFields={PARTNER_FORM_FIELDS}
-        detailFields={PARTNER_DETAIL_FIELDS}
-        item={partnerToFormData(selectedPartner)}
+        editFields={PARTNER_FORM_FIELDS}
+        viewFields={PARTNER_DETAIL_FIELDS}
+        data={partnerToFormData(selectedPartner)}
         loading={updateMutation.isPending}
+        width={500}
       />
 
-      {/* View Dialog */}
-      <CommonDetailDialog
+      {/* View Drawer */}
+      <CommonDetailDrawer
         open={dialogState.view}
         onClose={() => handleCloseDialog('view')}
-        onEdit={() => {
-          handleCloseDialog('view');
-          setDialogState(prev => ({ ...prev, edit: true }));
-        }}
         title="Chi tiết Đối tác"
         fields={PARTNER_DETAIL_FIELDS}
-        item={partnerToDisplayData(selectedPartner)}
+        data={partnerToDisplayData(selectedPartner)}
+        width={500}
       />
 
       {/* Delete Dialog */}

@@ -23,7 +23,7 @@ import { userApi } from '@/api/userApi';
 import { usePermissionMutations } from './hooks/usePermissionMutations';
 import { usePermissions } from './hooks/usePermissions';
 import { AssignPermissionDialog } from './components';
-import { CommonSnackbar } from '@/components/common';
+import { CommonSnackbar, CommonHeader } from '@/components/common';
 import type { User } from './types';
 
 export const AssignPermissionManagement: React.FC = () => {
@@ -114,38 +114,25 @@ export const AssignPermissionManagement: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Assignment sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
-              Gán quyền hạn
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Gán quyền hạn cho các người dùng trong hệ thống
-            </Typography>
-          </Box>
-        </Box>
-        
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            startIcon={<Refresh />}
-            onClick={handleRefresh}
-            disabled={isLoading}
-            sx={{ borderRadius: 2 }}
-          >
-            Làm mới
-          </Button>
-        </Box>
-      </Box>
+      <CommonHeader
+        title="Gán quyền hạn"
+        subtitle="Gán quyền hạn cho các người dùng trong hệ thống"
+        onCreate={() => {}} // No create action for this page
+        onRefresh={handleRefresh}
+        loading={isLoading}
+        showRefresh={true}
+        createButtonText=""
+        showBulkEdit={false}
+      />
 
       {/* Users Grid */}
-      <Paper elevation={3} sx={{ p: 3, borderRadius: 3, background: 'white' }}>
-        <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'primary.dark' }}>
-          Danh sách người dùng ({users.length})
-        </Typography>
+      <Box sx={{ mt: 2, flex: 1, overflow: 'hidden' }}>
+        <Paper elevation={3} sx={{ p: 3, borderRadius: 3, background: 'white', height: '100%', overflow: 'auto' }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'primary.dark' }}>
+            Danh sách người dùng ({users.length})
+          </Typography>
         
         {isLoading ? (
           <Box sx={{ p: 4, textAlign: 'center' }}>
@@ -253,7 +240,8 @@ export const AssignPermissionManagement: React.FC = () => {
             ))}
           </Grid>
         )}
-      </Paper>
+        </Paper>
+      </Box>
 
       {/* Assign Permission Dialog */}
       <AssignPermissionDialog

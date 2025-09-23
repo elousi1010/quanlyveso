@@ -13,8 +13,7 @@ export const useInventoryMutations = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateInventoryDto }) =>
-      inventoryApi.update(id, data),
+    mutationFn: (data: UpdateInventoryDto) => inventoryApi.update(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inventories'] });
     },

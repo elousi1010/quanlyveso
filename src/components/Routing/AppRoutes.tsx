@@ -4,6 +4,9 @@ import ProtectedRoute from '../Auth/ProtectedRoute';
 import Unauthorized from '../../pages/Unauthorized';
 import DashboardLayout from '../Layout/DashboardLayout';
 
+// Import Dashboard
+import DashboardOverview from '../../pages/Dashboard/DashboardOverview';
+
 // Import pages with real APIs
 import PartnerManagement from '../../pages/Partners/PartnerManagement';
 import UserManagement from '../../pages/Users/UserManagement';
@@ -29,8 +32,18 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <DashboardLayout>
               <Routes>
-                {/* Default route - redirect to users */}
-                <Route path="/" element={<UserManagement />} />
+                {/* Default route - Dashboard */}
+                <Route path="/" element={<DashboardOverview />} />
+                
+                {/* Dashboard */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner', 'employee', 'seller']}>
+                      <DashboardOverview />
+                    </ProtectedRoute>
+                  }
+                />
                 
                 {/* Pages with real APIs */}
                 <Route
@@ -49,14 +62,14 @@ const AppRoutes: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
-                <Route
+                {/* <Route
                   path="/organizations"
                   element={
                     <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
                       <OrganizationManagement />
                     </ProtectedRoute>
                   }
-                />
+                /> */}
                 <Route
                   path="/permissions"
                   element={

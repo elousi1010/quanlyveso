@@ -12,8 +12,15 @@ import type {
 export const partnerApi = {
   // Get all partners
   getPartners: async (searchParams?: PartnerSearchParams): Promise<PartnerListResponse> => {
-    const response = await api.get<PartnerListResponse>('/api/v1/partners', { params: searchParams });
-    return response as unknown as PartnerListResponse;
+    try {
+      console.log('API call - getPartners with params:', searchParams);
+      const response = await api.get<PartnerListResponse>('/api/v1/partners', { params: searchParams });
+      console.log('API response:', response);
+      return response as unknown as PartnerListResponse;
+    } catch (error) {
+      console.error('API error - getPartners:', error);
+      throw error;
+    }
   },
 
   // Get partner by ID

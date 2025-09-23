@@ -4,15 +4,8 @@ import type { Inventory } from '../types';
 export const inventoryTableColumns: GridColDef<Inventory>[] = [
   {
     field: 'code',
-    headerName: 'Mã Kho',
-    width: 150,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'ticket_id',
     headerName: 'Mã Vé',
-    width: 200,
+    width: 150,
     sortable: true,
     filterable: true,
   },
@@ -51,15 +44,12 @@ export const inventoryTableColumns: GridColDef<Inventory>[] = [
     filterable: true,
     valueFormatter: (value) => {
       if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
+      const date = new Date(value);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     },
-  },
-  {
-    field: 'organization_id',
-    headerName: 'Tổ Chức',
-    width: 150,
-    sortable: true,
-    filterable: true,
   },
   {
     field: 'is_active',
@@ -82,7 +72,11 @@ export const inventoryTableColumns: GridColDef<Inventory>[] = [
     filterable: false,
     valueFormatter: (value) => {
       if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
+      const date = new Date(value);
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
     },
   },
   {

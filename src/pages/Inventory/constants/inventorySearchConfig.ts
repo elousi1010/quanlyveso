@@ -23,7 +23,6 @@ export const inventoryFilterFields: SearchFieldConfig[] = [
       { value: 'created_at', label: 'Ngày Tạo' },
       { value: 'updated_at', label: 'Ngày Cập Nhật' },
     ],
-    fullWidth: false,
   },
   {
     key: 'sortOrder',
@@ -33,7 +32,6 @@ export const inventoryFilterFields: SearchFieldConfig[] = [
       { value: 'asc', label: 'Tăng dần' },
       { value: 'desc', label: 'Giảm dần' },
     ],
-    fullWidth: false,
   },
   {
     key: 'is_active',
@@ -43,6 +41,22 @@ export const inventoryFilterFields: SearchFieldConfig[] = [
       { value: 'true', label: 'Hoạt động' },
       { value: 'false', label: 'Không hoạt động' },
     ],
-    fullWidth: false,
+  },
+  {
+    key: 'sub_type',
+    label: 'Loại Phụ',
+    type: 'select',
+    options: [
+      { value: 'buy_from_agent', label: 'Mua từ đại lý' },
+      { value: 'sell_to_customer', label: 'Bán cho khách hàng' },
+      { value: 'transfer', label: 'Chuyển kho' },
+      { value: 'return', label: 'Trả về' },
+    ],
+  },
+  {
+    key: 'partner_id',
+    label: 'Đối Tác',
+    type: 'text',
+    placeholder: 'Tìm kiếm theo ID đối tác',
   },
 ];

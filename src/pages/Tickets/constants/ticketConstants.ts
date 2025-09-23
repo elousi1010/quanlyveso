@@ -9,7 +9,7 @@ export const TICKET_CONSTANTS = {
   },
   DEFAULT_PAGINATION: {
     PAGE: 1,
-    LIMIT: 10,
+    LIMIT: 5,
   },
   SORT_OPTIONS: [
     { value: 'ticket_code', label: 'Mã vé' },

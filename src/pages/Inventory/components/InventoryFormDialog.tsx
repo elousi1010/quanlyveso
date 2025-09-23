@@ -20,7 +20,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Grid,
   CircularProgress,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
@@ -112,13 +111,6 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
     }
   }, [open]);
 
-  const handleTypeChange = useCallback((type: 'import' | 'export') => {
-    setFormData(prev => ({
-      ...prev,
-      type,
-      sub_type: type === 'import' ? 'buy_from_agent' : 'sell_to_customer',
-    }));
-  }, []);
 
   const generateTicketCode = useCallback((stationCode: string, drawDate: string) => {
     const date = new Date(drawDate);
@@ -207,22 +199,25 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
       </DialogTitle>
       
       <DialogContent>
-        <Grid container spacing={2} sx={{ mb: 3 }}>
-          <Grid item xs={12} md={3}>
+        <Box sx={{ mb: 3 }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+              gap: 2
+            }}
+          >
             <FormControl fullWidth>
               <InputLabel>Loại Giao Dịch</InputLabel>
               <Select
                 value={formData.type}
-                onChange={(e) => handleTypeChange(e.target.value as 'import' | 'export')}
+                disabled
                 label="Loại Giao Dịch"
               >
                 <MenuItem value="import">Nhập Kho</MenuItem>
-                <MenuItem value="export">Xuất Kho</MenuItem>
               </Select>
             </FormControl>
-          </Grid>
 
-          <Grid item xs={12} md={3}>
             <FormControl fullWidth>
               <InputLabel>Loại Vé</InputLabel>
               <Select
@@ -237,9 +232,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} md={3}>
+            
             <FormControl fullWidth>
               <InputLabel>Đài</InputLabel>
               <Select
@@ -265,9 +258,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
                 )}
               </Select>
             </FormControl>
-          </Grid>
 
-          <Grid item xs={12} md={3}>
             <TextField
               fullWidth
               label="Ngày Mở Thưởng"
@@ -276,9 +267,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
               onChange={(e) => setFormData(prev => ({ ...prev, draw_date: e.target.value }))}
               InputLabelProps={{ shrink: true }}
             />
-          </Grid>
 
-          <Grid item xs={12} md={3}>
             <FormControl fullWidth>
               <InputLabel>Loại Phụ</InputLabel>
               <Select
@@ -293,9 +282,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
                 ))}
               </Select>
             </FormControl>
-          </Grid>
 
-          <Grid item xs={12} md={3}>
             <FormControl fullWidth>
               <InputLabel>{formData.type === 'import' ? 'Nhà Cung Cấp' : 'Khách Hàng'}</InputLabel>
               <Select
@@ -321,8 +308,8 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
                 )}
               </Select>
             </FormControl>
-          </Grid>
-        </Grid>
+          </Box>
+        </Box>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6">Danh sách Vé</Typography>

@@ -20,12 +20,14 @@ import type {
   CreatePermissionDto, 
   PermissionSearchParams 
 } from './types';
+import { permissionSearchFields } from './constants';
+import type { SearchAndFilterConfig } from '@/components/common';
 
 export const PermissionManagement: React.FC = () => {
   // State management
   const [searchParams, setSearchParams] = useState<PermissionSearchParams>({
     page: 1,
-    limit: 10,
+    limit: 5,
   });
   const [selectedRows, setSelectedRows] = useState<Permission[]>([]);
   const [dialogState, setDialogState] = useState({
@@ -46,12 +48,20 @@ export const PermissionManagement: React.FC = () => {
   const { createMutation, updateMutation, deleteMutation } = usePermissionMutations();
 
   // Event handlers
-  const handleSearchChange = useCallback((params: PermissionSearchParams) => {
-    setSearchParams(prev => ({ ...prev, ...params, page: 1 }));
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchParams(prev => ({ ...prev, query, page: 1 }));
   }, []);
 
-  const handleReset = useCallback(() => {
-    setSearchParams({ page: 1, limit: 10 });
+  const handleSort = useCallback((sortBy: string) => {
+    setSearchParams(prev => ({ ...prev, sortBy }));
+  }, []);
+
+  const handleFilter = useCallback((filters: Record<string, string>) => {
+    setSearchParams(prev => ({ ...prev, ...filters }));
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    refetch();
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -85,10 +95,6 @@ export const PermissionManagement: React.FC = () => {
       setSelectedRows([]);
     }
   }, [selectedRows]);
-
-  const handleRefresh = useCallback(() => {
-    refetch();
-  }, [refetch]);
 
   const handleCloseDialog = useCallback((dialogType: keyof typeof dialogState) => {
     setDialogState(prev => ({ ...prev, [dialogType]: false }));
@@ -202,9 +208,13 @@ export const PermissionManagement: React.FC = () => {
 
       <Box>
         <PermissionSearchAndFilter
-          searchParams={searchParams} 
-          onSearchChange={handleSearchChange}
-          onReset={handleReset}
+          searchParams={searchParams as Record<string, unknown>} 
+          onSearch={handleSearchChange as (query: string) => void}
+          onSort={handleSort}
+          onFilter={handleFilter}
+          onSearchChange={handleSearchChange as (query: string) => void}
+          loading={isLoading}
+          config={permissionSearchFields as SearchAndFilterConfig}
         />
       </Box>
 
@@ -224,7 +234,7 @@ export const PermissionManagement: React.FC = () => {
       <PermissionFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
-        onSave={handleCreateSubmit}
+        onSave={(data) => handleCreateSubmit(data as unknown as CreatePermissionDto)}
         title="Tạo Quyền hạn Mới"
         loading={createMutation.isPending}
       />
@@ -245,25 +255,7 @@ export const PermissionManagement: React.FC = () => {
         onClose={() => handleCloseDialog('view')}
         maxWidth="lg"
         fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            minHeight: '700px',
-            background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-          }
-        }}
       >
-        <DialogTitle sx={{ pb: 2, textAlign: 'center' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
-            <Security sx={{ mr: 2, fontSize: 32, color: 'primary.main' }} />
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
-              Chi tiết Quyền hạn
-            </Typography>
-          </Box>
-          <Typography variant="body1" color="text.secondary">
-            Xem thông tin chi tiết và phân quyền
-          </Typography>
-        </DialogTitle>
 
         <DialogContent sx={{ pt: 1 }}>
           {selectedPermission && <PermissionDetailView permission={selectedPermission} />}

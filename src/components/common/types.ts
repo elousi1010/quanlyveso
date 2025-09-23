@@ -44,10 +44,25 @@ export interface TableColumn {
 
 export interface CommonHeaderProps {
   title: string;
+  subtitle?: string;
   onCreate: () => void;
-  onRefresh: () => void;
+  onRefresh?: () => void;
+  createButtonText?: string;
+  createButtonIcon?: React.ReactNode;
+  refreshButtonText?: string;
+  refreshButtonIcon?: React.ReactNode;
+  loading?: boolean;
+  onBulkEdit?: () => void;
+  bulkEditButtonText?: string;
+  bulkEditButtonIcon?: React.ReactNode;
+  showBulkEdit?: boolean;
   selectedCount?: number;
   onDeleteSelected?: () => void;
+  deleteButtonText?: string;
+  deleteButtonIcon?: React.ReactNode;
+  showDeleteSelected?: boolean;
+  customActions?: React.ReactNode;
+  showRefresh?: boolean;
 }
 
 export interface CommonSearchAndFilterProps {

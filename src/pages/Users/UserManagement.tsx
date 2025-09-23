@@ -175,7 +175,7 @@ const UserManagement: React.FC = () => {
   }));
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CommonHeader
         title="Quản lý người dùng"
         subtitle="Quản lý thông tin và quyền hạn của các người dùng trong hệ thống"
@@ -185,27 +185,30 @@ const UserManagement: React.FC = () => {
         loading={isLoading}
       />
 
-      <CommonSearchAndFilter
-        config={searchFilterConfig}
-        onSearch={handleSearch}
-        onSort={handleSort}
-        onFilter={handleFilter}
-        onRefresh={handleRefresh}
-        loading={isLoading}
-      />
-
-      <Paper sx={{ p: 3 }}>
-        <CommonDataTable
-          data={usersResponse?.data?.data as unknown as Record<string, unknown>[]}
-          columns={USER_TABLE_COLUMNS}
-          actions={tableActions}
-          isLoading={isLoading}
-          error={error}
-          onRefresh={handleRefresh}
-          emptyMessage="Không có người dùng"
-          emptyDescription="Chưa có người dùng nào trong hệ thống"
+      <Box sx={{ mt: 2 }}>
+        <CommonSearchAndFilter
+          config={searchFilterConfig}
+          onSearch={handleSearch}
+          onSort={handleSort}
+          onFilter={handleFilter}
+          loading={isLoading}
         />
-      </Paper>
+      </Box>
+
+      <Box sx={{ mt: 2, flex: 1, overflow: 'hidden' }}>
+        <Paper sx={{ height: '100%' }}>
+          <CommonDataTable
+            data={usersResponse?.data?.data as unknown as Record<string, unknown>[]}
+            columns={USER_TABLE_COLUMNS}
+            actions={tableActions}
+            isLoading={isLoading}
+            error={error}
+            onRefresh={handleRefresh}
+            emptyMessage="Không có người dùng"
+            emptyDescription="Chưa có người dùng nào trong hệ thống"
+          />
+        </Paper>
+      </Box>
 
       {/* Dialogs */}
       <CommonFormDialog

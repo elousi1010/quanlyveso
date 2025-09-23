@@ -5,11 +5,13 @@ import { STATION_CONSTANTS } from '../constants';
 interface StationHeaderProps {
   onCreate: () => void;
   onRefresh: () => void;
+  loading?: boolean;
 }
 
 export const StationHeader: React.FC<StationHeaderProps> = ({
   onCreate,
   onRefresh,
+  loading = false,
 }) => {
   return (
     <CommonHeader
@@ -17,6 +19,7 @@ export const StationHeader: React.FC<StationHeaderProps> = ({
       subtitle="Quản lý các trạm xổ số"
       onCreate={onCreate}
       onRefresh={onRefresh}
+      loading={loading}
     />
   );
 };
