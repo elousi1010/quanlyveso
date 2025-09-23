@@ -1,4 +1,23 @@
 import React, { useState } from 'react';
+
+// CSS Animation for rotating circles
+const rotateKeyframes = `
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+// Inject CSS
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = rotateKeyframes;
+  document.head.appendChild(style);
+}
 import {
   Box,
   Drawer,
@@ -355,30 +374,51 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                   strokeWidth="2.5"
                   fill="rgba(255, 255, 255, 0.1)"
                 />
-                <circle
-                  cx="8"
-                  cy="8"
-                  r="2.5"
-                  fill="url(#sidebarLotteryGradient)"
-                />
-                <circle
-                  cx="16"
-                  cy="8"
-                  r="2.5"
-                  fill="url(#sidebarLotteryGradient)"
-                />
-                <circle
-                  cx="8"
-                  cy="16"
-                  r="2.5"
-                  fill="url(#sidebarLotteryGradient)"
-                />
-                <circle
-                  cx="16"
-                  cy="16"
-                  r="2.5"
-                  fill="url(#sidebarLotteryGradient)"
-                />
+                <g transform="translate(12, 12)">
+                  <circle
+                    cx="-4"
+                    cy="-4"
+                    r="2.5"
+                    fill="url(#sidebarLotteryGradient)"
+                    style={{
+                      animation: 'rotate 4s linear infinite',
+                      transformOrigin: '0 0'
+                    }}
+                  />
+                  <circle
+                    cx="4"
+                    cy="-4"
+                    r="2.5"
+                    fill="url(#sidebarLotteryGradient)"
+                    style={{
+                      animation: 'rotate 4s linear infinite',
+                      transformOrigin: '0 0',
+                      animationDelay: '1s'
+                    }}
+                  />
+                  <circle
+                    cx="-4"
+                    cy="4"
+                    r="2.5"
+                    fill="url(#sidebarLotteryGradient)"
+                    style={{
+                      animation: 'rotate 4s linear infinite',
+                      transformOrigin: '0 0',
+                      animationDelay: '2s'
+                    }}
+                  />
+                  <circle
+                    cx="4"
+                    cy="4"
+                    r="2.5"
+                    fill="url(#sidebarLotteryGradient)"
+                    style={{
+                      animation: 'rotate 4s linear infinite',
+                      transformOrigin: '0 0',
+                      animationDelay: '3s'
+                    }}
+                  />
+                </g>
                 <circle
                   cx="12"
                   cy="12"
