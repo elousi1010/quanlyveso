@@ -7,16 +7,14 @@ import {
 import {
   CommonHeader,
   CommonSearchAndFilter,
-  CommonDataTable,
   CommonFormDialog,
-  CommonViewEditDialog,
   CommonDeleteDialog,
   CommonSnackbar,
 } from '../../components/common';
-import { useUsers, useUserMutations, useUser } from './hooks';
+import { useUsers, useUserMutations } from './hooks';
+import { UserDataGrid } from './components/UserDataGrid';
 import type { CreateUserRequest, UpdateUserRequest, User } from './types';
-import { USER_TABLE_COLUMNS, USER_TABLE_ACTIONS } from './constants/userTableConfig';
-import { USER_FORM_FIELDS, USER_DETAIL_FIELDS } from './constants/userDialogConfig';
+import { USER_FORM_FIELDS } from './constants/userDialogConfig';
 import { USER_ROLES, USER_STATUS_OPTIONS, USER_SORT_OPTIONS } from './constants';
 
 const UserManagement: React.FC = () => {
@@ -32,19 +30,14 @@ const UserManagement: React.FC = () => {
   const {
     selectedUser,
     isCreateDialogOpen,
-    isViewEditDialogOpen,
     isDeleteDialogOpen,
     createUserMutation,
     updateUserMutation,
     deleteUserMutation,
     openCreateDialog,
-    openViewEditDialog,
-    openDeleteDialog,
     closeAllDialogs,
   } = useUserMutations();
 
-  // Luôn gọi useUser nhưng với enabled condition
-  const { user: userDetail } = useUser(selectedUser?.id || '');
   
   // Debug logging removed to prevent console spam
 
@@ -97,15 +90,16 @@ const UserManagement: React.FC = () => {
     });
   };
 
-  const handleUpdateUserWithSnackbar = (data: Record<string, unknown>) => {
-    if (!selectedUser?.id) {
+  const handleUpdateUserWithSnackbar = async (data: Record<string, unknown>, selectedRow?: User) => {
+    const userToUpdate = selectedRow || selectedUser;
+    if (!userToUpdate?.id) {
       showSnackbar('Lỗi: Không tìm thấy ID người dùng', 'error');
       return;
     }
     
     const updateData = data as unknown as UpdateUserRequest;
     updateUserMutation.mutate(
-      { id: selectedUser.id, data: updateData },
+      { id: userToUpdate.id, data: updateData },
       {
         onSuccess: () => {
           showSnackbar('Cập nhật người dùng thành công!', 'success');
@@ -116,6 +110,18 @@ const UserManagement: React.FC = () => {
         },
       }
     );
+  };
+
+  const handleViewUser = () => {
+    // View functionality is now handled by CommonViewEditDrawer
+  };
+
+  const handleEditUser = () => {
+    // Edit functionality is now handled by CommonViewEditDrawer
+  };
+
+  const handleDeleteUser = () => {
+    // Delete functionality is now handled by CommonViewEditDrawer
   };
 
   const handleDeleteUserWithSnackbar = () => {
@@ -159,20 +165,6 @@ const UserManagement: React.FC = () => {
   };
 
   // Table actions with handlers
-  const tableActions = USER_TABLE_ACTIONS.map(action => ({
-    ...action,
-    onClick: (user: User) => {
-      switch (action.key) {
-        case 'view':
-        case 'edit':
-          openViewEditDialog(user);
-          break;
-        case 'delete':
-          openDeleteDialog(user);
-          break;
-      }
-    },
-  }));
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -197,15 +189,15 @@ const UserManagement: React.FC = () => {
 
       <Box sx={{ mt: 2, flex: 1, overflow: 'hidden' }}>
         <Paper sx={{ height: '100%' }}>
-          <CommonDataTable
-            data={usersResponse?.data?.data as unknown as Record<string, unknown>[]}
-            columns={USER_TABLE_COLUMNS}
-            actions={tableActions}
+          <UserDataGrid
+            data={usersResponse}
             isLoading={isLoading}
             error={error}
             onRefresh={handleRefresh}
-            emptyMessage="Không có người dùng"
-            emptyDescription="Chưa có người dùng nào trong hệ thống"
+            onViewDetail={handleViewUser}
+            onEdit={handleEditUser}
+            onDelete={handleDeleteUser}
+            onSave={handleUpdateUserWithSnackbar}
           />
         </Paper>
       </Box>
@@ -222,20 +214,6 @@ const UserManagement: React.FC = () => {
         submitText="Tạo người dùng"
       />
 
-      <CommonViewEditDialog
-        open={isViewEditDialogOpen}
-        onClose={closeAllDialogs}
-        onSave={handleUpdateUserWithSnackbar}
-        title="Thông tin người dùng"
-        item={(userDetail || selectedUser || {}) as unknown as Record<string, unknown>}
-        formFields={USER_FORM_FIELDS.filter(field => field.key !== 'password')}
-        detailFields={USER_DETAIL_FIELDS as unknown as import('../../components/common/types').DetailField[]}
-        loading={updateUserMutation.isPending}
-        avatar={{
-          text: selectedUser?.name?.charAt(0)?.toUpperCase() || 'U',
-          color: 'primary.main',
-        }}
-      />
 
       <CommonDeleteDialog
         open={isDeleteDialogOpen}

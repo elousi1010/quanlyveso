@@ -2,6 +2,7 @@ import React from 'react';
 import { CommonDataTable } from '@/components/common';
 import { PARTNER_TABLE_COLUMNS, PARTNER_TABLE_ACTIONS, PARTNER_DETAIL_FIELDS, PARTNER_FORM_FIELDS } from '../constants';
 import type { Partner, PartnerListResponse } from '../types';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
 interface PartnerDataGridProps {
   data: PartnerListResponse;
@@ -9,7 +10,7 @@ interface PartnerDataGridProps {
   onEdit: (partner: Partner) => void;
   onDelete: (partner: Partner) => void;
   onView: (partner: Partner) => void;
-  onSave?: (data: Record<string, any>) => Promise<void>;
+  onSave?: (data: Record<string, unknown>) => Promise<void>;
   selectedRows?: Partner[];
   onSelectionChange?: (selectedRows: Partner[]) => void;
 }
@@ -22,9 +23,6 @@ export const PartnerDataGrid: React.FC<PartnerDataGridProps> = ({
   onView,
   onSave,
 }) => {
-  console.log('PartnerDataGrid - Full data:', data);
-  console.log('PartnerDataGrid - Data array:', data?.data?.data);
-  console.log('PartnerDataGrid - Total:', data?.data?.total);
   
   // Table actions with handlers
   const tableActions = PARTNER_TABLE_ACTIONS.map(action => ({
@@ -44,20 +42,26 @@ export const PartnerDataGrid: React.FC<PartnerDataGridProps> = ({
     },
   }));
 
-  // Handle data structure
-  const partnersArray = data?.data?.data || [];
-  const totalCount = data?.data?.total || 0;
+  // Handle data structure - based on actual API response
+  // Data structure: { data: { data: { data: Partner[], total: number } } }
+  const partnersArray = data?.data?.data?.data || [];
+  const totalCount = data?.data?.data?.total || 0;
   
-  console.log('PartnerDataGrid - partnersArray:', partnersArray);
-  console.log('PartnerDataGrid - partnersArray length:', partnersArray.length);
-  console.log('PartnerDataGrid - totalCount:', totalCount);
-  console.log('PartnerDataGrid - data structure:', {
-    hasData: !!data,
-    hasDataData: !!data?.data,
-    hasDataDataData: !!data?.data?.data,
-    dataKeys: data ? Object.keys(data) : [],
-    dataDataKeys: data?.data ? Object.keys(data.data) : []
-  });
+
+  // Show loading if data is not ready
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  // Show message if no data
+  if (!data || !partnersArray.length) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <p>Không có dữ liệu đối tác</p>
+      </div>
+    );
+  }
+
 
   return (
     <CommonDataTable
@@ -70,14 +74,13 @@ export const PartnerDataGrid: React.FC<PartnerDataGridProps> = ({
       emptyMessage="Không có đối tác"
       emptyDescription="Chưa có đối tác nào trong hệ thống"
       total={totalCount}
-      // Drawer props
-      enableViewDetail={true}
-      enableEdit={!!onSave}
+      // Enable both view and edit
+      enableViewDetail={!!onSave}
+      enableEdit={false}
       detailFields={PARTNER_DETAIL_FIELDS}
       editFields={PARTNER_FORM_FIELDS}
       onSave={onSave}
       detailTitle="Chi tiết Đối tác"
-      editTitle="Chỉnh sửa Đối tác"
     />
   );
 };

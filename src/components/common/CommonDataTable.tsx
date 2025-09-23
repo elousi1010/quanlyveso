@@ -16,8 +16,8 @@ import {
   Tooltip,
   Checkbox
 } from '@mui/material';
-import { Visibility as VisibilityIcon, Edit as EditIcon } from '@mui/icons-material';
-import { CommonDetailDrawer, CommonViewEditDrawer, type DetailField, type FormField } from './index';
+import { Visibility as VisibilityIcon, Visibility as ViewIcon } from '@mui/icons-material';
+import { type DetailField, type FormField, CommonViewEditDrawer } from './index';
 
 export interface TableColumn {
   key: string;
@@ -61,11 +61,10 @@ interface CommonDataTableProps<T = unknown> {
   // Drawer props
   detailFields?: DetailField[];
   editFields?: FormField[];
-  onSave?: (data: Record<string, any>) => Promise<void>;
+  onSave?: (data: Record<string, unknown>, selectedRow?: T) => Promise<void>;
   enableViewDetail?: boolean;
   enableEdit?: boolean;
   detailTitle?: string;
-  editTitle?: string;
 }
 
 const CommonDataTable = <T extends Record<string, unknown>>({
@@ -94,8 +93,8 @@ const CommonDataTable = <T extends Record<string, unknown>>({
   enableViewDetail = false,
   enableEdit = false,
   detailTitle = 'Chi tiết',
-  editTitle = 'Chỉnh sửa',
 }: CommonDataTableProps<T>) => {
+  console.log('CommonDataTable - data:', data);
   const [internalPage, setInternalPage] = React.useState(0);
   const [internalRowsPerPage, setInternalRowsPerPage] = React.useState(10);
   
@@ -139,12 +138,6 @@ const CommonDataTable = <T extends Record<string, unknown>>({
     setSaveError(null);
   };
 
-  const handleEdit = (row: T) => {
-    setSelectedRow(row);
-    setDrawerMode('edit');
-    setDrawerOpen(true);
-    setSaveError(null);
-  };
 
   const handleCloseDrawer = () => {
     setDrawerOpen(false);
@@ -152,13 +145,14 @@ const CommonDataTable = <T extends Record<string, unknown>>({
     setSaveError(null);
   };
 
-  const handleSave = async (data: Record<string, any>) => {
-    if (!onSave) return;
+  const handleSave = async (data: Record<string, unknown>) => {
+    if (!onSave || !selectedRow) return;
     
     try {
       setSaveLoading(true);
       setSaveError(null);
-      await onSave(data);
+      // Pass both the form data and the selected row (which contains the id)
+      await onSave(data, selectedRow);
       setDrawerOpen(false);
       setSelectedRow(null);
     } catch (error) {
@@ -335,13 +329,13 @@ const CommonDataTable = <T extends Record<string, unknown>>({
                         </Tooltip>
                       )}
                       {enableEdit && (
-                        <Tooltip title="Chỉnh sửa">
+                        <Tooltip title="Xem chi tiết">
                           <IconButton
                             size="small"
-                            onClick={() => handleEdit(row)}
-                            sx={{ color: 'warning.main' }}
+                            onClick={() => handleViewDetail(row)}
+                            sx={{ color: 'primary.main' }}
                           >
-                            <EditIcon />
+                            <ViewIcon />
                           </IconButton>
                         </Tooltip>
                       )}
@@ -379,28 +373,20 @@ const CommonDataTable = <T extends Record<string, unknown>>({
         }
       />
 
-      {/* Drawer Components */}
-      {enableViewDetail && detailFields.length > 0 && selectedRow && (
-        <CommonDetailDrawer
-          open={drawerOpen && drawerMode === 'view'}
+      {/* Use CommonDetailDrawer with edit capability */}
+      {(enableViewDetail || enableEdit) && selectedRow && (
+        <CommonViewEditDrawer
+          open={drawerOpen}
           onClose={handleCloseDrawer}
           title={detailTitle}
           data={selectedRow}
-          fields={detailFields}
-        />
-      )}
-
-      {enableEdit && editFields.length > 0 && selectedRow && onSave && (
-        <CommonViewEditDrawer
-          open={drawerOpen && drawerMode === 'edit'}
-          onClose={handleCloseDrawer}
-          title={editTitle}
-          data={selectedRow}
           viewFields={detailFields}
           editFields={editFields}
-          onSave={handleSave}
+          onSave={onSave ? handleSave : undefined}
           loading={saveLoading}
           error={saveError}
+          mode={drawerMode}
+          enableEdit={!!onSave}
         />
       )}
     </Box>

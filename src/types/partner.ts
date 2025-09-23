@@ -51,10 +51,10 @@ export interface PartnerListResponse {
   message: string;
   error: string;
   statusCode: number;
-  data: Partner[];
-  total: number;
-  page: number;
-  limit: number;
+  data: {
+    data: Partner[];
+    total: number;
+  };
 }
 
 export interface PartnerResponse {

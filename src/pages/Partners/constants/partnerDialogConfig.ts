@@ -3,8 +3,9 @@ import type { FormField, DetailField } from '../../../components/common';
 export const PARTNER_TYPES = [
   { value: 'agent', label: 'Đại lý' },
   { value: 'seller', label: 'Người bán' },
-  { value: 'distributor', label: 'Nhà phân phối' },
-  { value: 'retailer', label: 'Bán lẻ' },
+  { value: 'customer', label: 'Khách hàng' },
+  { value: 'supplier', label: 'Nhà cung cấp' },
+  { value: 'other', label: 'Khác' },
 ];
 
 export const PARTNER_LEVELS = [
@@ -65,18 +66,26 @@ export const PARTNER_DETAIL_FIELDS: DetailField[] = [
   {
     key: 'name',
     label: 'Tên đối tác',
+    type: 'text',
   },
   {
     key: 'phone_number',
     label: 'Số điện thoại',
+    type: 'text',
   },
   {
     key: 'address',
     label: 'Địa chỉ',
+    type: 'text',
   },
   {
     key: 'type',
     label: 'Loại',
+    type: 'custom',
+    render: (type: string) => {
+      const typeLabel = PARTNER_TYPES.find(t => t.value === type)?.label || type;
+      return typeLabel;
+    },
     chip: {
       color: 'primary',
       variant: 'outlined',
@@ -85,19 +94,24 @@ export const PARTNER_DETAIL_FIELDS: DetailField[] = [
   {
     key: 'level',
     label: 'Cấp độ',
+    type: 'custom',
+    render: (level: number) => `Cấp ${level}`,
     chip: {
-      color: 'primary',
+      color: 'secondary',
       variant: 'outlined',
     },
   },
   {
     key: 'debt',
     label: 'Nợ (VNĐ)',
+    type: 'currency',
     render: (debt: number) => debt ? debt.toLocaleString('vi-VN') + ' VNĐ' : '0 VNĐ',
   },
   {
     key: 'is_active',
     label: 'Trạng thái',
+    type: 'custom',
+    render: (isActive: boolean) => isActive ? 'Hoạt động' : 'Không hoạt động',
     chip: {
       color: 'success',
       variant: 'filled',
@@ -106,9 +120,13 @@ export const PARTNER_DETAIL_FIELDS: DetailField[] = [
   {
     key: 'created_at',
     label: 'Ngày tạo',
+    type: 'date',
+    render: (date: string) => new Date(date).toLocaleDateString('vi-VN'),
   },
   {
     key: 'updated_at',
     label: 'Ngày cập nhật',
+    type: 'date',
+    render: (date: string) => new Date(date).toLocaleDateString('vi-VN'),
   },
 ];

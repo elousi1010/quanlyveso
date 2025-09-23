@@ -1,9 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog, 
-  CommonViewEditDialog, 
-  CommonDetailDialog 
+  CommonFormDialog
 } from '@/components/common';
 import {
   TicketHeader,
@@ -14,9 +12,7 @@ import {
 } from './components';
 import { useTickets, useTicketMutations } from './hooks';
 import { 
-  ticketCreateFields, 
-  ticketUpdateFields, 
-  ticketDetailFields 
+  ticketCreateFields
 } from './constants';
 import type { 
   Ticket, 
@@ -117,11 +113,12 @@ export const TicketManagement: React.FC = () => {
     }
   }, [createMutation, handleCloseDialog]);
 
-  const handleUpdateSubmit = useCallback(async (data: UpdateTicketDto) => {
-    if (!selectedTicket) return;
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Ticket) => {
+    const ticketToUpdate = selectedRow || selectedTicket;
+    if (!ticketToUpdate) return;
     
     try {
-      await updateMutation.mutateAsync({ id: selectedTicket.id, data });
+      await updateMutation.mutateAsync({ id: ticketToUpdate.id, data: data as unknown as UpdateTicketDto });
       setSnackbar({
         open: true,
         message: 'Cập nhật vé số thành công',
@@ -185,6 +182,7 @@ export const TicketManagement: React.FC = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onView={handleView}
+          onSave={handleUpdateSubmit}
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}
         />
@@ -201,27 +199,6 @@ export const TicketManagement: React.FC = () => {
         loading={createMutation.isPending}
       />
 
-      {/* Edit Dialog */}
-      <CommonViewEditDialog
-        open={dialogState.edit}
-        onClose={() => handleCloseDialog('edit')}
-        onSave={(data) => handleUpdateSubmit(data as unknown as UpdateTicketDto)}
-        title="Chỉnh sửa Vé số"
-        formFields={ticketUpdateFields}
-        item={selectedTicket as unknown as Record<string, unknown>}
-        detailFields={ticketDetailFields}
-        loading={updateMutation.isPending}
-      />
-
-      {/* View Dialog */}
-      <CommonDetailDialog
-        open={dialogState.view}
-        onClose={() => handleCloseDialog('view')}
-        onEdit={() => handleCloseDialog('view')}
-        title="Chi tiết Vé số"
-        fields={ticketDetailFields}
-        item={selectedTicket as unknown as Record<string, unknown>}
-      />
 
       {/* Delete Dialog */}
       <TicketDeleteDialog

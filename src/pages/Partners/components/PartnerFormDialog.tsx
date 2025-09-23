@@ -19,7 +19,7 @@ export const PartnerFormDialog: React.FC<PartnerFormDialogProps> = ({
   loading = false,
 }) => {
   const handleSave = (data: Record<string, unknown>) => {
-    const partnerData = data as CreatePartnerRequest;
+    const partnerData = data as unknown as CreatePartnerRequest;
     onSave(partnerData);
   };
 

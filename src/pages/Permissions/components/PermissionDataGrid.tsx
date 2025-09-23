@@ -12,6 +12,7 @@ import {
   Edit,
   Delete
 } from '@mui/icons-material';
+import { permissionFormFields, permissionDetailFields } from '../constants/permissionViewEditConfig';
 import type { Permission } from '../types';
 
 interface PermissionDataGridProps {
@@ -20,6 +21,7 @@ interface PermissionDataGridProps {
   onEdit: (permission: Permission) => void;
   onDelete: (permission: Permission) => void;
   onView: (permission: Permission) => void;
+  onSave?: (data: Record<string, unknown>, selectedRow?: Permission) => Promise<void>;
   selectedRows: Permission[];
   onSelectionChange: (permissions: Permission[]) => void;
 }
@@ -30,6 +32,7 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
+  onSave,
   selectedRows,
   onSelectionChange,
 }) => {
@@ -272,6 +275,13 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
         onSelectionChange={onSelectionChange}
         emptyMessage="Không có quyền hạn nào"
         emptyDescription="Chưa có quyền hạn nào trong hệ thống"
+        // Enable view detail with edit capability
+        enableViewDetail={!!onSave}
+        enableEdit={false}
+        detailFields={permissionDetailFields}
+        editFields={permissionFormFields}
+        onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
+        detailTitle="Chi tiết Quyền hạn"
       />
     </Box>
   );

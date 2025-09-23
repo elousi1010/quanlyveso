@@ -1,9 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
-import { 
-  CommonViewEditDialog, 
-  CommonDetailDialog 
-} from '@/components/common';
 import {
   InventoryHeader,
   InventoryDataGrid,
@@ -14,10 +10,6 @@ import {
   InventoryBulkEditDialog,
 } from './components';
 import { useInventories, useInventoryMutations } from './hooks';
-import { 
-  inventoryUpdateFields, 
-  inventoryDetailFields 
-} from './constants';
 import type { 
   Inventory, 
   CreateInventoryDto, 
@@ -116,9 +108,12 @@ export const InventoryManagement: React.FC = () => {
     }
   }, [createMutation, handleCloseDialog]);
 
-  const handleUpdateSubmit = useCallback(async (data: UpdateInventoryDto) => {
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Inventory) => {
+    const inventoryToUpdate = selectedRow || selectedInventory;
+    if (!inventoryToUpdate) return;
+    
     try {
-      await updateMutation.mutateAsync(data);
+      await updateMutation.mutateAsync({ ...data as UpdateInventoryDto, id: inventoryToUpdate.id });
       setSnackbar({
         open: true,
         message: 'Cập nhật kho thành công',
@@ -132,7 +127,7 @@ export const InventoryManagement: React.FC = () => {
         severity: 'error',
       });
     }
-  }, [updateMutation, handleCloseDialog]);
+  }, [selectedInventory, updateMutation, handleCloseDialog]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!selectedInventory) return;
@@ -209,6 +204,7 @@ export const InventoryManagement: React.FC = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onView={handleView}
+          onSave={handleUpdateSubmit}
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}
         />
@@ -222,30 +218,6 @@ export const InventoryManagement: React.FC = () => {
         loading={createMutation.isPending}
       />
 
-      {/* Edit Dialog */}
-      <CommonViewEditDialog
-        open={dialogState.edit}
-        onClose={() => handleCloseDialog('edit')}
-        onSave={handleUpdateSubmit}
-        title="Chỉnh sửa Kho"
-        item={selectedInventory as unknown as Record<string, unknown>}
-        formFields={inventoryUpdateFields}
-        detailFields={inventoryDetailFields}
-        loading={updateMutation.isPending}
-      />
-
-      {/* View Dialog */}
-      <CommonDetailDialog
-        open={dialogState.view}
-        onClose={() => handleCloseDialog('view')}
-        onEdit={() => {
-          handleCloseDialog('view');
-          setDialogState(prev => ({ ...prev, edit: true }));
-        }}
-        title="Chi tiết Kho"
-        fields={inventoryDetailFields}
-        item={selectedInventory as unknown as Record<string, unknown>}
-      />
 
       {/* Delete Dialog */}
       <InventoryDeleteDialog

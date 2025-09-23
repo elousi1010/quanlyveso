@@ -1,10 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
-import { 
-  Security,
-  Cancel,
-  Edit
-} from '@mui/icons-material';
+import { Box, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
+import { Cancel, Edit } from '@mui/icons-material';
 import {
   PermissionHeader,
   PermissionDataGrid,
@@ -62,7 +58,7 @@ export const PermissionManagement: React.FC = () => {
 
   const handleRefresh = useCallback(() => {
     refetch();
-  }, []);
+  }, [refetch]);
 
   const handleCreate = useCallback(() => {
     setSelectedPermission(null);
@@ -145,21 +141,18 @@ export const PermissionManagement: React.FC = () => {
     }
   }, [createMutation]);
 
-  const handleUpdateSubmit = useCallback(async (data: CreatePermissionDto) => {
-    if (!selectedPermission) return;
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Permission) => {
+    const permissionToUpdate = selectedRow || selectedPermission;
+    if (!permissionToUpdate) return;
     
     try {
-      // Use data directly instead of converting it again
-      await updateMutation.mutateAsync({ id: selectedPermission.id, data: data });
+      await updateMutation.mutateAsync({ id: permissionToUpdate.id, data: data as unknown as CreatePermissionDto });
       setSnackbar({
         open: true,
         message: 'Cập nhật quyền hạn thành công',
         severity: 'success',
       });
-      // Close dialog after a short delay to show success message
-      setTimeout(() => {
-        handleCloseDialog('edit');
-      }, 1000);
+      handleCloseDialog('edit');
     } catch {
       setSnackbar({
         open: true,
@@ -225,6 +218,7 @@ export const PermissionManagement: React.FC = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onView={handleView}
+          onSave={handleUpdateSubmit}
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}
         />
@@ -243,7 +237,7 @@ export const PermissionManagement: React.FC = () => {
       <PermissionFormDialog
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
-        onSave={handleUpdateSubmit}
+        onSave={(data) => handleUpdateSubmit(data as unknown as Record<string, unknown>, selectedPermission)}
         title="Chỉnh sửa Quyền hạn"
         permission={selectedPermission}
         loading={updateMutation.isPending}

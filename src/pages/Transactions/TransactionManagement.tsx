@@ -1,9 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog, 
-  CommonViewEditDialog, 
-  CommonDetailDialog 
+  CommonFormDialog
 } from '@/components/common';
 import {
   TransactionHeader,
@@ -14,9 +12,7 @@ import {
 } from './components';
 import { useTransactions, useTransactionMutations } from './hooks';
 import { 
-  transactionCreateFields, 
-  transactionUpdateFields, 
-  transactionDetailFields 
+  transactionCreateFields
 } from './constants';
 import type { 
   Transaction, 
@@ -117,11 +113,12 @@ export const TransactionManagement: React.FC = () => {
     }
   }, [createMutation, handleCloseDialog]);
 
-  const handleUpdateSubmit = useCallback(async (data: UpdateTransactionDto) => {
-    if (!selectedTransaction) return;
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Transaction) => {
+    const transactionToUpdate = selectedRow || selectedTransaction;
+    if (!transactionToUpdate) return;
     
     try {
-      await updateMutation.mutateAsync({ id: selectedTransaction.id, data });
+      await updateMutation.mutateAsync({ id: transactionToUpdate.id, data: data as unknown as UpdateTransactionDto });
       setSnackbar({
         open: true,
         message: 'Cập nhật giao dịch thành công',
@@ -185,6 +182,7 @@ export const TransactionManagement: React.FC = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onView={handleView}
+          onSave={handleUpdateSubmit}
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}
         />
@@ -201,30 +199,6 @@ export const TransactionManagement: React.FC = () => {
         loading={createMutation.isPending}
       />
 
-      {/* Edit Dialog */}
-      <CommonViewEditDialog
-        open={dialogState.edit}
-        onClose={() => handleCloseDialog('edit')}
-        onSave={(data) => handleUpdateSubmit(data as unknown as UpdateTransactionDto)}
-        title="Chỉnh sửa Giao dịch"
-        formFields={transactionUpdateFields}
-        item={selectedTransaction as unknown as Record<string, unknown>}
-        detailFields={transactionDetailFields}
-        loading={updateMutation.isPending}
-      />
-
-      {/* View Dialog */}
-      <CommonDetailDialog
-        open={dialogState.view}
-        onClose={() => handleCloseDialog('view')}
-        onEdit={() => {
-          handleCloseDialog('view');
-          setDialogState(prev => ({ ...prev, edit: true }));
-        }}
-        title="Chi tiết Giao dịch"
-        fields={transactionDetailFields}
-        item={selectedTransaction as unknown as Record<string, unknown>}
-      />
 
       {/* Delete Dialog */}
       <TransactionDeleteDialog

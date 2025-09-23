@@ -9,6 +9,7 @@ import {
   Delete as DeleteIcon 
 } from '@mui/icons-material';
 import { transactionTableConfig } from '../constants';
+import { transactionFormFields, transactionDetailFields } from '../constants/transactionViewEditConfig';
 import type { Transaction } from '../types';
 
 interface TransactionDataGridProps {
@@ -17,6 +18,7 @@ interface TransactionDataGridProps {
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
   onView: (transaction: Transaction) => void;
+  onSave?: (data: Record<string, unknown>, selectedRow?: Transaction) => Promise<void>;
   selectedRows: Transaction[];
   onSelectionChange: (transactions: Transaction[]) => void;
 }
@@ -27,6 +29,7 @@ export const TransactionDataGrid: React.FC<TransactionDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
+  onSave,
   selectedRows,
   onSelectionChange,
 }) => {
@@ -85,6 +88,13 @@ export const TransactionDataGrid: React.FC<TransactionDataGridProps> = ({
       selectedRows={selectedRows as unknown as Record<string, unknown>[]}
       onSelectionChange={onSelectionChange as (items: unknown[]) => void}
       config={transactionTableConfig as unknown as Record<string, unknown>}
+      // Enable view detail with edit capability
+      enableViewDetail={!!onSave}
+      enableEdit={false}
+      detailFields={transactionDetailFields}
+      editFields={transactionFormFields}
+      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
+      detailTitle="Chi tiết Giao dịch"
     />
   );
 };

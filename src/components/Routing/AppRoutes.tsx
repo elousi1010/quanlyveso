@@ -10,13 +10,14 @@ import DashboardOverview from '../../pages/Dashboard/DashboardOverview';
 // Import pages with real APIs
 import PartnerManagement from '../../pages/Partners/PartnerManagement';
 import UserManagement from '../../pages/Users/UserManagement';
-import { OrganizationManagement } from '../../pages/Organizations';
 import { PermissionManagement } from '../../pages/Permissions';
 import { AssignPermissionManagement } from '../../pages/Permissions/AssignPermissionManagement';
 import { StationManagement } from '../../pages/Stations';
 import { TicketManagement } from '../../pages/Tickets';
 import { TransactionManagement } from '../../pages/Transactions';
 import { InventoryManagement } from '../../pages/Inventory';
+import { InventoryTransactionPage } from '../../pages/InventoryTransaction';
+import { PartnerDebtManagement } from '../../pages/PartnerDebt';
 import TokenTest from '../../pages/TokenTest';
 
 const AppRoutes: React.FC = () => {
@@ -115,6 +116,38 @@ const AppRoutes: React.FC = () => {
                   element={
                     <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
                       <InventoryManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/inventory-transactions"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
+                      <InventoryTransactionPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/inventory-transactions/import"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
+                      <InventoryTransactionPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/inventory-transactions/export"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
+                      <InventoryTransactionPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/partner-debt"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
+                      <PartnerDebtManagement />
                     </ProtectedRoute>
                   }
                 />

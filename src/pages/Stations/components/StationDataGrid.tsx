@@ -9,6 +9,7 @@ import {
   Delete as DeleteIcon 
 } from '@mui/icons-material';
 import { stationTableConfig } from '../constants';
+import { stationFormFields, stationDetailFields } from '../constants/stationViewEditConfig';
 import type { Station } from '../types';
 
 interface StationDataGridProps {
@@ -17,6 +18,7 @@ interface StationDataGridProps {
   onEdit: (station: Station) => void;
   onDelete: (station: Station) => void;
   onView: (station: Station) => void;
+  onSave?: (data: Record<string, unknown>, selectedRow?: Station) => Promise<void>;
   page: number;
   rowsPerPage: number;
   total: number;
@@ -30,6 +32,7 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
+  onSave,
   page,
   rowsPerPage,
   total,
@@ -89,6 +92,13 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
       total={total}
       onPageChange={onPageChange}
       onRowsPerPageChange={onRowsPerPageChange}
+      // Enable view detail with edit capability
+      enableViewDetail={!!onSave}
+      enableEdit={false}
+      detailFields={stationDetailFields}
+      editFields={stationFormFields}
+      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
+      detailTitle="Chi tiết Trạm"
     />
   );
 };

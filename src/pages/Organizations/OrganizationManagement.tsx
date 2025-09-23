@@ -1,9 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog, 
-  CommonViewEditDialog, 
-  CommonDetailDialog 
+  CommonFormDialog
 } from '@/components/common';
 import {
   OrganizationHeader,
@@ -14,9 +12,7 @@ import {
 } from './components';
 import { useOrganizations, useOrganizationMutations } from './hooks';
 import { 
-  organizationCreateFields, 
-  organizationUpdateFields, 
-  organizationDetailFields 
+  organizationCreateFields
 } from './constants';
 import type { 
   Organization, 
@@ -108,11 +104,12 @@ export const OrganizationManagement: React.FC = () => {
     }
   }, [createMutation, handleCloseDialog]);
 
-  const handleUpdateSubmit = useCallback(async (data: UpdateOrganizationDto) => {
-    if (!selectedOrganization) return;
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Organization) => {
+    const organizationToUpdate = selectedRow || selectedOrganization;
+    if (!organizationToUpdate) return;
     
     try {
-      await updateMutation.mutateAsync({ id: selectedOrganization.id, data });
+      await updateMutation.mutateAsync({ id: organizationToUpdate.id, data: data as unknown as UpdateOrganizationDto });
       setSnackbar({
         open: true,
         message: 'Cập nhật tổ chức thành công',
@@ -180,6 +177,7 @@ export const OrganizationManagement: React.FC = () => {
           onEdit={handleEdit}
           onDelete={handleDelete}
           onView={handleView}
+          onSave={handleUpdateSubmit}
           page={(searchParams.page || 1) - 1}
           rowsPerPage={searchParams.limit || 10}
           total={total}
@@ -199,30 +197,6 @@ export const OrganizationManagement: React.FC = () => {
         loading={createMutation.isPending}
       />
 
-      {/* Edit Dialog */}
-      <CommonViewEditDialog
-        open={dialogState.edit}
-        onClose={() => handleCloseDialog('edit')}
-        onSave={(data: Record<string, unknown>) => handleUpdateSubmit(data as unknown as UpdateOrganizationDto)}
-        title="Chỉnh sửa Tổ chức"
-        item={selectedOrganization as unknown as Record<string, unknown>}
-        formFields={organizationUpdateFields}
-        detailFields={organizationDetailFields}
-        loading={updateMutation.isPending}
-      />
-
-      {/* View Dialog */}
-      <CommonDetailDialog
-        open={dialogState.view}
-        onClose={() => handleCloseDialog('view')}
-        onEdit={() => {
-          handleCloseDialog('view');
-          setDialogState(prev => ({ ...prev, edit: true }));
-        }}
-        title="Chi tiết Tổ chức"
-        fields={organizationDetailFields}
-        item={selectedOrganization as unknown as Record<string, unknown>}
-      />
 
       {/* Delete Dialog */}
       <OrganizationDeleteDialog

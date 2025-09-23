@@ -3,12 +3,8 @@ import {
   Box,
   Button,
   Typography,
-  Grid,
   Chip,
-  Divider,
   Paper,
-  useTheme,
-  useMediaQuery,
   Alert,
   CircularProgress,
 } from '@mui/material';
@@ -19,14 +15,15 @@ export interface CommonViewEditDrawerProps {
   open: boolean;
   onClose: () => void;
   title: string;
-  data: Record<string, any>;
-  viewFields: DetailField[];
-  editFields: FormField[];
-  onSave: (data: Record<string, any>) => Promise<void>;
+  data: Record<string, unknown>;
+  viewFields?: DetailField[];
+  editFields?: FormField[];
+  onSave?: (data: Record<string, unknown>) => Promise<void>;
   loading?: boolean;
   error?: string | null;
   width?: number | string;
-  allowEdit?: boolean;
+  mode?: 'view' | 'edit';
+  enableEdit?: boolean;
 }
 
 const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
@@ -34,31 +31,35 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
   onClose,
   title,
   data,
-  viewFields,
-  editFields,
+  viewFields = [],
+  editFields = [],
   onSave,
   loading = false,
   error = null,
   width = 500,
-  allowEdit = true,
+  mode = 'view',
+  enableEdit = true,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [isEditing, setIsEditing] = useState(mode === 'edit');
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (open) {
       setFormData(data);
       setFormErrors({});
-      setIsEditing(false);
+      setIsEditing(mode === 'edit');
     }
-  }, [open, data]);
+  }, [open, data, mode]);
 
   const handleEdit = () => {
     setIsEditing(true);
-    setFormData(data);
+    // Only keep fields that exist in editFields for form data
+    const formFields = editFields.reduce((acc, field) => {
+      acc[field.key] = data[field.key];
+      return acc;
+    }, {} as Record<string, unknown>);
+    setFormData(formFields);
     setFormErrors({});
   };
 
@@ -71,14 +72,14 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
   const handleSave = async () => {
     try {
       setFormErrors({});
-      await onSave(formData);
+      await onSave?.(formData);
       setIsEditing(false);
     } catch (err) {
       console.error('Save error:', err);
     }
   };
 
-  const handleFieldChange = (fieldName: string, value: any) => {
+  const handleFieldChange = (fieldName: string, value: unknown) => {
     setFormData(prev => ({
       ...prev,
       [fieldName]: value,
@@ -93,11 +94,20 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
     }
   };
 
-  const renderFieldValue = (field: DetailField, value: any) => {
+  const renderFieldValue = (field: DetailField, value: unknown) => {
     if (value === null || value === undefined || value === '') {
       return (
         <Typography variant="body2" color="text.secondary" fontStyle="italic">
           Không có dữ liệu
+        </Typography>
+      );
+    }
+
+    // Handle objects that shouldn't be rendered directly
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      return (
+        <Typography variant="body2" color="text.secondary" fontStyle="italic">
+          [Object - {Object.keys(value).join(', ')}]
         </Typography>
       );
     }
@@ -108,14 +118,14 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       case 'tel':
         return (
           <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-            {value}
+            {String(value)}
           </Typography>
         );
 
       case 'number':
         return (
           <Typography variant="body2">
-            {typeof value === 'number' ? value.toLocaleString() : value}
+            {typeof value === 'number' ? value.toLocaleString() : String(value)}
           </Typography>
         );
 
@@ -125,21 +135,21 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
             {typeof value === 'number' ? value.toLocaleString('vi-VN', {
               style: 'currency',
               currency: 'VND',
-            }) : value}
+            }) : String(value)}
           </Typography>
         );
 
       case 'date':
         return (
           <Typography variant="body2">
-            {value ? new Date(value).toLocaleDateString('vi-VN') : 'N/A'}
+            {value ? new Date(value as string | number | Date).toLocaleDateString('vi-VN') : 'N/A'}
           </Typography>
         );
 
       case 'datetime':
         return (
           <Typography variant="body2">
-            {value ? new Date(value).toLocaleString('vi-VN') : 'N/A'}
+            {value ? new Date(value as string | number | Date).toLocaleString('vi-VN') : 'N/A'}
           </Typography>
         );
 
@@ -153,19 +163,21 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
           />
         );
 
-      case 'status':
-        const statusConfig = field.statusConfig?.[value] || {
-          label: value,
+      case 'status': {
+        const statusConfig = field.statusConfig?.[value as string] || {
+          label: String(value),
           color: 'default' as const,
+          variant: 'filled' as const,
         };
         return (
           <Chip
             label={statusConfig.label}
             color={statusConfig.color}
             size="small"
-            variant="statusConfig.variant || 'filled'"
+            variant={statusConfig.variant || 'filled'}
           />
         );
+      }
 
       case 'array':
         if (Array.isArray(value)) {
@@ -185,7 +197,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         }
         return (
           <Typography variant="body2" color="text.secondary">
-            {value}
+            {String(value)}
           </Typography>
         );
 
@@ -208,7 +220,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         }
         return (
           <Typography variant="body2">
-            {value}
+            {String(value)}
           </Typography>
         );
 
@@ -218,22 +230,45 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         }
         return (
           <Typography variant="body2">
-            {value}
+            {String(value)}
           </Typography>
         );
 
       default:
+        // Check if field has custom render function
+        if (field.render) {
+          const renderedValue = field.render(value, data);
+          
+          // If field has chip config, wrap in Chip component
+          if (field.chip) {
+            return (
+              <Chip
+                label={renderedValue}
+                color={field.chip.color}
+                size="small"
+                variant={field.chip.variant || 'filled'}
+              />
+            );
+          }
+          
+          return (
+            <Typography variant="body2">
+              {renderedValue}
+            </Typography>
+          );
+        }
+        
         return (
           <Typography variant="body2">
-            {value}
+            {String(value)}
           </Typography>
         );
     }
   };
 
   const renderEditField = (field: FormField) => {
-    const value = formData[field.name] || '';
-    const error = formErrors[field.name];
+    const value = formData[field.key] || '';
+    const error = formErrors[field.key];
 
     switch (field.type) {
       case 'text':
@@ -242,8 +277,8 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         return (
           <input
             type={field.type}
-            value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            value={String(value)}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             disabled={field.disabled}
             style={{
@@ -261,8 +296,8 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         return (
           <input
             type="number"
-            value={value}
-            onChange={(e) => handleFieldChange(field.name, parseFloat(e.target.value) || 0)}
+            value={String(value)}
+            onChange={(e) => handleFieldChange(field.key, parseFloat(e.target.value) || 0)}
             placeholder={field.placeholder}
             disabled={field.disabled}
             min={field.min}
@@ -282,8 +317,8 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       case 'select':
         return (
           <select
-            value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            value={String(value)}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
             disabled={field.disabled}
             style={{
               width: '100%',
@@ -306,8 +341,8 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       case 'textarea':
         return (
           <textarea
-            value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            value={String(value)}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             disabled={field.disabled}
             rows={field.rows || 3}
@@ -329,7 +364,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
             <input
               type="checkbox"
               checked={Boolean(value)}
-              onChange={(e) => handleFieldChange(field.name, e.target.checked)}
+              onChange={(e) => handleFieldChange(field.key, e.target.checked)}
               disabled={field.disabled}
             />
             <span>{field.placeholder || 'Bật/Tắt'}</span>
@@ -340,8 +375,8 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         return (
           <input
             type="date"
-            value={value ? new Date(value).toISOString().split('T')[0] : ''}
-            onChange={(e) => handleFieldChange(field.name, e.target.value ? new Date(e.target.value).toISOString() : '')}
+            value={value ? new Date(value as string | number | Date).toISOString().split('T')[0] : ''}
+            onChange={(e) => handleFieldChange(field.key, e.target.value ? new Date(e.target.value).toISOString() : '')}
             disabled={field.disabled}
             style={{
               width: '100%',
@@ -361,8 +396,8 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         return (
           <input
             type="text"
-            value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            value={String(value)}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             disabled={field.disabled}
             style={{
@@ -380,8 +415,8 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         return (
           <input
             type="text"
-            value={value}
-            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            value={String(value)}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             disabled={field.disabled}
             style={{
@@ -420,7 +455,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
           </Button>
         </>
       ) : (
-        allowEdit && (
+        enableEdit && onSave && (
           <Button
             onClick={handleEdit}
             startIcon={<EditIcon />}
@@ -433,6 +468,34 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       )}
     </Box>
   );
+
+  const fieldsToUse = isEditing ? (editFields || []) : (viewFields || []);
+  
+  // Fallback: if no fields provided, create basic fields from data
+  const fallbackFields = fieldsToUse.length === 0 && Object.keys(data).length > 0 ? 
+    Object.keys(data)
+      .filter(key => {
+        const value = data[key];
+        // Filter out ID and organization_id fields
+        if (key === 'id' || key === 'organization_id') {
+          return false;
+        }
+        // Only include primitive values, not objects
+        return value !== null && value !== undefined && 
+               (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean');
+      })
+      .map(key => ({
+        key,
+        label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+        type: 'text' as const
+      })) : [];
+  
+  // Filter out ID and organization_id fields from provided fields as well
+  const filteredFields = fieldsToUse.filter(field => 
+    field.key !== 'id' && field.key !== 'organization_id'
+  );
+  
+  const finalFields = filteredFields.length > 0 ? filteredFields : fallbackFields;
 
   return (
     <CommonDrawer
@@ -449,47 +512,55 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
           </Alert>
         )}
 
-        <Grid container spacing={2}>
-          {(isEditing ? editFields : viewFields).map((field) => {
-            const value = isEditing ? formData[field.name] : data[field.name];
-            const error = isEditing ? formErrors[field.name] : null;
-            
-            return (
-              <Grid item xs={12} sm={field.fullWidth ? 12 : 6} key={field.name}>
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 2,
-                    border: 1,
-                    borderColor: error ? 'error.main' : 'divider',
-                    borderRadius: 1,
-                    height: '100%',
+
+        {finalFields.length > 0 ? (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {finalFields.map((field) => {
+              const value = isEditing ? formData[field.key] : data[field.key];
+              const error = isEditing ? formErrors[field.key] : null;
+              
+              
+              return (
+                <Box 
+                  key={field.key}
+                  sx={{ 
+                    flex: field.fullWidth ? '1 1 100%' : '1 1 calc(50% - 8px)',
+                    minWidth: '300px'
                   }}
                 >
-                  <Typography
-                    variant="subtitle2"
-                    color={error ? 'error.main' : 'text.secondary'}
-                    gutterBottom
-                    sx={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      border: 1,
+                      borderColor: error ? 'error.main' : 'divider',
+                      borderRadius: 1,
+                      height: '100%',
+                    }}
                   >
-                    {field.label}
-                    {field.required && <span style={{ color: '#d32f2f' }}> *</span>}
-                  </Typography>
-                  <Box sx={{ mt: 0.5 }}>
-                    {isEditing ? renderEditField(field as FormField) : renderFieldValue(field as DetailField, value)}
-                  </Box>
-                  {error && (
-                    <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-                      {error}
+                    <Typography
+                      variant="subtitle2"
+                      color={error ? 'error.main' : 'text.secondary'}
+                      gutterBottom
+                      sx={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}
+                    >
+                      {field.label}
+                      {field.required && <span style={{ color: '#d32f2f' }}> *</span>}
                     </Typography>
-                  )}
-                </Paper>
-              </Grid>
-            );
-          })}
-        </Grid>
-
-        {(isEditing ? editFields : viewFields).length === 0 && (
+                    <Box sx={{ mt: 0.5 }}>
+                      {isEditing ? renderEditField(field as FormField) : renderFieldValue(field as DetailField, value)}
+                    </Box>
+                    {error && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
+                        {error}
+                      </Typography>
+                    )}
+                  </Paper>
+                </Box>
+              );
+            })}
+          </Box>
+        ) : (
           <Box
             sx={{
               display: 'flex',

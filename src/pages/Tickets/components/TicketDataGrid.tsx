@@ -9,6 +9,7 @@ import {
   Delete as DeleteIcon 
 } from '@mui/icons-material';
 import { ticketTableConfig } from '../constants';
+import { ticketFormFields, ticketDetailFields } from '../constants/ticketViewEditConfig';
 import type { Ticket } from '../types';
 
 interface TicketDataGridProps {
@@ -17,6 +18,7 @@ interface TicketDataGridProps {
   onEdit: (ticket: Ticket) => void;
   onDelete: (ticket: Ticket) => void;
   onView: (ticket: Ticket) => void;
+  onSave?: (data: Record<string, unknown>, selectedRow?: Ticket) => Promise<void>;
   selectedRows: Ticket[];
   onSelectionChange: (tickets: Ticket[]) => void;
 }
@@ -27,6 +29,7 @@ export const TicketDataGrid: React.FC<TicketDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
+  onSave,
   selectedRows,
   onSelectionChange,
 }) => {
@@ -85,6 +88,13 @@ export const TicketDataGrid: React.FC<TicketDataGridProps> = ({
       selectedRows={selectedRows as unknown as Record<string, unknown>[]}
       onSelectionChange={onSelectionChange as (items: unknown[]) => void}
       config={ticketTableConfig as unknown as Record<string, unknown>}
+      // Enable view detail with edit capability
+      enableViewDetail={!!onSave}
+      enableEdit={false}
+      detailFields={ticketDetailFields}
+      editFields={ticketFormFields}
+      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
+      detailTitle="Chi tiết Vé"
     />
   );
 };

@@ -1,7 +1,7 @@
 import type { TableColumn, TableAction } from '../../../components/common';
 import type { Partner } from '../types/partnerTypes';
 import { formatCurrency, formatDate } from '../../../utils/format';
-import { Visibility as ViewIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import { Chip } from '@mui/material';
 
 export const PARTNER_TABLE_COLUMNS: TableColumn[] = [
@@ -103,15 +103,6 @@ export const PARTNER_TABLE_COLUMNS: TableColumn[] = [
 ];
 
 export const PARTNER_TABLE_ACTIONS: TableAction[] = [
-  {
-    key: 'view',
-    label: 'Xem/Chỉnh sửa',
-    icon: <ViewIcon fontSize="small" />,
-    color: 'primary.main',
-    onClick: (partner: Partner) => {
-      console.log('View/Edit partner:', partner);
-    },
-  },
   {
     key: 'delete',
     label: 'Xóa',

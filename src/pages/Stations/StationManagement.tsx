@@ -1,9 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog, 
-  CommonViewEditDialog, 
-  CommonDetailDialog 
+  CommonFormDialog
 } from '@/components/common';
 import {
   StationHeader,
@@ -14,9 +12,7 @@ import {
 } from './components';
 import { useStations, useStationMutations } from './hooks';
 import { 
-  stationCreateFields, 
-  stationUpdateFields, 
-  stationDetailFields 
+  stationCreateFields
 } from './constants';
 import type { 
   Station, 
@@ -106,11 +102,12 @@ export const StationManagement: React.FC = () => {
     }
   }, [createMutation, handleCloseDialog]);
 
-  const handleUpdateSubmit = useCallback(async (data: UpdateStationDto) => {
-    if (!selectedStation) return;
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Station) => {
+    const stationToUpdate = selectedRow || selectedStation;
+    if (!stationToUpdate) return;
     
     try {
-      await updateMutation.mutateAsync({ id: selectedStation.id, data });
+      await updateMutation.mutateAsync({ id: stationToUpdate.id, data: data as unknown as UpdateStationDto });
       setSnackbar({
         open: true,
         message: 'Cập nhật trạm thành công',
@@ -173,6 +170,7 @@ export const StationManagement: React.FC = () => {
           onEdit={handleEdit as (station: Station) => void}
           onDelete={handleDelete as (station: Station) => void}
           onView={handleView}
+          onSave={handleUpdateSubmit}
           page={(searchParams.page || 1) - 1}
           rowsPerPage={searchParams.limit || 10}
           total={total}
@@ -192,27 +190,6 @@ export const StationManagement: React.FC = () => {
         loading={createMutation.isPending}
       />
 
-      {/* Edit Dialog */}
-      <CommonViewEditDialog
-        open={dialogState.edit}
-        onClose={() => handleCloseDialog('edit')}
-        onSave={(data: Record<string, unknown>) => handleUpdateSubmit(data as unknown as UpdateStationDto)}
-        title="Chỉnh sửa Trạm"
-        formFields={stationUpdateFields}
-        item={(selectedStation || {}) as unknown as Record<string, unknown>}
-        detailFields={stationDetailFields}
-        loading={updateMutation.isPending}
-      />
-
-      {/* View Dialog */}
-      <CommonDetailDialog
-        open={dialogState.view}
-        onClose={() => handleCloseDialog('view')}
-        onEdit={() => handleCloseDialog('view')}
-        title="Chi tiết Trạm"
-        fields={stationDetailFields}
-        item={(selectedStation || {}) as unknown as Record<string, unknown>}
-      />
 
       {/* Delete Dialog */}
       <StationDeleteDialog

@@ -4,9 +4,8 @@ import {
   type TableColumn, 
   type TableAction 
 } from '@/components/common';
+import { inventoryFormFields, inventoryDetailFields } from '../constants/inventoryViewEditConfig';
 import { 
-  Visibility as ViewIcon, 
-  Edit as EditIcon, 
   Delete as DeleteIcon 
 } from '@mui/icons-material';
 import { inventoryTableConfig } from '../constants';
@@ -54,6 +53,7 @@ interface InventoryDataGridProps {
   onEdit: (inventory: Inventory) => void;
   onDelete: (inventory: Inventory) => void;
   onView: (inventory: Inventory) => void;
+  onSave?: (data: Record<string, unknown>, selectedRow?: Inventory) => Promise<void>;
 }
 
 export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
@@ -62,6 +62,7 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
+  onSave,
   selectedRows,
   onSelectionChange,
 }) => {
@@ -78,28 +79,10 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
     onDelete(inventory);
   };
 
-  const handleView = (inventory: Inventory) => {
-    onView(inventory);
-  };
-
   const tableColumns = convertColumnsToTableFormat(inventoryTableConfig.columns);
 
   // Define actions for the table
   const actions: TableAction[] = [
-    {
-      key: 'view',
-      label: 'Xem',
-      icon: <ViewIcon fontSize="small" />,
-      color: 'primary.main',
-      onClick: handleView,
-    },
-    {
-      key: 'edit',
-      label: 'Sửa',
-      icon: <EditIcon fontSize="small" />,
-      color: 'warning.main',
-      onClick: handleEdit,
-    },
     {
       key: 'delete',
       label: 'Xóa',
@@ -125,6 +108,13 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
       enableCheckbox={true}
       getRowId={(row) => (row as unknown as Inventory).id}
       config={inventoryTableConfig as unknown as Record<string, unknown>}
+      // Enable view detail with edit capability
+      enableViewDetail={!!onSave}
+      enableEdit={false}
+      detailFields={inventoryDetailFields}
+      editFields={inventoryFormFields}
+      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
+      detailTitle="Chi tiết Kho hàng"
     />
   );
 };

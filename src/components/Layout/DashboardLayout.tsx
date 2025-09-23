@@ -32,12 +32,10 @@ import {
   Menu,
   MenuItem,
   Badge,
-  Collapse,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Switch,
-  FormControlLabel,
+  Collapse,
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import {
@@ -47,9 +45,7 @@ import {
   Receipt as TransactionIcon,
   Person as PersonIcon,
   Business as PartnerIcon,
-  BusinessCenter as OrganizationIcon,
   Security as PermissionIcon,
-  Assignment as AssignmentIcon,
   LocationOn as StationIcon,
   Inventory as InventoryIcon,
   Assessment as AssessmentIcon,
@@ -61,6 +57,8 @@ import {
   Settings as SettingsIcon,
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
+  Inventory2 as InventoryTransactionIcon,
+  AccountBalance as PartnerDebtIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -86,6 +84,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     system: false,
   });
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
   const { user, logout } = useAuthState();
   const { mode, toggleMode } = useTheme();
   const navigate = useNavigate();
@@ -184,6 +183,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     }));
   };
 
+  const handleSubmenuToggle = (itemText: string) => {
+    setOpenSubmenus(prev => ({
+      ...prev,
+      [itemText]: !prev[itemText]
+    }));
+  };
+
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -235,16 +241,38 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           path: '/tickets',
           permission: PERMISSIONS.MANAGE_TICKETS,
         },
-        {
-          text: 'Transaction',
-          icon: <TransactionIcon />,
-          path: '/transactions',
-          permission: PERMISSIONS.MANAGE_TRANSACTIONS,
-        },
+        // {
+        //   text: 'Transaction',
+        //   icon: <TransactionIcon />,
+        //   path: '/transactions',
+        //   permission: PERMISSIONS.MANAGE_TRANSACTIONS,
+        // },
         {
           text: 'Inventory',
           icon: <InventoryIcon />,
           path: '/inventory',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
+        },
+        {
+          text: 'Partner Debt',
+          icon: <PartnerDebtIcon />,
+          path: '/partner-debt',
+          permission: PERMISSIONS.MANAGE_PARTNERS,
+        },
+      ]
+    },
+    {
+      id: 'inventory-transactions',
+      title: 'Giao Dịch Kho',
+      items: [
+        {
+          text: 'Nhập Kho',
+          path: '/inventory-transactions/import',
+          permission: PERMISSIONS.MANAGE_EMPLOYEES,
+        },
+        {
+          text: 'Xuất Kho',
+          path: '/inventory-transactions/export',
           permission: PERMISSIONS.MANAGE_EMPLOYEES,
         },
       ]
@@ -276,6 +304,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             if (currentPath.includes('/tickets')) return 'Quản lý vé số';
             if (currentPath.includes('/transactions')) return 'Quản lý giao dịch';
             if (currentPath.includes('/inventory')) return 'Quản lý kho';
+            if (currentPath.includes('/partner-debt')) return 'Quản lý công nợ đối tác';
             if (currentPath.includes('/organizations')) return 'Quản lý tổ chức';
             return 'Hệ thống quản lý';
           })()
@@ -531,6 +560,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                       {group.id === 'masterdata' && <SettingsIcon fontSize="small" />}
                       {group.id === 'reports' && <AssessmentIcon fontSize="small" />}
                       {group.id === 'transactions' && <TransactionIcon fontSize="small" />}
+                      {group.id === 'inventory-transactions' && <InventoryTransactionIcon fontSize="small" />}
                     </div>
                   </ListItemIcon>
                   <ListItemText
@@ -581,7 +611,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                         />
                   <List component="div" disablePadding>
                           {group.items.map((item, itemIndex) => {
-                      const isActive = location.pathname === item.path;
+                      const subItems = (item as Record<string, unknown>).subItems as Record<string, unknown>[] | undefined;
+                      const isActive = location.pathname === item.path || (subItems && subItems.some((subItem: Record<string, unknown>) => location.pathname === subItem.path));
+                      const hasSubItems = subItems && subItems.length > 0;
+                      
                       return (
                               <motion.div
                                 key={item.text}
@@ -593,8 +626,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                               >
                         <ListItemButton
                           onClick={() => {
-                            navigate(item.path);
-                            setMobileOpen(false);
+                            if (hasSubItems) {
+                              handleSubmenuToggle(item.text);
+                            } else {
+                              navigate(item.path);
+                              setMobileOpen(false);
+                            }
                           }}
                           sx={{
                                     minHeight: 40,
@@ -643,7 +680,114 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                                       }
                                     }}
                                   />
+                                  {/* Submenu arrow */}
+                                  {hasSubItems && (
+                                    <Box sx={{ ml: 'auto' }}>
+                                      {openSubmenus[item.text] ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                                    </Box>
+                                  )}
                         </ListItemButton>
+                        
+                        {/* Submenu items */}
+                        {hasSubItems && (
+                          <Collapse in={openSubmenus[item.text] || false} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding>
+                              {subItems.map((subItem: Record<string, unknown>, subIndex: number) => {
+                                const isSubActive = location.pathname === subItem.path;
+                                return (
+                                  <motion.div
+                                    key={subItem.text as string}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.2, delay: subIndex * 0.05 }}
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.99 }}
+                                  >
+                                    <ListItemButton
+                                      onClick={() => {
+                                        navigate(subItem.path as string);
+                                        setMobileOpen(false);
+                                      }}
+                                      className="submenu-item"
+                                      style={{
+                                        backgroundColor: 'transparent !important',
+                                      }}
+                                      sx={{
+                                        minHeight: 36,
+                                        pl: 6,
+                                        px: 3,
+                                        py: 1,
+                                        borderRadius: 2,
+                                        mb: 0.5,
+                                        backgroundColor: 'transparent',
+                                        color: isSubActive 
+                                          ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                                          : (mode === 'light' ? '#6b7280' : '#9ca3af'),
+                                        '&:hover': {
+                                          backgroundColor: mode === 'light' ? '#f9fafb' : '#374151',
+                                          color: mode === 'light' ? '#7c3aed' : '#a855f7',
+                                        },
+                                        '&.Mui-selected': {
+                                          backgroundColor: 'transparent',
+                                        },
+                                        '&.Mui-active': {
+                                          backgroundColor: 'transparent',
+                                        },
+                                        '&.Mui-focusVisible': {
+                                          backgroundColor: 'transparent',
+                                        },
+                                        '&.Mui-disabled': {
+                                          backgroundColor: 'transparent',
+                                        },
+                                        '&:focus': {
+                                          backgroundColor: 'transparent',
+                                        },
+                                        '&:active': {
+                                          backgroundColor: 'transparent',
+                                        },
+                                        '&:visited': {
+                                          backgroundColor: 'transparent',
+                                        },
+                                        '&:link': {
+                                          backgroundColor: 'transparent',
+                                        },
+                                        transition: 'all 0.2s ease-in-out',
+                                        position: 'relative',
+                                      }}
+                                    >
+                                      {/* Submenu dot indicator */}
+                                      <Box
+                                        sx={{
+                                          position: 'absolute',
+                                          left: 12,
+                                          top: '50%',
+                                          transform: 'translateY(-50%)',
+                                          width: 4,
+                                          height: 4,
+                                          borderRadius: '50%',
+                                          backgroundColor: isSubActive 
+                                            ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                                            : (mode === 'light' ? '#d1d5db' : '#4b5563'),
+                                        }}
+                                      />
+                                      <ListItemText
+                                        primary={subItem.text as string}
+                                        primaryTypographyProps={{
+                                          className: "font-medium text-xs",
+                                          style: { 
+                                            color: isSubActive 
+                                              ? (mode === 'light' ? '#7c3aed' : '#a855f7')
+                                              : (mode === 'light' ? '#6b7280' : '#9ca3af')
+                                          }
+                                        }}
+                                      />
+                                    </ListItemButton>
+                                  </motion.div>
+                                );
+                              })}
+                            </List>
+                          </Collapse>
+                        )}
                               </motion.div>
                       );
                     })}
@@ -1110,7 +1254,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                                 marginBottom: '4px',
                               }}
                             >
-                              {item.icon}
+                              {'icon' in item ? item.icon : <Box sx={{ width: 16, height: 16 }} />}
                             </ListItemIcon>
                             <Typography
                               variant="caption"

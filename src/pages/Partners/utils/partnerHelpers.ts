@@ -1,4 +1,4 @@
-import type { Partner, CreatePartnerRequest, UpdatePartnerRequest } from '../types';
+import type { Partner, UpdatePartnerRequest } from '../types';
 
 export const formDataToUpdateDto = (data: Record<string, unknown>): UpdatePartnerRequest => {
   return {

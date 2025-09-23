@@ -36,6 +36,7 @@ export interface CreateInventoryDto {
 }
 
 export interface UpdateInventoryDto {
+  id?: string;
   draw_date?: string;
   ticket_type?: string;
   station_id?: string;

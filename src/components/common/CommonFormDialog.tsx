@@ -7,9 +7,6 @@ import {
   Button,
   Box,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
   MenuItem,
   Typography,
 } from '@mui/material';
@@ -111,22 +108,24 @@ const CommonFormDialog: React.FC<CommonFormDialogProps> = ({
     switch (field.type) {
       case 'select':
         return (
-          <FormControl key={field.key} fullWidth error={!!errors[field.key]} size="small">
-            <InputLabel required={field.required} shrink>
-              {field.label}
-            </InputLabel>
-            <Select
-              {...commonProps}
-              label={field.label}
-              onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            >
-              {field.options?.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <TextField
+            key={field.key}
+            {...commonProps}
+            label={field.label}
+            select
+            size="small"
+            required={field.required}
+            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            SelectProps={{
+              native: false,
+            }}
+          >
+            {field.options?.map((option) => (
+              <MenuItem key={option.value} value={option.value}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
         );
 
       case 'textarea':

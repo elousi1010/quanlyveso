@@ -1,6 +1,7 @@
 import React from 'react';
 import { CommonDataTable } from '@/components/common';
 import { organizationTableConfig } from '../constants';
+import { organizationFormFields, organizationDetailFields } from '../constants/organizationViewEditConfig';
 import type { Organization } from '../types';
 
 interface OrganizationDataGridProps {
@@ -16,6 +17,7 @@ interface OrganizationDataGridProps {
   onEdit?: (item: Organization) => void;
   onDelete?: (item: Organization) => void;
   onView?: (item: Organization) => void;
+  onSave?: (data: Record<string, unknown>, selectedRow?: Organization) => Promise<void>;
 }
 
 export const OrganizationDataGrid: React.FC<OrganizationDataGridProps> = ({
@@ -31,6 +33,7 @@ export const OrganizationDataGrid: React.FC<OrganizationDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
+  onSave,
 }) => {
   const actions = [
     {
@@ -69,6 +72,13 @@ export const OrganizationDataGrid: React.FC<OrganizationDataGridProps> = ({
       total={total}
       onPageChange={onPageChange}
       onRowsPerPageChange={onRowsPerPageChange}
+      // Enable view detail with edit capability
+      enableViewDetail={!!onSave}
+      enableEdit={false}
+      detailFields={organizationDetailFields}
+      editFields={organizationFormFields}
+      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
+      detailTitle="Chi tiết Tổ Chức"
     />
   );
 };

@@ -1,10 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonViewEditDialog, 
-  CommonDetailDialog,
   CommonViewEditDrawer,
-  CommonDetailDrawer
 } from '@/components/common';
 import {
   PartnerHeader,
@@ -21,14 +18,12 @@ import {
 } from './constants';
 import { 
   formDataToUpdateDto, 
-  partnerToFormData, 
-  partnerToDisplayData 
+  partnerToDisplayData, 
 } from './utils/partnerHelpers';
 import type { 
   Partner, 
   CreatePartnerRequest, 
   PartnerSearchParams,
-  PartnerListResponse
 } from './types';
 
 export const PartnerManagement: React.FC = () => {
@@ -155,12 +150,13 @@ export const PartnerManagement: React.FC = () => {
     }
   }, [createMutation]);
 
-  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>) => {
-    if (!selectedPartner) return;
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Partner) => {
+    const partnerToUpdate = selectedRow || selectedPartner;
+    if (!partnerToUpdate) return;
     
     try {
       const updateData = formDataToUpdateDto(data);
-      await updateMutation.mutateAsync({ id: selectedPartner.id, data: updateData });
+      await updateMutation.mutateAsync({ id: partnerToUpdate.id, data: updateData });
       setSnackbar({
         open: true,
         message: 'Cập nhật đối tác thành công',
@@ -201,8 +197,6 @@ export const PartnerManagement: React.FC = () => {
   }, []);
 
 
-  const partners = partnersData?.data?.data || [];
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <PartnerHeader
@@ -223,7 +217,7 @@ export const PartnerManagement: React.FC = () => {
 
       <Box sx={{ mt: 2, flex: 1, overflow: 'hidden' }}>
         <PartnerDataGrid
-          data={partnersData as unknown as PartnerListResponse}
+          data={partnersData}
           loading={isLoading}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -249,18 +243,8 @@ export const PartnerManagement: React.FC = () => {
         title="Chỉnh sửa Đối tác"
         editFields={PARTNER_FORM_FIELDS}
         viewFields={PARTNER_DETAIL_FIELDS}
-        data={partnerToFormData(selectedPartner)}
-        loading={updateMutation.isPending}
-        width={500}
-      />
-
-      {/* View Drawer */}
-      <CommonDetailDrawer
-        open={dialogState.view}
-        onClose={() => handleCloseDialog('view')}
-        title="Chi tiết Đối tác"
-        fields={PARTNER_DETAIL_FIELDS}
         data={partnerToDisplayData(selectedPartner)}
+        loading={updateMutation.isPending}
         width={500}
       />
 
