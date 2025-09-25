@@ -64,6 +64,12 @@ const PartnerDebtManagement: React.FC = () => {
 
   const handleReset = useCallback(() => {
     setSearchParams({ page: 1, limit: 10 });
+    setFilters({});
+  }, []);
+
+  const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
+    setFilters(newFilters);
+    setSearchParams(prev => ({ ...prev, ...newFilters, page: 1 }));
   }, []);
 
   const handleCreate = useCallback(() => {
@@ -187,12 +193,10 @@ const PartnerDebtManagement: React.FC = () => {
         <PartnerDebtSearchAndFilter
           searchParams={searchParams}
           onSearchChange={handleSearchChange}
-        onFilterChange={handleFilterChange}
-        filters={filters}
-          onReset={handleReset}
-        />
           onFilterChange={handleFilterChange}
           filters={filters}
+          onReset={handleReset}
+        />
       </Paper>
 
       <Paper sx={{ p: 2 }}>
@@ -200,7 +204,6 @@ const PartnerDebtManagement: React.FC = () => {
           data={partnerDebts.map(convertToTableRow)}
           loading={isLoading}
           error={null}
-          onRefresh={handleRefresh}
           onView={(item) => handleView(item.id)}
           onEdit={(item) => handleEdit(item.id)}
           onDelete={(item) => handleDelete(item.id)}

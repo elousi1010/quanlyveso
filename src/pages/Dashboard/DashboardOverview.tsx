@@ -19,7 +19,8 @@ import {
   Alert,
   Button,
   ButtonGroup,
-  Skeleton
+  Skeleton,
+  useTheme
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -57,6 +58,8 @@ import {
 } from '@/utils';
 
 const DashboardOverview: React.FC = () => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [filters, setFilters] = useState<DashboardFilters>({});
   const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month' | 'year'>('today');
   const [revenueType, setRevenueType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
@@ -131,10 +134,10 @@ const DashboardOverview: React.FC = () => {
   };
 
   // Helper function to determine growth type
-  const getGrowthType = (value: number | undefined | null): 'positive' | 'negative' | 'neutral' => {
-    if (value == null || isNaN(value) || value === 0) return 'neutral';
-    return value > 0 ? 'positive' : 'negative';
-  };
+  // const getGrowthType = (value: number | undefined | null): 'positive' | 'negative' | 'neutral' => {
+  //   if (value == null || isNaN(value) || value === 0) return 'neutral';
+  //   return value > 0 ? 'positive' : 'negative';
+  // };
 
   // Helper function to safely format numbers
   const safeFormatNumber = (value: number | undefined | null): string => {
@@ -232,12 +235,12 @@ const DashboardOverview: React.FC = () => {
     revenue: item.total, // For backward compatibility with existing chart
   })) || [];
 
-  const topPartnersData = dashboardData?.topPartners?.slice(0, 5) || [];
-  const topStationsData = dashboardData?.topStations?.slice(0, 5) || [];
+  const topPartnersData = (dashboardData as any)?.topPartners?.slice(0, 5) || [];
+  const topStationsData = (dashboardData as any)?.topStations?.slice(0, 5) || [];
 
   // System health data
-  const systemHealthData = dashboardData?.systemHealth;
-  const inventoryStatus = dashboardData?.inventoryStatus;
+  const systemHealthData = (dashboardData as any)?.systemHealth;
+  const inventoryStatus = (dashboardData as any)?.inventoryStatus;
 
   if (error) {
     return (
@@ -261,7 +264,7 @@ const DashboardOverview: React.FC = () => {
     type: activityData.activity.transaction.type === 'export' ? 'warning' as const : 'success' as const,
     avatar: undefined,
     color: activityData.activity.transaction.type === 'export' ? '#ff9800' : '#4caf50',
-  }] : dashboardData?.recentTransactions?.slice(0, 5)?.map(transaction => ({
+  }] : (dashboardData as any)?.recentTransactions?.slice(0, 5)?.map(transaction => ({
     id: transaction.id,
     title: `Giao dịch ${transaction.type || 'N/A'}`,
     description: `${transaction.partnerName || 'N/A'} - ${transaction.stationName || 'N/A'}: ${safeFormatCurrency(transaction.amount)}`,
@@ -272,20 +275,61 @@ const DashboardOverview: React.FC = () => {
   })) || [];
 
   return (
-    <Box sx={{ p: { xs: 1, sm: 2 } }}>
+    <Box sx={{ 
+      p: { xs: 1, sm: 2 },
+      background: isDark 
+        ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'
+        : 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
+      minHeight: '100vh'
+    }}>
       {/* Header */}
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 700, 
+                mb: 1, 
+                fontSize: { xs: '1.5rem', sm: '2rem' },
+                color: isDark ? '#ffffff' : 'text.primary',
+                textShadow: isDark ? '0 2px 4px rgba(0, 0, 0, 0.3)' : 'none'
+              }}
+            >
               Dashboard Tổng Quan
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+            <Typography 
+              variant="body1" 
+              color="text.secondary" 
+              sx={{ 
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary'
+              }}
+            >
               Thống kê và báo cáo tổng quan về hoạt động hệ thống
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <ButtonGroup size="small" variant="outlined">
+            <ButtonGroup 
+              size="small" 
+              variant="outlined"
+              sx={{
+                '& .MuiButton-root': {
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
+                  color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'text.primary',
+                  '&:hover': {
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: isDark ? 'rgba(79, 172, 254, 0.2)' : 'primary.main',
+                    color: isDark ? '#ffffff' : 'white',
+                    borderColor: isDark ? 'rgba(79, 172, 254, 0.5)' : 'primary.main'
+                  }
+                }
+              }}
+            >
               <Button 
                 onClick={() => handleTimeRangeChange('today')}
                 variant={timeRange === 'today' ? 'contained' : 'outlined'}
@@ -311,9 +355,19 @@ const DashboardOverview: React.FC = () => {
                 Năm
               </Button>
             </ButtonGroup>
-            <IconButton color="primary" onClick={() => refetch()} disabled={isLoading}>
+            <IconButton 
+              color="primary" 
+              onClick={() => refetch()} 
+              disabled={isLoading}
+              sx={{
+                color: isDark ? 'rgba(79, 172, 254, 0.8)' : 'primary.main',
+                '&:hover': {
+                  backgroundColor: isDark ? 'rgba(79, 172, 254, 0.1)' : 'rgba(25, 118, 210, 0.1)'
+                }
+              }}
+            >
               {isLoading ? <CircularProgress size={20} /> : <RefreshIcon />}
-          </IconButton>
+            </IconButton>
           </Box>
         </Box>
       </Box>
@@ -338,14 +392,24 @@ const DashboardOverview: React.FC = () => {
             <Card
               sx={{
                 height: '100%',
-                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-                border: '1px solid #e0e0e0',
+                background: isDark 
+                  ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
+                  : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                border: isDark 
+                  ? '1px solid rgba(255, 255, 255, 0.1)'
+                  : '1px solid #e0e0e0',
                 borderRadius: 2,
                 overflow: 'hidden',
                 transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+                boxShadow: isDark 
+                  ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                  : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+                backdropFilter: 'blur(10px)',
                 '&:hover': {
                   transform: 'translateY(-2px)',
-                  boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+                  boxShadow: isDark 
+                    ? '0px 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+                    : '0px 8px 25px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
                 },
               }}
             >
@@ -369,15 +433,39 @@ const DashboardOverview: React.FC = () => {
                         icon={stat.changeType === 'positive' ? <TrendingUpIcon /> : stat.changeType === 'negative' ? <TrendingDownIcon /> : undefined}
                   />
                 </Box>
-                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
-                  {stat.value}
-                </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                  {stat.unit}
-                </Typography>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                  {stat.title}
-                </Typography>
+                    <Typography 
+                      variant="h5" 
+                      sx={{ 
+                        fontWeight: 700, 
+                        mb: 0.5, 
+                        color: isDark ? '#ffffff' : 'text.primary', 
+                        fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                        textShadow: isDark ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
+                      }}
+                    >
+                      {stat.value}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary" 
+                      sx={{ 
+                        mb: 1, 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
+                      }}
+                    >
+                      {stat.unit}
+                    </Typography>
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        fontWeight: 600, 
+                        color: isDark ? 'rgba(255, 255, 255, 0.9)' : 'text.primary', 
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }}
+                    >
+                      {stat.title}
+                    </Typography>
               </CardContent>
             </Card>
               </Grid>
@@ -390,13 +478,40 @@ const DashboardOverview: React.FC = () => {
       <Grid container spacing={3}>
         {/* Revenue Chart */}
         <Grid item xs={12} lg={8}>
-          <Card>
+          <Card
+            sx={{
+              background: isDark 
+                ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: isDark 
+                ? '1px solid rgba(255, 255, 255, 0.1)'
+                : '1px solid #e0e0e0',
+              boxShadow: isDark 
+                ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 600,
+                    color: isDark ? '#ffffff' : 'text.primary'
+                  }}
+                >
                   Biểu đồ doanh thu ({revenueType === 'daily' ? 'Hàng ngày' : revenueType === 'weekly' ? 'Hàng tuần' : revenueType === 'monthly' ? 'Hàng tháng' : 'Hàng năm'})
                 </Typography>
-                <IconButton size="small">
+                <IconButton 
+                  size="small"
+                  sx={{
+                    color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
+                    '&:hover': {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                    }
+                  }}
+                >
                   <MoreVertIcon />
                 </IconButton>
               </Box>
@@ -450,13 +565,19 @@ const DashboardOverview: React.FC = () => {
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'center',
-                  bgcolor: 'grey.50',
+                  bgcolor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'grey.50',
                   borderRadius: 2,
                   border: '2px dashed',
-                  borderColor: 'grey.300'
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'grey.300'
                 }}
               >
-                <Typography variant="body1" color="text.secondary">
+                <Typography 
+                  variant="body1" 
+                  color="text.secondary"
+                  sx={{
+                    color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
+                  }}
+                >
                     Chưa có dữ liệu biểu đồ
                 </Typography>
               </Box>
@@ -467,9 +588,30 @@ const DashboardOverview: React.FC = () => {
 
         {/* Recent Activities */}
         <Grid item xs={12} lg={4}>
-          <Card sx={{ height: '100%' }}>
+          <Card 
+            sx={{ 
+              height: '100%',
+              background: isDark 
+                ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: isDark 
+                ? '1px solid rgba(255, 255, 255, 0.1)'
+                : '1px solid #e0e0e0',
+              boxShadow: isDark 
+                ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
             <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600, 
+                  mb: 3,
+                  color: isDark ? '#ffffff' : 'text.primary'
+                }}
+              >
                 Hoạt động gần đây
               </Typography>
               {(isLoading || isActivityLoading) ? (
@@ -525,7 +667,13 @@ const DashboardOverview: React.FC = () => {
                 </List>
               ) : (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{
+                      color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
+                    }}
+                  >
                     Chưa có hoạt động nào
                   </Typography>
                 </Box>
@@ -536,9 +684,29 @@ const DashboardOverview: React.FC = () => {
 
         {/* Top Partners */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card
+            sx={{
+              background: isDark 
+                ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: isDark 
+                ? '1px solid rgba(255, 255, 255, 0.1)'
+                : '1px solid #e0e0e0',
+              boxShadow: isDark 
+                ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
             <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600, 
+                  mb: 3,
+                  color: isDark ? '#ffffff' : 'text.primary'
+                }}
+              >
                 Đối tác hàng đầu
               </Typography>
               {isLoading ? (
@@ -588,7 +756,13 @@ const DashboardOverview: React.FC = () => {
                 </List>
               ) : (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{
+                      color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
+                    }}
+                  >
                     Chưa có dữ liệu đối tác
                   </Typography>
                 </Box>
@@ -599,9 +773,29 @@ const DashboardOverview: React.FC = () => {
 
         {/* Top Stations */}
         <Grid item xs={12} md={6}>
-          <Card>
+          <Card
+            sx={{
+              background: isDark 
+                ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
+                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              border: isDark 
+                ? '1px solid rgba(255, 255, 255, 0.1)'
+                : '1px solid #e0e0e0',
+              boxShadow: isDark 
+                ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+              backdropFilter: 'blur(10px)'
+            }}
+          >
             <CardContent>
-              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600, 
+                  mb: 3,
+                  color: isDark ? '#ffffff' : 'text.primary'
+                }}
+              >
                 Trạm hàng đầu
               </Typography>
               {isLoading ? (
@@ -651,7 +845,13 @@ const DashboardOverview: React.FC = () => {
                 </List>
               ) : (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    color="text.secondary"
+                    sx={{
+                      color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
+                    }}
+                  >
                     Chưa có dữ liệu trạm
                   </Typography>
                 </Box>
