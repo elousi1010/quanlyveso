@@ -1,15 +1,11 @@
 import React from 'react';
-import { 
-  CommonDataTable, 
-  type TableAction 
-} from '@/components/common';
+import { SimpleTable } from '@/components/common';
 import { 
   Visibility as ViewIcon, 
   Edit as EditIcon, 
   Delete as DeleteIcon 
 } from '@mui/icons-material';
 import { ticketTableConfig } from '../constants';
-import { ticketFormFields, ticketDetailFields } from '../constants/ticketViewEditConfig';
 import type { Ticket } from '../types';
 
 interface TicketDataGridProps {
@@ -33,68 +29,40 @@ export const TicketDataGrid: React.FC<TicketDataGridProps> = ({
   selectedRows,
   onSelectionChange,
 }) => {
-  const handleRowClick = (ticket: Ticket) => {
-    onView(ticket);
-  };
 
-  const handleEdit = (ticket: Ticket) => {
-    onEdit(ticket);
-  };
-
-  const handleDelete = (ticket: Ticket) => {
-    onDelete(ticket);
-  };
-
-  const handleView = (ticket: Ticket) => {
-    onView(ticket);
-  };
-
-  // Define actions for the table
-  const actions: TableAction[] = [
+  // Simple table actions
+  const actions = [
     {
       key: 'view',
       label: 'Xem',
-      icon: <ViewIcon fontSize="small" />,
-      color: 'primary.main',
-      onClick: handleView,
+      icon: <ViewIcon />,
+      color: 'primary' as const,
+      onClick: (ticket: unknown) => onView(ticket as Ticket),
     },
     {
       key: 'edit',
       label: 'Sửa',
-      icon: <EditIcon fontSize="small" />,
-      color: 'warning.main',
-      onClick: handleEdit,
+      icon: <EditIcon />,
+      color: 'primary' as const,
+      onClick: (ticket: unknown) => onEdit(ticket as Ticket),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon fontSize="small" />,
-      color: 'error.main',
-      onClick: handleDelete,
+      icon: <DeleteIcon />,
+      color: 'error' as const,
+      onClick: (ticket: unknown) => onDelete(ticket as Ticket),
     },
   ];
 
   return (
-    <CommonDataTable
-      data={data as unknown as Record<string, unknown>[]}
-      isLoading={loading}
-      error={undefined}
-      onRefresh={() => {}}
+    <SimpleTable
+      data={data}
       columns={ticketTableConfig.columns}
       actions={actions}
-      onRowClick={handleRowClick as (item: Ticket) => void}
-      onEdit={handleEdit as (item: Ticket) => void}
-      onDelete={handleDelete as (item: Ticket) => void}
-      selectedRows={selectedRows as unknown as Record<string, unknown>[]}
-      onSelectionChange={onSelectionChange as (items: unknown[]) => void}
-      config={ticketTableConfig as unknown as Record<string, unknown>}
-      // Enable view detail with edit capability
-      enableViewDetail={!!onSave}
-      enableEdit={false}
-      detailFields={ticketDetailFields}
-      editFields={ticketFormFields}
-      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
-      detailTitle="Chi tiết Vé"
+      loading={loading}
+      onRefresh={() => {}}
+      emptyMessage="Không có vé số"
     />
   );
 };

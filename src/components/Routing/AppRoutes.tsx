@@ -18,7 +18,6 @@ import { TransactionManagement } from '../../pages/Transactions';
 import { InventoryManagement } from '../../pages/Inventory';
 import { InventoryTransactionPage } from '../../pages/InventoryTransaction';
 import { PartnerDebtManagement } from '../../pages/PartnerDebt';
-import TokenTest from '../../pages/TokenTest';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -148,14 +147,6 @@ const AppRoutes: React.FC = () => {
                   element={
                     <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
                       <PartnerDebtManagement />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/token-test"
-                  element={
-                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
-                      <TokenTest />
                     </ProtectedRoute>
                   }
                 />

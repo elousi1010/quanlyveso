@@ -1,75 +1,59 @@
-import type { GridColDef } from '@mui/x-data-grid';
+import type { SimpleTableColumn } from '../../../components/common/SimpleTable';
 import type { Permission } from '../types';
-
-export const permissionTableColumns: GridColDef<Permission>[] = [
-  {
-    field: 'id',
-    headerName: 'ID',
-    width: 200,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'name',
-    headerName: 'Tên quyền',
-    width: 200,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'code',
-    headerName: 'Mã quyền',
-    width: 200,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'actions',
-    headerName: 'Hành động',
-    width: 300,
-    sortable: false,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value || typeof value !== 'object') return '';
-      return Object.entries(value)
-        .map(([resource, actions]) => `${resource}: ${Array.isArray(actions) ? actions.join(', ') : actions}`)
-        .join('; ');
-    },
-  },
-  {
-    field: 'created_at',
-    headerName: 'Ngày tạo',
-    width: 150,
-    sortable: true,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
-    },
-  },
-  {
-    field: 'updated_at',
-    headerName: 'Ngày cập nhật',
-    width: 150,
-    sortable: true,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
-    },
-  },
-];
+import { formatDate } from '@/utils/format';
 
 export const permissionTableConfig = {
-  columns: permissionTableColumns,
-  pageSize: 10,
-  pageSizeOptions: [5, 10, 25, 50],
-  density: 'compact' as const,
-  disableColumnMenu: false,
-  disableColumnFilter: false,
-  disableColumnSelector: false,
-  disableDensitySelector: false,
-  disableRowSelectionOnClick: true,
-  checkboxSelection: true,
-  rowSelection: true,
+  columns: [
+    {
+      key: 'id',
+      label: 'ID',
+      minWidth: 200,
+    },
+    {
+      key: 'name',
+      label: 'Tên quyền',
+      minWidth: 200,
+    },
+    {
+      key: 'code',
+      label: 'Mã quyền',
+      minWidth: 150,
+    },
+    {
+      key: 'description',
+      label: 'Mô tả',
+      minWidth: 250,
+    },
+    {
+      key: 'actions',
+      label: 'Hành động',
+      minWidth: 300,
+      render: (value: Record<string, number>) => {
+        return Object.entries(value || {}).map(([resource, permissions]) => {
+          const actions = [];
+          if (permissions & 1) actions.push('Đọc');
+          if (permissions & 2) actions.push('Tạo');
+          if (permissions & 4) actions.push('Cập nhật');
+          if (permissions & 8) actions.push('Xóa');
+          return `${resource}: ${actions.join(', ')}`;
+        }).join(' | ');
+      },
+    },
+    {
+      key: 'created_at',
+      label: 'Ngày tạo',
+      minWidth: 150,
+      render: (value: string) => {
+        return formatDate(value);
+      },
+    },
+    {
+      key: 'updated_at',
+      label: 'Ngày cập nhật',
+      minWidth: 150,
+      render: (value: string) => {
+        return formatDate(value);
+      },
+    },
+  ] as SimpleTableColumn[],
 };

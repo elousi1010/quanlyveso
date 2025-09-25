@@ -1,8 +1,8 @@
 import React from 'react';
-import { CommonDataTable } from '@/components/common';
-import { PARTNER_TABLE_COLUMNS, PARTNER_TABLE_ACTIONS, PARTNER_DETAIL_FIELDS, PARTNER_FORM_FIELDS } from '../constants';
+import { SimpleTable } from '@/components/common';
+import { PARTNER_TABLE_COLUMNS, PARTNER_TABLE_ACTIONS } from '../constants';
 import type { Partner, PartnerListResponse } from '../types';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { Edit as EditIcon, Delete as DeleteIcon, Visibility as ViewIcon } from '@mui/icons-material';
 
 interface PartnerDataGridProps {
   data: PartnerListResponse;
@@ -21,66 +21,39 @@ export const PartnerDataGrid: React.FC<PartnerDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
-  onSave,
 }) => {
-  
-  // Table actions with handlers
-  const tableActions = PARTNER_TABLE_ACTIONS.map(action => ({
-    ...action,
-    onClick: (partner: Partner) => {
-      switch (action.key) {
-        case 'view':
-          onView(partner);
-          break;
-        case 'edit':
-          onEdit(partner);
-          break;
-        case 'delete':
-          onDelete(partner);
-          break;
-      }
-    },
-  }));
-
   // Handle data structure - based on actual API response
   // Data structure: { data: { data: { data: Partner[], total: number } } }
   const partnersArray = data?.data?.data?.data || [];
   const totalCount = data?.data?.data?.total || 0;
-  
 
-  // Show loading if data is not ready
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  // Show message if no data
-  if (!data || !partnersArray.length) {
-    return (
-      <div style={{ padding: '20px', textAlign: 'center' }}>
-        <p>Không có dữ liệu đối tác</p>
-      </div>
-    );
-  }
-
+  // Simple table actions
+  const tableActions = [
+    {
+      key: 'view',
+      label: 'Xem chi tiết',
+      icon: <ViewIcon />,
+      color: 'primary' as const,
+      onClick: (partner: unknown) => onView(partner as Partner),
+    },
+    {
+      key: 'delete',
+      label: 'Xóa',
+      icon: <DeleteIcon />,
+      color: 'error' as const,
+      onClick: (partner: unknown) => onDelete(partner as Partner),
+    },
+  ];
 
   return (
-    <CommonDataTable
-      data={partnersArray as unknown as Record<string, unknown>[]}
+    <SimpleTable
+      data={partnersArray}
       columns={PARTNER_TABLE_COLUMNS}
       actions={tableActions}
-      isLoading={loading}
-      error={null}
+      loading={loading}
       onRefresh={() => window.location.reload()}
       emptyMessage="Không có đối tác"
-      emptyDescription="Chưa có đối tác nào trong hệ thống"
       total={totalCount}
-      // Enable both view and edit
-      enableViewDetail={!!onSave}
-      enableEdit={false}
-      detailFields={PARTNER_DETAIL_FIELDS}
-      editFields={PARTNER_FORM_FIELDS}
-      onSave={onSave}
-      detailTitle="Chi tiết Đối tác"
     />
   );
 };

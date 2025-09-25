@@ -1,9 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Button,
   Box,
   TextField,
@@ -21,10 +17,13 @@ import {
   TableRow,
   Paper,
   CircularProgress,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+import CommonDrawer from '@/components/common/CommonDrawer';
 import { useQuery } from '@tanstack/react-query';
-import { partnerApi } from '@/api/partnerApi';
+import { partnerApi } from '../../Partners/api';
 import { stationApi } from '../../Stations/api/stationApi';
 import type { CreateInventoryDto, Ticket } from '../types';
 
@@ -62,6 +61,9 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
   onSave,
   loading = false,
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [formData, setFormData] = useState<CreateInventoryDto>({
     draw_date: new Date().toISOString().split('T')[0],
     ticket_type: 'T',
@@ -79,7 +81,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
   // Fetch partners and stations data
   const { data: partnersData, isLoading: partnersLoading } = useQuery({
     queryKey: ['partners', 'all'],
-    queryFn: () => partnerApi.getPartners({ limit: 1000 }),
+    queryFn: () => partnerApi.getPartners({ page: 1, limit: 1000 }),
     enabled: open,
   });
 
@@ -89,7 +91,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
     enabled: open,
   });
 
-  const partners = partnersData?.data?.data || [];
+  const partners = partnersData?.data?.data?.data || [];
   const stations = stationsData?.data?.data || [];
 
   // Reset form when dialog opens
@@ -185,20 +187,17 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
   }, [onClose]);
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose} 
-      maxWidth="lg" 
-      fullWidth
-      PaperProps={{
-        sx: { minHeight: '70vh' }
-      }}
+    <CommonDrawer
+      open={open}
+      onClose={handleClose}
+      title="Quản lý Kho"
+      width={isMobile ? '100%' : 600}
+      anchor="right"
+      loading={loading}
     >
-      <DialogTitle>
-        Quản lý Kho
-      </DialogTitle>
-      
-      <DialogContent>
+      <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Form Content */}
+        <Box sx={{ flex: 1, overflow: 'auto' }}>
         <Box sx={{ mb: 3 }}>
           <Box
             sx={{
@@ -386,29 +385,33 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
           </Table>
         </TableContainer>
 
-        <TextField
-          fullWidth
-          label="Ghi chú chung"
-          multiline
-          rows={3}
-          value={formData.note}
-          onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
-          sx={{ mt: 2 }}
-        />
-      </DialogContent>
+          <TextField
+            fullWidth
+            label="Ghi chú chung"
+            multiline
+            rows={3}
+            value={formData.note}
+            onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
+            sx={{ mt: 2 }}
+          />
+        </Box>
 
-      <DialogActions>
-        <Button onClick={handleClose} disabled={loading}>
-          Hủy
-        </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
-          disabled={loading || formData.tickets.length === 0}
-        >
-          {loading ? 'Đang xử lý...' : (formData.type === 'import' ? 'Nhập Kho' : 'Xuất Kho')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        {/* Actions */}
+        <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button onClick={handleClose} disabled={loading}>
+              Hủy
+            </Button>
+            <Button 
+              onClick={handleSubmit} 
+              variant="contained" 
+              disabled={loading || formData.tickets.length === 0}
+            >
+              {loading ? 'Đang xử lý...' : (formData.type === 'import' ? 'Nhập Kho' : 'Xuất Kho')}
+            </Button>
+          </Box>
+        </Box>
+      </Box>
+    </CommonDrawer>
   );
 };

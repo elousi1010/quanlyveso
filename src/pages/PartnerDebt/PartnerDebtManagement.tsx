@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Box, Paper } from '@mui/material';
-import { CommonFormDialog, CommonViewEditDrawer, type DetailField, type FormField } from '@/components/common';
+import { CommonFormDrawer, CommonViewEditDrawer, type DetailField, type FormField } from '@/components/common';
 import {
   PartnerDebtDataGrid,
   PartnerDebtHeader,
@@ -206,8 +206,8 @@ const PartnerDebtManagement: React.FC = () => {
         />
       </Paper>
 
-      {/* Create Dialog */}
-      <CommonFormDialog
+      {/* Create Drawer */}
+      <CommonFormDrawer
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSave={handleCreateSubmit}
@@ -261,10 +261,11 @@ const PartnerDebtManagement: React.FC = () => {
         ]}
         title="Thêm Công Nợ Đối Tác"
         loading={createMutation.isPending}
+        width={500}
       />
 
-      {/* Edit Dialog */}
-      <CommonFormDialog
+      {/* Edit Drawer */}
+      <CommonFormDrawer
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         onSave={handleEditSubmit}
@@ -319,6 +320,7 @@ const PartnerDebtManagement: React.FC = () => {
         title="Chỉnh Sửa Công Nợ Đối Tác"
         initialData={selectedFormData as unknown as Record<string, unknown>}
         loading={updateMutation.isPending}
+        width={500}
       />
 
       {/* View/Edit Drawer */}

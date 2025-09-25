@@ -226,7 +226,7 @@ export const PartnerManagement: React.FC = () => {
         />
       </Box>
 
-      {/* Create Dialog */}
+      {/* Create Drawer */}
       <PartnerFormDialog
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
@@ -237,10 +237,10 @@ export const PartnerManagement: React.FC = () => {
 
       {/* Edit Drawer */}
       <CommonViewEditDrawer
-        open={dialogState.edit}
-        onClose={() => handleCloseDialog('edit')}
+        open={dialogState.view}
+        onClose={() => handleCloseDialog('view')}
         onSave={handleUpdateSubmit}
-        title="Chỉnh sửa Đối tác"
+        title="Chi tiết Đối tác"
         editFields={PARTNER_FORM_FIELDS}
         viewFields={PARTNER_DETAIL_FIELDS}
         data={partnerToDisplayData(selectedPartner)}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommonFormDialog } from '@/components/common';
+import { CommonFormDrawer } from '@/components/common';
 import { PARTNER_FORM_FIELDS } from '../constants';
 import type { CreatePartnerRequest } from '../types';
 
@@ -24,7 +24,7 @@ export const PartnerFormDialog: React.FC<PartnerFormDialogProps> = ({
   };
 
   return (
-    <CommonFormDialog
+    <CommonFormDrawer
       open={open}
       onClose={onClose}
       onSave={handleSave}
@@ -33,6 +33,7 @@ export const PartnerFormDialog: React.FC<PartnerFormDialogProps> = ({
       initialData={{}}
       loading={loading}
       submitText="Tạo đối tác"
+      width={500}
     />
   );
 };

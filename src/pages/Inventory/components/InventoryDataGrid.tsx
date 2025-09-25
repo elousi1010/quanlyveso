@@ -1,46 +1,22 @@
 import React from 'react';
-import { 
-  CommonDataTable, 
-  type TableColumn, 
-  type TableAction 
-} from '@/components/common';
+import { SimpleTable } from '@/components/common';
 import { inventoryFormFields, inventoryDetailFields } from '../constants/inventoryViewEditConfig';
 import { 
-  Delete as DeleteIcon 
+  Delete as DeleteIcon,
+  Visibility as ViewIcon
 } from '@mui/icons-material';
 import { inventoryTableConfig } from '../constants';
 import type { Inventory } from '../types';
 
-// Convert MUI DataGrid columns to CommonDataTable columns
-const convertColumnsToTableFormat = (dataGridColumns: unknown[]): TableColumn[] => {
-  return dataGridColumns.map((col: unknown) => {
-    const column = col as {
-      field: string;
-      headerName?: string;
-      width?: number;
-      align?: 'left' | 'center' | 'right';
-      renderCell?: (params: { value: unknown }) => React.ReactNode;
-      valueFormatter?: (value: unknown) => string;
-    };
+// Convert table config columns to SimpleTable format
+const convertColumnsToTableFormat = (tableColumns: any[]): any[] => {
+  return tableColumns.map((column) => {
     return {
-      key: column.field,
-      label: column.headerName || column.field,
-      minWidth: column.width,
+      key: column.key,
+      label: column.label,
+      minWidth: column.minWidth,
       align: column.align || 'left',
-      render: column.renderCell ? (value: unknown): React.ReactNode => {
-        // Handle special rendering cases
-        if (column.field === 'is_active') {
-          return (
-            <span style={{ color: value ? '#4caf50' : '#f44336' }}>
-              {value ? 'Hoạt động' : 'Không hoạt động'}
-            </span>
-          );
-        }
-        if (column.valueFormatter) {
-          return column.valueFormatter(value);
-        }
-        return value as React.ReactNode;
-      } : undefined,
+      render: column.render,
     };
   });
 };
@@ -66,7 +42,6 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
   selectedRows,
   onSelectionChange,
 }) => {
-
   const handleRowClick = (inventory: Inventory) => {
     onView(inventory);
   };
@@ -81,40 +56,32 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
 
   const tableColumns = convertColumnsToTableFormat(inventoryTableConfig.columns);
 
-  // Define actions for the table
-  const actions: TableAction[] = [
+  // Simple table actions
+  const actions = [
+    {
+      key: 'view',
+      label: 'Xem',
+      icon: <ViewIcon />,
+      color: 'primary' as const,
+      onClick: (inventory: unknown) => onView(inventory as Inventory),
+    },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon fontSize="small" />,
-      color: 'error.main',
-      onClick: handleDelete,
+      icon: <DeleteIcon />,
+      color: 'error' as const,
+      onClick: (inventory: unknown) => onDelete(inventory as Inventory),
     },
   ];
 
   return (
-    <CommonDataTable
-      data={data as unknown as Record<string, unknown>[]}
-      isLoading={loading}
-      error={undefined}
-      onRefresh={() => {}}
+    <SimpleTable
+      data={data}
       columns={tableColumns}
       actions={actions}
-      onRowClick={handleRowClick as (item: Inventory) => void}
-      onEdit={handleEdit as (item: Inventory) => void}
-      onDelete={handleDelete as (item: Inventory) => void}
-      selectedRows={selectedRows as unknown as Record<string, unknown>[]}
-      onSelectionChange={onSelectionChange as (items: unknown[]) => void}
-      enableCheckbox={true}
-      getRowId={(row) => (row as unknown as Inventory).id}
-      config={inventoryTableConfig as unknown as Record<string, unknown>}
-      // Enable view detail with edit capability
-      enableViewDetail={!!onSave}
-      enableEdit={false}
-      detailFields={inventoryDetailFields}
-      editFields={inventoryFormFields}
-      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
-      detailTitle="Chi tiết Kho hàng"
+      loading={loading}
+      onRefresh={() => {}}
+      emptyMessage="Không có dữ liệu kho hàng"
     />
   );
 };

@@ -1,15 +1,11 @@
 import React from 'react';
-import { 
-  CommonDataTable, 
-  type TableAction 
-} from '@/components/common';
+import { SimpleTable } from '@/components/common';
 import { 
   Visibility as ViewIcon, 
   Edit as EditIcon, 
   Delete as DeleteIcon 
 } from '@mui/icons-material';
 import { stationTableConfig } from '../constants';
-import { stationFormFields, stationDetailFields } from '../constants/stationViewEditConfig';
 import type { Station } from '../types';
 
 interface StationDataGridProps {
@@ -39,66 +35,44 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
   onPageChange,
   onRowsPerPageChange,
 }) => {
-  const handleEdit = (station: Station) => {
-    onEdit(station);
-  };
-
-  const handleDelete = (station: Station) => {
-    onDelete(station);
-  };
-
-  const handleView = (station: Station) => {
-    onView(station);
-  };
-
-  // Define actions for the table
-  const actions: TableAction[] = [
+  // Simple table actions
+  const actions = [
     {
       key: 'view',
       label: 'Xem',
-      icon: <ViewIcon fontSize="small" />,
-      color: 'primary.main',
-      onClick: handleView,
+      icon: <ViewIcon />,
+      color: 'primary' as const,
+      onClick: (station: unknown) => onView(station as Station),
     },
     {
       key: 'edit',
       label: 'Sửa',
-      icon: <EditIcon fontSize="small" />,
-      color: 'warning.main',
-      onClick: handleEdit,
+      icon: <EditIcon />,
+      color: 'primary' as const,
+      onClick: (station: unknown) => onEdit(station as Station),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon fontSize="small" />,
-      color: 'error.main',
-      onClick: handleDelete,
+      icon: <DeleteIcon />,
+      color: 'error' as const,
+      onClick: (station: unknown) => onDelete(station as Station),
     },
   ];
 
   return (
-    <CommonDataTable
-      data={data as unknown as Record<string, unknown>[]}
+    <SimpleTable
+      data={data}
       columns={stationTableConfig.columns}
       actions={actions}
-      isLoading={loading}
-      error={undefined}
+      loading={loading}
       onRefresh={() => {}}
-      onEdit={handleEdit}
-      onDelete={handleDelete}
-      onRowClick={onView}
+      emptyMessage="Không có trạm"
       page={page}
       rowsPerPage={rowsPerPage}
       total={total}
       onPageChange={onPageChange}
       onRowsPerPageChange={onRowsPerPageChange}
-      // Enable view detail with edit capability
-      enableViewDetail={!!onSave}
-      enableEdit={false}
-      detailFields={stationDetailFields}
-      editFields={stationFormFields}
-      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
-      detailTitle="Chi tiết Trạm"
     />
   );
 };

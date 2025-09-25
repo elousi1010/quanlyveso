@@ -1,19 +1,19 @@
 import React from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   Box,
+  Button,
   TextField,
   MenuItem,
   Typography,
+  Divider,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
+import CommonDrawer from './CommonDrawer';
 import type { FormField } from './types';
 
-interface CommonFormDialogProps {
+interface CommonFormDrawerProps {
   open: boolean;
   onClose: () => void;
   onSave: (data: Record<string, unknown>) => void;
@@ -23,11 +23,11 @@ interface CommonFormDialogProps {
   submitText?: string;
   cancelButtonText?: string;
   loading?: boolean;
-  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  fullWidth?: boolean;
+  width?: number | string;
+  anchor?: 'left' | 'right' | 'top' | 'bottom';
 }
 
-const CommonFormDialog: React.FC<CommonFormDialogProps> = ({
+const CommonFormDrawer: React.FC<CommonFormDrawerProps> = ({
   open,
   onClose,
   onSave,
@@ -37,21 +37,24 @@ const CommonFormDialog: React.FC<CommonFormDialogProps> = ({
   submitText = 'Lưu',
   cancelButtonText = 'Hủy',
   loading = false,
-  maxWidth = 'sm',
-  fullWidth = true,
+  width = 400,
+  anchor = 'right',
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [formData, setFormData] = React.useState<Record<string, unknown>>(initialData);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const prevInitialDataRef = React.useRef<Record<string, unknown>>(initialData);
 
   React.useEffect(() => {
-    // Only update if initialData actually changed or dialog opened
+    // Only update if initialData actually changed or drawer opened
     if (open && JSON.stringify(prevInitialDataRef.current) !== JSON.stringify(initialData)) {
       setFormData(initialData);
       setErrors({});
       prevInitialDataRef.current = initialData;
     } else if (open) {
-      // Reset form when dialog opens
+      // Reset form when drawer opens
       setFormData(initialData);
       setErrors({});
     }
@@ -192,27 +195,17 @@ const CommonFormDialog: React.FC<CommonFormDialogProps> = ({
   };
 
   return (
-    <Dialog
+    <CommonDrawer
       open={open}
       onClose={handleClose}
-      maxWidth={maxWidth}
-      fullWidth={fullWidth}
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          minHeight: '400px',
-        }
-      }}
+      title={title}
+      width={width}
+      anchor={anchor}
+      loading={loading}
     >
-      <DialogTitle sx={{ pb: 1 }}>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-          {title}
-        </Typography>
-      </DialogTitle>
-
-      <DialogContent sx={{ pt: 2 }}>
-        <Box sx={{ mt: 1 }}>
-          {/* Form Fields */}
+      <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Form Fields */}
+        <Box sx={{ flex: 1, overflow: 'auto' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {fields.map((field) => (
               <Box key={field.key}>
@@ -221,27 +214,30 @@ const CommonFormDialog: React.FC<CommonFormDialogProps> = ({
             ))}
           </Box>
         </Box>
-      </DialogContent>
 
-      <DialogActions sx={{ p: 3, pt: 1 }}>
-        <Button
-          onClick={handleClose}
-          disabled={loading}
-          sx={{ textTransform: 'none' }}
-        >
-          {cancelButtonText}
-        </Button>
-        <LoadingButton
-          onClick={handleSubmit}
-          loading={loading}
-          variant="contained"
-          sx={{ textTransform: 'none' }}
-        >
-          {submitText}
-        </LoadingButton>
-      </DialogActions>
-    </Dialog>
+        {/* Actions */}
+        <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button
+              onClick={handleClose}
+              disabled={loading}
+              sx={{ textTransform: 'none' }}
+            >
+              {cancelButtonText}
+            </Button>
+            <LoadingButton
+              onClick={handleSubmit}
+              loading={loading}
+              variant="contained"
+              sx={{ textTransform: 'none' }}
+            >
+              {submitText}
+            </LoadingButton>
+          </Box>
+        </Box>
+      </Box>
+    </CommonDrawer>
   );
 };
 
-export default CommonFormDialog;
+export default CommonFormDrawer;

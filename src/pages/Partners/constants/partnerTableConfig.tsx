@@ -1,10 +1,10 @@
-import type { TableColumn, TableAction } from '../../../components/common';
+import type { SimpleTableColumn, SimpleTableAction } from '../../../components/common/SimpleTable';
 import type { Partner } from '../types/partnerTypes';
 import { formatCurrency, formatDate } from '../../../utils/format';
 import { Delete as DeleteIcon } from '@mui/icons-material';
 import { Chip } from '@mui/material';
 
-export const PARTNER_TABLE_COLUMNS: TableColumn[] = [
+export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
   {
     key: 'name',
     label: 'Tên đối tác',
@@ -102,12 +102,12 @@ export const PARTNER_TABLE_COLUMNS: TableColumn[] = [
   },
 ];
 
-export const PARTNER_TABLE_ACTIONS: TableAction[] = [
+export const PARTNER_TABLE_ACTIONS: SimpleTableAction[] = [
   {
     key: 'delete',
     label: 'Xóa',
     icon: <DeleteIcon fontSize="small" />,
-    color: 'error.main',
+    color: 'error',
     onClick: (partner: Partner) => {
       console.log('Delete partner:', partner);
     },

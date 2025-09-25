@@ -66,6 +66,7 @@ export const InventoryManagement: React.FC = () => {
   }, []);
 
   const handleView = useCallback((inventory: Inventory) => {
+    console.log('handleView', inventory);
     setSelectedInventory(inventory);
     setDialogState(prev => ({ ...prev, view: true }));
   }, []);
@@ -176,7 +177,11 @@ export const InventoryManagement: React.FC = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-  const inventories = React.useMemo(() => inventoriesData?.data || [], [inventoriesData?.data]);
+  // const inventories = React.useMemo(() => {
+  //   console.log('Inventory data from API:', inventoriesData);
+  //   console.log('Inventories array:', inventoriesData?.data);
+  //   return inventoriesData?.data || [];
+  // }, [inventoriesData?.data]);
 
   return (
     <Box sx={{ p: 2 }}>
@@ -199,7 +204,7 @@ export const InventoryManagement: React.FC = () => {
 
       <Box sx={{ mt: 2 }}>
         <InventoryDataGrid
-          data={inventories}
+          data={inventoriesData?.data || []}
           loading={isLoading}
           onEdit={handleEdit}
           onDelete={handleDelete}

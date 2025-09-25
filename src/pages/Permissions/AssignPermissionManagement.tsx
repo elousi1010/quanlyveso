@@ -19,7 +19,7 @@ import {
   Refresh,
 } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { userApi } from '@/api/userApi';
+import { userApi } from '../Users/api';
 import { usePermissionMutations } from './hooks/usePermissionMutations';
 import { usePermissions } from './hooks/usePermissions';
 import { AssignPermissionDialog } from './components';

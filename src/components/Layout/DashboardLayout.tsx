@@ -328,7 +328,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         borderRadius: '0px',
         borderRight: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
         position: 'relative',
-        border: 'none',
         boxShadow: 'none',
       }}
       initial={{ x: -280 }}

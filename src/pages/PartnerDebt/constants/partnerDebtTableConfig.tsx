@@ -1,10 +1,10 @@
 import React from 'react';
 import { Chip } from '@mui/material';
-import type { TableColumn } from '@/components/common/CommonDataTable';
+import type { SimpleTableColumn } from '@/components/common/SimpleTable';
 import { formatCurrency, formatDate } from '../../../utils/format';
 
 // Table columns configuration
-export const partnerDebtTableColumns: TableColumn[] = [
+export const partnerDebtTableColumns: SimpleTableColumn[] = [
   {
     key: 'partner_name',
     label: 'Đối tác',
@@ -75,9 +75,9 @@ export const partnerDebtTableColumns: TableColumn[] = [
     label: 'Ngày tạo',
     minWidth: 120,
     align: 'center',
-    render: (value) => {
+    render: (value: string) => {
       if (!value) return '';
-      return formatDate(String(value));
+      return formatDate(value);
     },
   },
   {

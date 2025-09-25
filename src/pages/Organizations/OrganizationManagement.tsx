@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog
+  CommonFormDrawer
 } from '@/components/common';
 import {
   OrganizationHeader,
@@ -186,8 +186,8 @@ export const OrganizationManagement: React.FC = () => {
         />
       </Box>
 
-      {/* Create Dialog */}
-      <CommonFormDialog
+      {/* Create Drawer */}
+      <CommonFormDrawer
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
         onSave={(data: Record<string, unknown>) => handleCreateSubmit(data as unknown as CreateOrganizationDto)}
@@ -195,6 +195,7 @@ export const OrganizationManagement: React.FC = () => {
         fields={organizationCreateFields}
         submitText="Tạo"
         loading={createMutation.isPending}
+        width={500}
       />
 
 

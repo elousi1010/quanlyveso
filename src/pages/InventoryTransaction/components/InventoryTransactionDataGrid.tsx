@@ -1,8 +1,5 @@
 import React from 'react';
-import { 
-  CommonDataTable, 
-  type TableAction 
-} from '@/components/common';
+import { SimpleTable } from '@/components/common';
 import { 
   Visibility as ViewIcon, 
   Edit as EditIcon, 
@@ -75,28 +72,39 @@ export const InventoryTransactionDataGrid: React.FC<InventoryTransactionDataGrid
     },
   ];
 
+  const simpleActions = [
+    {
+      key: 'view',
+      label: 'Xem chi tiết',
+      icon: <ViewIcon />,
+      color: 'primary' as const,
+      onClick: (item: unknown) => onView(item as InventoryTransactionItem),
+    },
+    {
+      key: 'edit',
+      label: 'Chỉnh sửa',
+      icon: <EditIcon />,
+      color: 'primary' as const,
+      onClick: (item: unknown) => onEdit(item as InventoryTransactionItem),
+    },
+    {
+      key: 'delete',
+      label: 'Xóa',
+      icon: <DeleteIcon />,
+      color: 'error' as const,
+      onClick: (item: unknown) => onDelete(item as InventoryTransactionItem),
+    },
+  ];
+
   return (
-    <CommonDataTable
-      data={data as unknown as Record<string, unknown>[]}
+    <SimpleTable
+      data={data}
       columns={inventoryTransactionTableConfig.columns}
-      actions={actions}
-      isLoading={loading}
-      error={undefined}
+      actions={simpleActions}
+      loading={loading}
       onRefresh={() => {}}
-      onRowClick={handleRowClick as (item: InventoryTransactionItem) => void}
-      onEdit={handleEdit as (item: InventoryTransactionItem) => void}
-      onDelete={handleDelete as (item: InventoryTransactionItem) => void}
-      selectedRows={selectedRows as unknown as Record<string, unknown>[]}
-      onSelectionChange={onSelectionChange as (items: unknown[]) => void}
-      config={inventoryTransactionTableConfig as unknown as Record<string, unknown>}
+      emptyMessage="Không có giao dịch kho hàng"
       total={total}
-      // Enable view detail with edit capability
-      enableViewDetail={!!onSave}
-      enableEdit={false}
-      detailFields={inventoryTransactionDetailFields}
-      editFields={inventoryTransactionFormFields}
-      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
-      detailTitle="Chi tiết Giao dịch Kho"
     />
   );
 };

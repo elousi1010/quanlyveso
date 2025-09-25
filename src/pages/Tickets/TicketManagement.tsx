@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog
+  CommonFormDrawer
 } from '@/components/common';
 import {
   TicketHeader,
@@ -188,8 +188,8 @@ export const TicketManagement: React.FC = () => {
         />
       </Box>
 
-      {/* Create Dialog */}
-      <CommonFormDialog
+      {/* Create Drawer */}
+      <CommonFormDrawer
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
         onSave={(data) => handleCreateSubmit(data as unknown as CreateTicketDto)}
@@ -197,6 +197,7 @@ export const TicketManagement: React.FC = () => {
         fields={ticketCreateFields}
         submitText="Tạo"
         loading={createMutation.isPending}
+        width={500}
       />
 
 

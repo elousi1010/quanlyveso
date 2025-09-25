@@ -44,18 +44,8 @@ export const permissionDetailFields: DetailField[] = [
     type: 'text',
   },
   {
-    key: 'description',
-    label: 'Mô Tả',
-    type: 'text',
-  },
-  {
-    key: 'resource',
-    label: 'Tài Nguyên',
-    type: 'text',
-  },
-  {
-    key: 'action',
-    label: 'Hành Động',
+    key: 'code',
+    label: 'Mã Quyền',
     type: 'text',
   },
   {
@@ -68,14 +58,35 @@ export const permissionDetailFields: DetailField[] = [
       variant: 'filled',
     },
   },
+  // Users count
+  {
+    key: 'users',
+    label: 'Số Lượng User',
+    type: 'custom',
+    render: (data: unknown) => {
+      const permission = data as Record<string, unknown>;
+      const users = permission.users as unknown[] || [];
+      return `${users.length} user(s)`;
+    },
+  },
   {
     key: 'created_at',
     label: 'Ngày Tạo',
     type: 'date',
   },
   {
+    key: 'created_by',
+    label: 'Người Tạo',
+    type: 'text',
+  },
+  {
     key: 'updated_at',
     label: 'Ngày Cập Nhật',
     type: 'date',
+  },
+  {
+    key: 'updated_by',
+    label: 'Người Cập Nhật',
+    type: 'text',
   },
 ];

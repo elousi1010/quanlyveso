@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDialog
+  CommonFormDrawer
 } from '@/components/common';
 import {
   StationHeader,
@@ -179,8 +179,8 @@ export const StationManagement: React.FC = () => {
         />
       </Box>
 
-      {/* Create Dialog */}
-      <CommonFormDialog
+      {/* Create Drawer */}
+      <CommonFormDrawer
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
         onSave={handleCreateSubmit}
@@ -188,6 +188,7 @@ export const StationManagement: React.FC = () => {
         fields={stationCreateFields}
         submitText="Tạo"
         loading={createMutation.isPending}
+        width={500}
       />
 
 

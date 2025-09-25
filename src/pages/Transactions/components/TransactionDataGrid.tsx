@@ -1,15 +1,11 @@
 import React from 'react';
-import { 
-  CommonDataTable, 
-  type TableAction 
-} from '@/components/common';
+import { SimpleTable } from '@/components/common';
 import { 
   Visibility as ViewIcon, 
   Edit as EditIcon, 
   Delete as DeleteIcon 
 } from '@mui/icons-material';
 import { transactionTableConfig } from '../constants';
-import { transactionFormFields, transactionDetailFields } from '../constants/transactionViewEditConfig';
 import type { Transaction } from '../types';
 
 interface TransactionDataGridProps {
@@ -29,72 +25,40 @@ export const TransactionDataGrid: React.FC<TransactionDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
-  onSave,
-  selectedRows,
-  onSelectionChange,
 }) => {
-  const handleRowClick = (transaction: Transaction) => {
-    onView(transaction);
-  };
-
-  const handleEdit = (transaction: Transaction) => {
-    onEdit(transaction);
-  };
-
-  const handleDelete = (transaction: Transaction) => {
-    onDelete(transaction);
-  };
-
-  const handleView = (transaction: Transaction) => {
-    onView(transaction);
-  };
-
-  // Define actions for the table
-  const actions: TableAction[] = [
+  // Simple table actions
+  const actions = [
     {
       key: 'view',
       label: 'Xem',
-      icon: <ViewIcon fontSize="small" />,
-      color: 'primary.main',
-      onClick: handleView,
+      icon: <ViewIcon />,
+      color: 'primary' as const,
+      onClick: (transaction: unknown) => onView(transaction as Transaction),
     },
     {
       key: 'edit',
       label: 'Sửa',
-      icon: <EditIcon fontSize="small" />,
-      color: 'warning.main',
-      onClick: handleEdit,
+      icon: <EditIcon />,
+      color: 'primary' as const,
+      onClick: (transaction: unknown) => onEdit(transaction as Transaction),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon fontSize="small" />,
-      color: 'error.main',
-      onClick: handleDelete,
+      icon: <DeleteIcon />,
+      color: 'error' as const,
+      onClick: (transaction: unknown) => onDelete(transaction as Transaction),
     },
   ];
 
   return (
-    <CommonDataTable
-      data={data as unknown as Record<string, unknown>[]}
-      isLoading={loading}
-      error={undefined}
-      onRefresh={() => {}}
+    <SimpleTable
+      data={data}
       columns={transactionTableConfig.columns}
       actions={actions}
-      onRowClick={handleRowClick as (item: Transaction) => void}
-      onEdit={handleEdit as (item: Transaction) => void}
-      onDelete={handleDelete as (item: Transaction) => void}
-      selectedRows={selectedRows as unknown as Record<string, unknown>[]}
-      onSelectionChange={onSelectionChange as (items: unknown[]) => void}
-      config={transactionTableConfig as unknown as Record<string, unknown>}
-      // Enable view detail with edit capability
-      enableViewDetail={!!onSave}
-      enableEdit={false}
-      detailFields={transactionDetailFields}
-      editFields={transactionFormFields}
-      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
-      detailTitle="Chi tiết Giao dịch"
+      loading={loading}
+      onRefresh={() => {}}
+      emptyMessage="Không có giao dịch"
     />
   );
 };

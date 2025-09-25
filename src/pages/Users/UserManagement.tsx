@@ -7,9 +7,12 @@ import {
 import {
   CommonHeader,
   CommonSearchAndFilter,
-  CommonFormDialog,
+  CommonFormDrawer,
   CommonDeleteDialog,
   CommonSnackbar,
+  CommonViewEditDrawer,
+  type DetailField,
+  type FormField,
 } from '../../components/common';
 import { useUsers, useUserMutations } from './hooks';
 import { UserDataGrid } from './components/UserDataGrid';
@@ -30,11 +33,14 @@ const UserManagement: React.FC = () => {
   const {
     selectedUser,
     isCreateDialogOpen,
+    isViewEditDialogOpen,
     isDeleteDialogOpen,
     createUserMutation,
     updateUserMutation,
     deleteUserMutation,
     openCreateDialog,
+    openViewEditDialog,
+    openDeleteDialog,
     closeAllDialogs,
   } = useUserMutations();
 
@@ -112,15 +118,18 @@ const UserManagement: React.FC = () => {
     );
   };
 
-  const handleViewUser = () => {
+  const handleViewUser = (user: User) => {
+    openViewEditDialog(user);
     // View functionality is now handled by CommonViewEditDrawer
   };
 
-  const handleEditUser = () => {
+  const handleEditUser = (user: User) => {
+    openViewEditDialog(user);
     // Edit functionality is now handled by CommonViewEditDrawer
   };
 
-  const handleDeleteUser = () => {
+  const handleDeleteUser = (user: User) => {
+    openDeleteDialog(user);
     // Delete functionality is now handled by CommonViewEditDrawer
   };
 
@@ -202,8 +211,8 @@ const UserManagement: React.FC = () => {
         </Paper>
       </Box>
 
-      {/* Dialogs */}
-      <CommonFormDialog
+      {/* Drawers */}
+      <CommonFormDrawer
         open={isCreateDialogOpen}
         onClose={closeAllDialogs}
         onSave={handleCreateUserWithSnackbar}
@@ -212,8 +221,20 @@ const UserManagement: React.FC = () => {
         initialData={createFormData as unknown as Record<string, unknown>}
         loading={createUserMutation.isPending}
         submitText="Tạo người dùng"
+        width={500}
       />
 
+      <CommonViewEditDrawer
+        open={isViewEditDialogOpen}
+        onClose={closeAllDialogs}
+        onSave={handleUpdateUserWithSnackbar}
+        title="Chi tiết người dùng"
+        viewFields={USER_FORM_FIELDS as DetailField[]}
+        editFields={USER_FORM_FIELDS as FormField[]}
+        data={selectedUser as unknown as Record<string, unknown>}
+        loading={updateUserMutation.isPending}
+        mode={isViewEditDialogOpen ? 'view' : 'edit'}
+      />
 
       <CommonDeleteDialog
         open={isDeleteDialogOpen}

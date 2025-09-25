@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommonDataTable } from '@/components/common';
+import { SimpleTable } from '@/components/common';
 import { organizationTableConfig } from '../constants';
 import { organizationFormFields, organizationDetailFields } from '../constants/organizationViewEditConfig';
 import type { Organization } from '../types';
@@ -60,11 +60,11 @@ export const OrganizationDataGrid: React.FC<OrganizationDataGridProps> = ({
   ];
 
   return (
-    <CommonDataTable
-      data={(data || []) as unknown as Record<string, unknown>[]}
+    <SimpleTable
+      data={data || []}
       columns={organizationTableConfig.columns}
       actions={actions}
-      isLoading={loading}
+      loading={loading}
       error={error}
       onRefresh={onRefresh}
       page={page}
@@ -72,13 +72,7 @@ export const OrganizationDataGrid: React.FC<OrganizationDataGridProps> = ({
       total={total}
       onPageChange={onPageChange}
       onRowsPerPageChange={onRowsPerPageChange}
-      // Enable view detail with edit capability
-      enableViewDetail={!!onSave}
-      enableEdit={false}
-      detailFields={organizationDetailFields}
-      editFields={organizationFormFields}
-      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
-      detailTitle="Chi tiết Tổ Chức"
+      emptyMessage="Không có tổ chức"
     />
   );
 };

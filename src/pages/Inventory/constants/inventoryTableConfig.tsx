@@ -1,103 +1,70 @@
-import type { GridColDef } from '@mui/x-data-grid';
-import type { Inventory } from '../types';
-
-export const inventoryTableColumns: GridColDef<Inventory>[] = [
-  {
-    field: 'code',
-    headerName: 'Mã Vé',
-    width: 150,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'quantity',
-    headerName: 'Số Lượng',
-    width: 100,
-    sortable: true,
-    filterable: false,
-    type: 'number',
-    align: 'right',
-    headerAlign: 'right',
-  },
-  {
-    field: 'avg_cost',
-    headerName: 'Giá Trung Bình',
-    width: 120,
-    sortable: true,
-    filterable: false,
-    type: 'number',
-    align: 'right',
-    headerAlign: 'right',
-    valueFormatter: (value) => {
-      if (value == null) return '';
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-      }).format(value);
-    },
-  },
-  {
-    field: 'draw_date',
-    headerName: 'Ngày Quay',
-    width: 120,
-    sortable: true,
-    filterable: true,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      const date = new Date(value);
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    },
-  },
-  {
-    field: 'is_active',
-    headerName: 'Trạng Thái',
-    width: 100,
-    sortable: true,
-    filterable: true,
-    type: 'boolean',
-    renderCell: (params) => (
-      <span style={{ color: params.value ? '#4caf50' : '#f44336' }}>
-        {params.value ? 'Hoạt động' : 'Không hoạt động'}
-      </span>
-    ),
-  },
-  {
-    field: 'created_at',
-    headerName: 'Ngày Tạo',
-    width: 120,
-    sortable: true,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      const date = new Date(value);
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    },
-  },
-  {
-    field: 'created_by',
-    headerName: 'Người Tạo',
-    width: 120,
-    sortable: true,
-    filterable: true,
-  },
-];
+import type { SimpleTableColumn } from '../../../components/common/SimpleTable';
+import { formatDate } from '@/utils/format';
 
 export const inventoryTableConfig = {
-  columns: inventoryTableColumns,
-  pageSize: 10,
-  pageSizeOptions: [5, 10, 25, 50],
-  density: 'compact' as const,
-  disableColumnMenu: false,
-  disableColumnFilter: false,
-  disableColumnSelector: false,
-  disableDensitySelector: false,
-  disableRowSelectionOnClick: true,
-  checkboxSelection: true,
-  rowSelection: true,
+  columns: [
+    {
+      key: 'code',
+      label: 'Mã Vé',
+      minWidth: 150,
+    },
+    {
+      key: 'quantity',
+      label: 'Số Lượng',
+      minWidth: 100,
+      align: 'right',
+      render: (value: number) => value?.toString() || '0',
+    },
+    {
+      key: 'avg_cost',
+      label: 'Giá Trung Bình',
+      minWidth: 120,
+      align: 'right',
+      render: (value: number) => {
+        return new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        }).format(value || 0);
+      },
+    },
+    {
+      key: 'total_value',
+      label: 'Tổng Giá Trị',
+      minWidth: 150,
+      align: 'right',
+      render: (value: number, row: any) => {
+        const quantity = row?.quantity || 0;
+        const avgCost = row?.avg_cost || 0;
+        const total = quantity * avgCost;
+        return new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        }).format(total);
+      },
+    },
+    {
+      key: 'is_active',
+      label: 'Trạng thái',
+      minWidth: 120,
+      render: (value: boolean) => {
+        return (
+          <span style={{ color: value ? '#4caf50' : '#f44336' }}>
+            {value ? 'Hoạt động' : 'Không hoạt động'}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'draw_date',
+      label: 'Ngày Quay',
+      minWidth: 120,
+      render: (value: string) => formatDate(value),
+    },
+    {
+      key: 'created_at',
+      label: 'Ngày tạo',
+      minWidth: 150,
+      render: (value: string) => formatDate(value),
+    },
+  ] as SimpleTableColumn[],
 };

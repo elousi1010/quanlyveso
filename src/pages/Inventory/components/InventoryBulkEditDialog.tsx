@@ -24,7 +24,8 @@ import {
 } from '@mui/material';
 import { Edit as EditIcon, Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
 import { useQuery } from '@tanstack/react-query';
-import { partnerApi, type Partner } from '../../../api/partnerApi';
+import { partnerApi } from '../../Partners/api';
+import type { Partner } from '../../Partners/types';
 import type { Inventory, UpdateInventoryDto } from '../types';
 
 // Sub-type options
@@ -72,11 +73,11 @@ export const InventoryBulkEditDialog: React.FC<InventoryBulkEditDialogProps> = (
   // Fetch partners data
   const { data: partnersData, isLoading: partnersLoading } = useQuery({
     queryKey: ['partners', 'all'],
-    queryFn: () => partnerApi.getPartners({ limit: 1000 }),
+    queryFn: () => partnerApi.getPartners({ page: 1, limit: 1000 }),
     enabled: open,
   });
 
-  const partners = partnersData?.data?.data || [];
+  const partners = partnersData?.data?.data?.data || [];
 
   // Initialize editable fields when dialog opens
   useEffect(() => {

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Chip, Typography, Box } from '@mui/material';
-import type { TableColumn } from '@/components/common/types';
+import type { SimpleTableColumn } from '@/components/common/SimpleTable';
 import type { InventoryTransactionItem } from '../types';
+import { formatDate } from '@/utils/format';
 
 export const inventoryTransactionTableConfig = {
   columns: [
@@ -114,7 +115,7 @@ export const inventoryTransactionTableConfig = {
       minWidth: 120,
       render: (value: unknown, row: InventoryTransactionItem) => (
         <Typography variant="body2" color="text.secondary">
-          {row.inventory.draw_date ? new Date(row.inventory.draw_date).toLocaleDateString('vi-VN') : 'N/A'}
+          {row.inventory.draw_date ? formatDate(row.inventory.draw_date) : 'N/A'}
         </Typography>
       ),
     },
@@ -137,9 +138,9 @@ export const inventoryTransactionTableConfig = {
       minWidth: 120,
       render: (value: unknown) => (
         <Typography variant="body2" color="text.secondary">
-          {value ? new Date(value as string).toLocaleDateString('vi-VN') : 'N/A'}
+          {value ? formatDate(value as string) : 'N/A'}
         </Typography>
       ),
     },
-  ] as TableColumn[],
+  ] as SimpleTableColumn[],
 };

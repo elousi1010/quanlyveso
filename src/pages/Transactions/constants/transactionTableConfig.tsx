@@ -1,123 +1,87 @@
-import type { GridColDef } from '@mui/x-data-grid';
+import type { SimpleTableColumn } from '../../../components/common/SimpleTable';
 import type { Transaction } from '../types';
-
-export const transactionTableColumns: GridColDef<Transaction>[] = [
-  {
-    field: 'id',
-    headerName: 'ID',
-    width: 200,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'amount',
-    headerName: 'Số tiền',
-    width: 120,
-    sortable: true,
-    filterable: true,
-    valueFormatter: (value) => {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-      }).format(value);
-    },
-  },
-  {
-    field: 'type',
-    headerName: 'Loại',
-    width: 100,
-    sortable: true,
-    filterable: true,
-    valueFormatter: (value) => {
-      const typeMap: Record<string, string> = {
-        'income': 'Thu nhập',
-        'expense': 'Chi phí',
-      };
-      return typeMap[value] || value;
-    },
-  },
-  {
-    field: 'subType',
-    headerName: 'Loại phụ',
-    width: 150,
-    sortable: true,
-    filterable: true,
-    valueFormatter: (value) => {
-      const subTypeMap: Record<string, string> = {
-        'buy_from_agent': 'Mua từ đại lý',
-        'sell_to_customer': 'Bán cho khách hàng',
-        'commission': 'Hoa hồng',
-        'refund': 'Hoàn tiền',
-      };
-      return subTypeMap[value] || value;
-    },
-  },
-  {
-    field: 'partner_id',
-    headerName: 'ID Đối tác',
-    width: 150,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'swap_id',
-    headerName: 'ID Swap',
-    width: 150,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'note',
-    headerName: 'Ghi chú',
-    width: 200,
-    sortable: false,
-    filterable: true,
-  },
-  {
-    field: 'tickets',
-    headerName: 'Số vé',
-    width: 100,
-    sortable: false,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!Array.isArray(value)) return '0';
-      return value(value as any)?.length.toString();
-    },
-  },
-  {
-    field: 'created_at',
-    headerName: 'Ngày tạo',
-    width: 150,
-    sortable: true,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
-    },
-  },
-  {
-    field: 'updated_at',
-    headerName: 'Ngày cập nhật',
-    width: 150,
-    sortable: true,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
-    },
-  },
-];
+import { formatDate } from '@/utils/format';
 
 export const transactionTableConfig = {
-  columns: transactionTableColumns,
-  pageSize: 10,
-  pageSizeOptions: [5, 10, 25, 50],
-  density: 'compact' as const,
-  disableColumnMenu: false,
-  disableColumnFilter: false,
-  disableColumnSelector: false,
-  disableDensitySelector: false,
-  disableRowSelectionOnClick: true,
-  checkboxSelection: true,
-  rowSelection: true,
+  columns: [
+    {
+      key: 'id',
+      label: 'ID',
+      minWidth: 200,
+    },
+    {
+      key: 'amount',
+      label: 'Số tiền',
+      minWidth: 120,
+      render: (value: number) => {
+        return new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        }).format(value);
+      },
+    },
+    {
+      key: 'type',
+      label: 'Loại',
+      minWidth: 100,
+      render: (value: string) => {
+        const typeMap: Record<string, string> = {
+          'income': 'Thu nhập',
+          'expense': 'Chi phí',
+        };
+        return typeMap[value] || value;
+      },
+    },
+    {
+      key: 'subType',
+      label: 'Loại phụ',
+      minWidth: 150,
+      render: (value: string) => {
+        const subTypeMap: Record<string, string> = {
+          'buy_from_agent': 'Mua từ đại lý',
+          'sell_to_customer': 'Bán cho khách hàng',
+          'commission': 'Hoa hồng',
+          'refund': 'Hoàn tiền',
+        };
+        return subTypeMap[value] || value;
+      },
+    },
+    {
+      key: 'partner_id',
+      label: 'ID Đối tác',
+      minWidth: 150,
+    },
+    {
+      key: 'swap_id',
+      label: 'ID Swap',
+      minWidth: 150,
+    },
+    {
+      key: 'note',
+      label: 'Ghi chú',
+      minWidth: 200,
+    },
+    {
+      key: 'tickets',
+      label: 'Số vé',
+      minWidth: 100,
+      render: (value: number) => value || 0,
+    },
+    {
+      key: 'created_at',
+      label: 'Ngày tạo',
+      minWidth: 150,
+      render: (value: string) => {
+        return formatDate(value);
+      },
+    },
+    {
+      key: 'updated_at',
+      label: 'Ngày cập nhật',
+      minWidth: 150,
+      render: (value: string) => {
+        return formatDate(value);
+      },
+    },
+  ] as SimpleTableColumn[],
 };

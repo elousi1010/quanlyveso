@@ -1,95 +1,77 @@
-import type { GridColDef } from '@mui/x-data-grid';
+import type { SimpleTableColumn } from '../../../components/common/SimpleTable';
 import type { Ticket } from '../types';
-
-export const ticketTableColumns: GridColDef<Ticket>[] = [
-  {
-    field: 'id',
-    headerName: 'ID',
-    width: 200,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'ticket_code',
-    headerName: 'Mã vé',
-    width: 150,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'ticket_type',
-    headerName: 'Loại vé',
-    width: 120,
-    sortable: true,
-    filterable: true,
-    valueFormatter: (value) => {
-      const typeMap: Record<string, string> = {
-        'traditional': 'Truyền thống',
-        'online': 'Trực tuyến',
-        'instant': 'Tức thời',
-      };
-      return typeMap[value] || value;
-    },
-  },
-  {
-    field: 'station_id',
-    headerName: 'ID Trạm',
-    width: 150,
-    sortable: true,
-    filterable: true,
-  },
-  {
-    field: 'draw_date',
-    headerName: 'Ngày quay',
-    width: 150,
-    sortable: true,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
-    },
-  },
-  {
-    field: 'note',
-    headerName: 'Ghi chú',
-    width: 200,
-    sortable: false,
-    filterable: true,
-  },
-  {
-    field: 'created_at',
-    headerName: 'Ngày tạo',
-    width: 150,
-    sortable: true,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
-    },
-  },
-  {
-    field: 'updated_at',
-    headerName: 'Ngày cập nhật',
-    width: 150,
-    sortable: true,
-    filterable: false,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      return new Date(value).toLocaleDateString('vi-VN');
-    },
-  },
-];
+import { formatDate } from '@/utils/format';
 
 export const ticketTableConfig = {
-  columns: ticketTableColumns,
-  pageSize: 10,
-  pageSizeOptions: [5, 10, 25, 50],
-  density: 'compact' as const,
-  disableColumnMenu: false,
-  disableColumnFilter: false,
-  disableColumnSelector: false,
-  disableDensitySelector: false,
-  disableRowSelectionOnClick: true,
-  checkboxSelection: true,
-  rowSelection: true,
+  columns: [
+    {
+      key: 'id',
+      label: 'ID',
+      minWidth: 200,
+    },
+    {
+      key: 'ticket_code',
+      label: 'Mã vé',
+      minWidth: 150,
+    },
+    {
+      key: 'ticket_type',
+      label: 'Loại vé',
+      minWidth: 120,
+      render: (value: string) => {
+        const typeMap: Record<string, string> = {
+          'number': 'Số',
+          'special': 'Đặc biệt',
+        };
+        return typeMap[value] || value;
+      },
+    },
+    {
+      key: 'numbers',
+      label: 'Số',
+      minWidth: 200,
+      render: (value: string[]) => value?.join(', ') || '',
+    },
+    {
+      key: 'price',
+      label: 'Giá',
+      minWidth: 120,
+      render: (value: number) => {
+        return new Intl.NumberFormat('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        }).format(value);
+      },
+    },
+    {
+      key: 'status',
+      label: 'Trạng thái',
+      minWidth: 120,
+      render: (value: string) => {
+        const statusMap: Record<string, string> = {
+          'active': 'Hoạt động',
+          'inactive': 'Không hoạt động',
+          'sold': 'Đã bán',
+          'cancelled': 'Đã hủy',
+        };
+        return statusMap[value] || value;
+      },
+    },
+    {
+      key: 'created_at',
+      label: 'Ngày tạo',
+      minWidth: 150,
+      render: (value: string) => {
+        return formatDate(value);
+      },
+    },
+    {
+      key: 'updated_at',
+      label: 'Ngày cập nhật',
+      minWidth: 150,
+      render: (value: string) => {
+        return formatDate(value);
+      },
+    },
+  ] as SimpleTableColumn[],
 };

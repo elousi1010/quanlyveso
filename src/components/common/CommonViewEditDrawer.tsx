@@ -74,6 +74,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       setFormErrors({});
       await onSave?.(formData);
       setIsEditing(false);
+      onClose(); // Đóng drawer sau khi save thành công
     } catch (err) {
       console.error('Save error:', err);
     }
@@ -183,15 +184,18 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         if (Array.isArray(value)) {
           return (
             <Box>
-              {value.map((item, index) => (
-                <Chip
-                  key={index}
-                  label={typeof item === 'object' ? item.name || item.label || JSON.stringify(item) : item}
-                  size="small"
-                  variant="outlined"
-                  sx={{ mr: 0.5, mb: 0.5 }}
-                />
-              ))}
+              {value.map((item, index) => {
+                if (!item) return null;
+                return (
+                  <Chip
+                    key={index}
+                    label={typeof item === 'object' ? item?.name || item?.label || JSON.stringify(item) : String(item)}
+                    size="small"
+                    variant="outlined"
+                    sx={{ mr: 0.5, mb: 0.5 }}
+                  />
+                );
+              })}
             </Box>
           );
         }
@@ -330,11 +334,14 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
             }}
           >
             <option value="">{field.placeholder || 'Chọn...'}</option>
-            {field.options?.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
+            {field.options?.map((option) => {
+              if (!option) return null;
+              return (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              );
+            })}
           </select>
         );
 
@@ -455,7 +462,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
           </Button>
         </>
       ) : (
-        enableEdit && onSave && (
+        onSave && (
           <Button
             onClick={handleEdit}
             startIcon={<EditIcon />}
@@ -503,7 +510,6 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       onClose={onClose}
       title={title}
       width={width}
-      footerContent={footerContent}
     >
       <Box sx={{ p: 2 }}>
         {error && (
@@ -513,9 +519,10 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         )}
 
 
-        {finalFields.length > 0 ? (
+        {finalFields?.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {finalFields.map((field) => {
+              if (!field) return null;
               const value = isEditing ? formData[field.key] : data[field.key];
               const error = isEditing ? formErrors[field.key] : null;
               
@@ -576,6 +583,11 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
             </Typography>
           </Box>
         )}
+      </Box>
+      
+      {/* Footer with action buttons */}
+      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+        {footerContent}
       </Box>
     </CommonDrawer>
   );

@@ -8,18 +8,16 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import type { DrawerProps } from '@mui/material/Drawer';
 import { Close as CloseIcon } from '@mui/icons-material';
 
-export interface CommonDrawerProps extends Omit<DrawerProps, 'open' | 'onClose'> {
+interface CommonDrawerProps {
   open: boolean;
   onClose: () => void;
-  title?: string;
+  title: string;
   children: React.ReactNode;
   width?: number | string;
-  showCloseButton?: boolean;
-  headerContent?: React.ReactNode;
-  footerContent?: React.ReactNode;
+  anchor?: 'left' | 'right' | 'top' | 'bottom';
+  loading?: boolean;
 }
 
 const CommonDrawer: React.FC<CommonDrawerProps> = ({
@@ -28,63 +26,64 @@ const CommonDrawer: React.FC<CommonDrawerProps> = ({
   title,
   children,
   width = 400,
-  showCloseButton = true,
-  headerContent,
-  footerContent,
-  ...drawerProps
+  anchor = 'right',
+  loading = false,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Adjust width for mobile screens
+  const drawerWidth = isMobile ? '100%' : width;
+
   return (
     <Drawer
-      anchor="right"
+      anchor={anchor}
       open={open}
       onClose={onClose}
       sx={{
         '& .MuiDrawer-paper': {
-          width: isMobile ? '100%' : width,
-          height: '100%',
+          width: drawerWidth,
+          maxWidth: '100vw',
+          height: '100vh',
           display: 'flex',
           flexDirection: 'column',
         },
       }}
-      {...drawerProps}
+      PaperProps={{
+        sx: {
+          backgroundColor: theme.palette.background.paper,
+        },
+      }}
     >
       {/* Header */}
-      {(title || headerContent || showCloseButton) && (
-        <>
-          <Box
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              minHeight: 64,
-              borderBottom: 1,
-              borderColor: 'divider',
-            }}
-          >
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              {headerContent || (
-                <Typography variant="h6" noWrap>
-                  {title}
-                </Typography>
-              )}
-            </Box>
-            {showCloseButton && (
-              <IconButton
-                onClick={onClose}
-                size="small"
-                sx={{ ml: 1, flexShrink: 0 }}
-              >
-                <CloseIcon />
-              </IconButton>
-            )}
-          </Box>
-          <Divider />
-        </>
-      )}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          p: 2,
+          minHeight: 64,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
+          {title}
+        </Typography>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          sx={{
+            color: theme.palette.text.secondary,
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </Box>
+
+      <Divider />
 
       {/* Content */}
       <Box
@@ -96,22 +95,6 @@ const CommonDrawer: React.FC<CommonDrawerProps> = ({
       >
         {children}
       </Box>
-
-      {/* Footer */}
-      {footerContent && (
-        <>
-          <Divider />
-          <Box
-            sx={{
-              p: 2,
-              borderTop: 1,
-              borderColor: 'divider',
-            }}
-          >
-            {footerContent}
-          </Box>
-        </>
-      )}
     </Drawer>
   );
 };

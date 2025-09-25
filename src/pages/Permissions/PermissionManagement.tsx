@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Box, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
-import { Cancel, Edit } from '@mui/icons-material';
+import { Box } from '@mui/material';
 import {
   PermissionHeader,
   PermissionDataGrid,
@@ -8,16 +7,19 @@ import {
   PermissionDeleteDialog,
   PermissionSnackbar,
   PermissionFormDialog,
+  PermissionFormDrawer,
   PermissionDetailView,
 } from './components';
+import PermissionFormDrawerSimple from './components/PermissionFormDrawerSimple';
 import { usePermissions, usePermissionMutations } from './hooks';
 import type { 
   Permission, 
   CreatePermissionDto, 
+  UpdatePermissionDto,
   PermissionSearchParams 
 } from './types';
-import { permissionSearchFields } from './constants';
-import type { SearchAndFilterConfig } from '@/components/common';
+import { permissionSearchFields, permissionDetailFields } from './constants';
+import type { SearchAndFilterConfig, DetailField } from '@/components/common';
 
 export const PermissionManagement: React.FC = () => {
   // State management
@@ -33,6 +35,7 @@ export const PermissionManagement: React.FC = () => {
     delete: false,
   });
   const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -72,12 +75,22 @@ export const PermissionManagement: React.FC = () => {
 
   const handleView = useCallback((permission: Permission) => {
     setSelectedPermission(permission);
-    setDialogState(prev => ({ ...prev, view: true }));
+    setViewMode('detail');
   }, []);
 
   const handleDelete = useCallback((permission: Permission) => {
     setSelectedPermission(permission);
     setDialogState(prev => ({ ...prev, delete: true }));
+  }, []);
+
+  const handleBackToList = useCallback(() => {
+    setViewMode('list');
+    setSelectedPermission(null);
+  }, []);
+
+  const handleBackToListKeepSelection = useCallback(() => {
+    setViewMode('list');
+    // Keep selectedPermission for edit
   }, []);
 
   const handleDeleteSelected = useCallback(() => {
@@ -94,7 +107,13 @@ export const PermissionManagement: React.FC = () => {
 
   const handleCloseDialog = useCallback((dialogType: keyof typeof dialogState) => {
     setDialogState(prev => ({ ...prev, [dialogType]: false }));
-    setSelectedPermission(null);
+    if (dialogType === 'edit') {
+      // Don't reset selectedPermission when closing edit dialog
+      // Keep it for potential re-editing
+    } else {
+      setSelectedPermission(null);
+    }
+    setViewMode('list');
   }, []);
 
   const handleCreateSubmit = useCallback(async (data: CreatePermissionDto) => {
@@ -143,24 +162,32 @@ export const PermissionManagement: React.FC = () => {
 
   const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Permission) => {
     const permissionToUpdate = selectedRow || selectedPermission;
-    if (!permissionToUpdate) return;
+    if (!permissionToUpdate) {
+      console.error('No permission to update');
+      return;
+    }
+    
+    console.log('Updating permission:', permissionToUpdate.id, data);
     
     try {
-      await updateMutation.mutateAsync({ id: permissionToUpdate.id, data: data as unknown as CreatePermissionDto });
+      await updateMutation.mutateAsync({ id: permissionToUpdate.id, data: data as unknown as UpdatePermissionDto });
       setSnackbar({
         open: true,
         message: 'Cập nhật quyền hạn thành công',
         severity: 'success',
       });
-      handleCloseDialog('edit');
-    } catch {
+      setDialogState(prev => ({ ...prev, edit: false }));
+      setSelectedPermission(null);
+      setViewMode('list');
+    } catch (error) {
+      console.error('Update error:', error);
       setSnackbar({
         open: true,
         message: 'Có lỗi xảy ra khi cập nhật quyền hạn',
         severity: 'error',
       });
     }
-  }, [selectedPermission, updateMutation, handleCloseDialog]);
+  }, [selectedPermission, updateMutation]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!selectedPermission) return;
@@ -199,97 +226,77 @@ export const PermissionManagement: React.FC = () => {
         onCreateSpecific={handleCreateSpecificPermission}
       />
 
-      <Box>
-        <PermissionSearchAndFilter
-          searchParams={searchParams as Record<string, unknown>} 
-          onSearch={handleSearchChange as (query: string) => void}
-          onSort={handleSort}
-          onFilter={handleFilter}
-          onSearchChange={handleSearchChange as (query: string) => void}
-          loading={isLoading}
-          config={permissionSearchFields as SearchAndFilterConfig}
-        />
-      </Box>
+      {viewMode === 'list' ? (
+        <>
+          <Box>
+            <PermissionSearchAndFilter
+              searchParams={searchParams as Record<string, unknown>} 
+              onSearch={handleSearchChange as (query: string) => void}
+              onSort={handleSort}
+              onFilter={handleFilter}
+              onSearchChange={handleSearchChange as (query: string) => void}
+              loading={isLoading}
+              config={permissionSearchFields as SearchAndFilterConfig}
+            />
+          </Box>
 
-      <Box>
-        <PermissionDataGrid
-          data={permissions}
-          loading={isLoading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onView={handleView}
-          onSave={handleUpdateSubmit}
-          selectedRows={selectedRows}
-          onSelectionChange={setSelectedRows}
-        />
-      </Box>
+          <Box>
+            <PermissionDataGrid
+              data={permissions}
+              loading={isLoading}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onView={handleView}
+              onSave={handleUpdateSubmit}
+              selectedRows={selectedRows}
+              onSelectionChange={setSelectedRows}
+            />
+          </Box>
+        </>
+      ) : (
+        <Box>
+          {selectedPermission && (
+            <PermissionFormDrawerSimple
+              open={true}
+              onClose={handleBackToList}
+              onSave={(data) => {
+                handleUpdateSubmit(data as unknown as Record<string, unknown>, selectedPermission);
+                handleBackToList();
+              }}
+              title="Chi tiết Quyền hạn"
+              permission={selectedPermission}
+              loading={updateMutation.isPending}
+              mode="view"
+              onEdit={() => {
+                setViewMode('list');
+                setDialogState(prev => ({ ...prev, edit: true }));
+              }}
+            />
+          )}
+        </Box>
+      )}
 
-      {/* Create Dialog */}
-      <PermissionFormDialog
+      {/* Create Drawer */}
+      <PermissionFormDrawerSimple
         open={dialogState.create}
         onClose={() => handleCloseDialog('create')}
         onSave={(data) => handleCreateSubmit(data as unknown as CreatePermissionDto)}
         title="Tạo Quyền hạn Mới"
         loading={createMutation.isPending}
+        mode="edit"
       />
 
-      {/* Edit Dialog */}
-      <PermissionFormDialog
+      {/* Edit Drawer */}
+      <PermissionFormDrawerSimple
         open={dialogState.edit}
         onClose={() => handleCloseDialog('edit')}
         onSave={(data) => handleUpdateSubmit(data as unknown as Record<string, unknown>, selectedPermission)}
         title="Chỉnh sửa Quyền hạn"
         permission={selectedPermission}
         loading={updateMutation.isPending}
+        mode="edit"
       />
 
-      {/* View Dialog */}
-      <Dialog
-        open={dialogState.view}
-        onClose={() => handleCloseDialog('view')}
-        maxWidth="lg"
-        fullWidth
-      >
-
-        <DialogContent sx={{ pt: 1 }}>
-          {selectedPermission && <PermissionDetailView permission={selectedPermission} />}
-        </DialogContent>
-
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button
-            onClick={() => handleCloseDialog('view')}
-            startIcon={<Cancel />}
-            size="large"
-            sx={{ 
-              borderRadius: 2,
-              px: 3,
-              py: 1
-            }}
-          >
-            Đóng
-          </Button>
-          <Button
-            onClick={() => {
-              handleCloseDialog('view');
-              setDialogState(prev => ({ ...prev, edit: true }));
-            }}
-            startIcon={<Edit />}
-            variant="contained"
-            size="large"
-            sx={{ 
-              borderRadius: 2,
-              px: 4,
-              py: 1,
-              background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
-              }
-            }}
-          >
-            Chỉnh sửa
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Delete Dialog */}
       <PermissionDeleteDialog

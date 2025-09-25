@@ -1,11 +1,11 @@
-import type { TableColumn, TableAction } from '../../../components/common';
+import type { SimpleTableColumn, SimpleTableAction } from '../../../components/common/SimpleTable';
 import type { User } from '../types';
 import { USER_ROLES } from './userConstants';
 import { formatDate } from '../../../utils/format';
 import { Visibility as ViewIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { Chip } from '@mui/material';
 
-export const USER_TABLE_COLUMNS: TableColumn[] = [
+export const USER_TABLE_COLUMNS: SimpleTableColumn[] = [
   {
     key: 'name',
     label: 'Tên người dùng',
@@ -76,7 +76,7 @@ export const USER_TABLE_COLUMNS: TableColumn[] = [
   },
 ];
 
-export const USER_TABLE_ACTIONS: TableAction[] = [
+export const USER_TABLE_ACTIONS: SimpleTableAction[] = [
   {
     key: 'view',
     label: 'Xem/Chỉnh sửa',

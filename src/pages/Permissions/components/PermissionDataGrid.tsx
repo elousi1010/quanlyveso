@@ -1,5 +1,5 @@
 import React from 'react';
-import { CommonDataTable, type TableColumn } from '@/components/common';
+import { SimpleTable } from '@/components/common';
 import { 
   Chip, 
   Box, 
@@ -38,17 +38,6 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
 }) => {
   
 
-  const handleRowClick = (permission: Permission) => {
-    onView(permission);
-  };
-
-  const handleEdit = (permission: Permission) => {
-    onEdit(permission);
-  };
-
-  const handleDelete = (permission: Permission) => {
-    onDelete(permission);
-  };
 
   // Helper function to render permission badges
   const renderPermissionBadges = (actions: Record<string, number>) => {
@@ -117,7 +106,7 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
     });
   };
 
-  // Transform data for CommonDataTable
+  // Transform data for SimpleTable
   const displayData = data?.map((permission, index) => ({
     ...permission,
     id: permission.id || `permission-${index}`,
@@ -128,7 +117,7 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
 
 
   // Define columns for the table
-  const columns: TableColumn[] = [
+  const columns = [
     {
       key: 'name',
       label: 'Tên quyền',
@@ -157,11 +146,6 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
         </Typography>
       )
     },
-    // {
-    //   key: 'actions_display',
-    //   label: 'Quyền hạn',
-    //   render: (value) => value as React.ReactNode
-    // },
     {
       key: 'is_active',
       label: 'Trạng thái',
@@ -206,83 +190,34 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
           {value as React.ReactNode}
         </Typography>
       )
-    },
-    {
-      key: 'actions',
-      label: 'Thao tác',
-      render: (value, row) => (
-        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-          <Tooltip title="Xem chi tiết">
-            <IconButton 
-              size="small" 
-              onClick={() => onView(row as Permission)}
-              sx={{ 
-                border: '1px solid #dee2e6',
-                '&:hover': {
-                  backgroundColor: '#f8f9fa'
-                }
-              }}
-            >
-              <Visibility fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Chỉnh sửa">
-            <IconButton 
-              size="small" 
-              onClick={() => onEdit(row as Permission)}
-              sx={{ 
-                border: '1px solid #dee2e6',
-                '&:hover': {
-                  backgroundColor: '#f8f9fa'
-                }
-              }}
-            >
-              <Edit fontSize="small" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Xóa">
-            <IconButton 
-              size="small" 
-              onClick={() => onDelete(row as Permission)}
-              sx={{ 
-                border: '1px solid #dee2e6',
-                '&:hover': {
-                  backgroundColor: '#f8f9fa'
-                }
-              }}
-            >
-              <Delete fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      )
     }
   ];
 
+  const actions = [
+    {
+      key: 'view',
+      label: 'Xem',
+      icon: <Visibility />,
+      color: 'primary' as const,
+      onClick: (permission: unknown) => onView(permission as Permission),
+    },
+    {
+      key: 'delete',
+      label: 'Xóa',
+      icon: <Delete />,
+      color: 'error' as const,
+      onClick: (permission: unknown) => onDelete(permission as Permission),
+    },
+  ];
+
   return (
-    <Box>
-      <CommonDataTable
-        data={displayData}
-        isLoading={loading}
-        error={undefined}
-        onRefresh={() => {}}
-        columns={columns}
-        actions={[]}
-        onRowClick={handleRowClick}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        selectedRows={selectedRows}
-        onSelectionChange={onSelectionChange}
-        emptyMessage="Không có quyền hạn nào"
-        emptyDescription="Chưa có quyền hạn nào trong hệ thống"
-        // Enable view detail with edit capability
-        enableViewDetail={!!onSave}
-        enableEdit={false}
-        detailFields={permissionDetailFields}
-        editFields={permissionFormFields}
-        onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
-        detailTitle="Chi tiết Quyền hạn"
-      />
-    </Box>
+    <SimpleTable
+      data={displayData}
+      columns={columns}
+      actions={actions}
+      loading={loading}
+      onRefresh={() => {}}
+      emptyMessage="Không có quyền hạn nào"
+    />
   );
 };

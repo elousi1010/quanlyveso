@@ -1,14 +1,10 @@
 import React from 'react';
-import { 
-  CommonDataTable, 
-  type TableAction 
-} from '@/components/common';
+import { SimpleTable } from '@/components/common';
 import { 
   Edit as EditIcon, 
   Delete as DeleteIcon, 
   Visibility as ViewIcon
 } from '@mui/icons-material';
-import { userFormFields, userDetailFields } from '../constants/userViewEditConfig';
 import type { User, UserListResponse } from '../types';
 import { USER_ROLES } from '../constants';
 
@@ -116,47 +112,32 @@ const UserDataGrid: React.FC<UserDataGridProps> = ({
     },
   ];
 
-  const actions: TableAction[] = [
+  const actions = [
     {
       key: 'view',
       label: 'Xem chi tiết',
-      icon: <ViewIcon fontSize="small" />,
-      color: 'primary.main',
-      onClick: onViewDetail,
-    },
-    {
-      key: 'edit',
-      label: 'Chỉnh sửa',
-      icon: <EditIcon fontSize="small" />,
-      color: 'warning.main',
-      onClick: onEdit,
+      icon: <ViewIcon />,
+      color: 'primary' as const,
+      onClick: (user: unknown) => onViewDetail(user as User),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon fontSize="small" />,
-      color: 'error.main',
-      onClick: onDelete,
+      icon: <DeleteIcon />,
+      color: 'error' as const,
+      onClick: (user: unknown) => onDelete(user as User),
     },
   ];
 
   return (
-    <CommonDataTable
-      data={users as unknown as Record<string, unknown>[]}
+    <SimpleTable
+      data={users}
       columns={columns}
       actions={actions}
-      isLoading={isLoading}
+      loading={isLoading}
       error={error}
       onRefresh={onRefresh}
       emptyMessage="Không có dữ liệu"
-      emptyDescription="Chưa có người dùng nào trong hệ thống"
-      // Enable view detail with edit capability
-      enableViewDetail={!!onSave}
-      enableEdit={false}
-      detailFields={userDetailFields}
-      editFields={userFormFields}
-      onSave={onSave as unknown as (data: Record<string, unknown>, selectedRow?: Record<string, unknown>) => Promise<void>}
-      detailTitle="Chi tiết Người dùng"
     />
   );
 };

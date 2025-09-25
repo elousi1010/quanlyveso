@@ -1,6 +1,7 @@
-import type { TableColumn } from '@/components/common/CommonDataTable';
+import type { SimpleTableColumn } from '@/components/common/SimpleTable';
+import { formatDate } from '@/utils/format';
 
-export const organizationTableColumns: TableColumn[] = [
+export const organizationTableColumns: SimpleTableColumn[] = [
   {
     key: 'name',
     label: 'Tên tổ chức',
@@ -14,7 +15,7 @@ export const organizationTableColumns: TableColumn[] = [
     align: 'left',
     render: (value) => {
       if (!value) return '';
-      return new Date(value as string).toLocaleDateString('vi-VN');
+      return formatDate(value as string);
     },
   },
   {
@@ -24,7 +25,7 @@ export const organizationTableColumns: TableColumn[] = [
     align: 'left',
     render: (value) => {
       if (!value) return '';
-      return new Date(value as string).toLocaleDateString('vi-VN');
+      return formatDate(value as string);
     },
   },
 ];
