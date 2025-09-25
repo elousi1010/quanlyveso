@@ -63,8 +63,7 @@ export const createTestToken = (expiresInSeconds: number): string => {
  * Set a test token in localStorage for testing
  */
 export const setTestToken = (expiresInSeconds: number): void => {
-  console.log(`Setting test token to expire in ${expiresInSeconds} seconds...`);
-  
+
   const testToken = createTestToken(expiresInSeconds);
   
   // Store only access token, keep existing refresh token
@@ -74,7 +73,7 @@ export const setTestToken = (expiresInSeconds: number): void => {
   // Only set refresh token if none exists
   if (!existingRefreshToken) {
     localStorage.setItem('refresh_token', 'test-refresh-token');
-    console.log('No existing refresh token found, using test refresh token');
+
   } else {
     console.log('Keeping existing refresh token:', existingRefreshToken.substring(0, 20) + '...');
   }
@@ -93,8 +92,7 @@ export const setTestToken = (expiresInSeconds: number): void => {
   
   // Decode and verify
   const payload = decodeJWT(testToken);
-  console.log('Token payload:', payload);
-  
+
   if (payload) {
     const now = Math.floor(Date.now() / 1000);
     const timeUntilExpiry = Math.max(0, payload.exp - now);
@@ -109,7 +107,7 @@ export const setTestToken = (expiresInSeconds: number): void => {
   // Also trigger immediate refresh check
   setTimeout(() => {
     if ((window as any).forceTokenRefresh) {
-      console.log('Triggering immediate refresh check...');
+
       (window as any).forceTokenRefresh();
     }
   }, 100);
@@ -148,20 +146,19 @@ export const getTokenExpiryInfo = () => {
  * Clear test tokens and restore original tokens if available
  */
 export const clearTestTokens = (): void => {
-  console.log('Clearing test tokens...');
-  
+
   // Check if we have original tokens stored
   const originalAccessToken = localStorage.getItem('original_access_token');
   const originalRefreshToken = localStorage.getItem('original_refresh_token');
   
   if (originalAccessToken && originalRefreshToken) {
-    console.log('Restoring original tokens...');
+
     localStorage.setItem('access_token', originalAccessToken);
     localStorage.setItem('refresh_token', originalRefreshToken);
     localStorage.removeItem('original_access_token');
     localStorage.removeItem('original_refresh_token');
   } else {
-    console.log('No original tokens found, clearing all tokens...');
+
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   }
@@ -180,9 +177,9 @@ export const storeOriginalTokens = (): void => {
   if (accessToken && refreshToken) {
     localStorage.setItem('original_access_token', accessToken);
     localStorage.setItem('original_refresh_token', refreshToken);
-    console.log('Original tokens stored for later restoration');
+
   } else {
-    console.log('No tokens to store');
+
   }
 };
 
@@ -197,8 +194,7 @@ if (typeof window !== 'undefined') {
     clearTestTokens,
     storeOriginalTokens
   };
-  
-  console.log('Token test helper loaded. Available functions:');
+
   console.log('- tokenTestHelper.setTestToken(seconds) - Set token to expire in X seconds');
   console.log('- tokenTestHelper.getTokenExpiryInfo() - Get current token expiry info');
   console.log('- tokenTestHelper.createTestToken(seconds) - Create test token');

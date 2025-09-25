@@ -86,11 +86,9 @@ const AssignPermissionDialog: React.FC<AssignPermissionDialogProps> = ({
     setSelectedPermissions([]);
   };
 
-
   const hasPermission = (permissionId: string): boolean => {
     return selectedPermissions.includes(permissionId);
   };
-
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};

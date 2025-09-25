@@ -200,7 +200,6 @@ export const TransactionManagement: React.FC = () => {
         width={500}
       />
 
-
       {/* Delete Dialog */}
       <TransactionDeleteDialog
         open={dialogState.delete}

@@ -166,9 +166,7 @@ export const PermissionManagement: React.FC = () => {
       console.error('No permission to update');
       return;
     }
-    
-    console.log('Updating permission:', permissionToUpdate.id, data);
-    
+
     try {
       await updateMutation.mutateAsync({ id: permissionToUpdate.id, data: data as unknown as UpdatePermissionDto });
       setSnackbar({
@@ -214,7 +212,6 @@ export const PermissionManagement: React.FC = () => {
   }, []);
 
   const permissions = permissionsData?.data || [];
-
 
   return (
     <Box sx={{ mt: 0 }}>
@@ -296,7 +293,6 @@ export const PermissionManagement: React.FC = () => {
         loading={updateMutation.isPending}
         mode="edit"
       />
-
 
       {/* Delete Dialog */}
       <PermissionDeleteDialog

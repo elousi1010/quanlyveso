@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CommonSearchAndFilter, type SearchAndFilterConfig } from '@/components/common';
 import { inventorySearchFields } from '../constants';
 
@@ -8,6 +8,8 @@ interface InventorySearchAndFilterProps {
   onFilter: (filters: Record<string, string>) => void;
   onRefresh: () => void;
   loading: boolean;
+  onFilterChange?: (filters: Record<string, unknown>) => void;
+  filters?: Record<string, unknown>;
 }
 
 export const InventorySearchAndFilter: React.FC<InventorySearchAndFilterProps> = ({
@@ -16,13 +18,35 @@ export const InventorySearchAndFilter: React.FC<InventorySearchAndFilterProps> =
   onFilter,
   onRefresh,
   loading = false,
+  onFilterChange,
+  filters = {},
 }) => {
+  const [localFilters, setLocalFilters] = useState(filters);
+
+  const handleFilterChange = (newFilters: Record<string, unknown>) => {
+    setLocalFilters(newFilters);
+    if (onFilterChange) {
+      onFilterChange(newFilters);
+    }
+    onFilter(newFilters as Record<string, string>);
+  };
+
+  const handleClearFilters = () => {
+    setLocalFilters({});
+    if (onFilterChange) {
+      onFilterChange({});
+    }
+    onFilter({});
+  };
+
   return (
     <CommonSearchAndFilter
       config={inventorySearchFields as SearchAndFilterConfig}
-      onSearch={onSearch as (query: string) => void}
-      onSort={onSort as (sortBy: string) => void}
-      onFilter={onFilter as (filters: Record<string, string>) => void}
+      onSearch={onSearch}
+      onSort={onSort}
+      onFilter={handleFilterChange}
+      onClearFilters={handleClearFilters}
+      filters={localFilters}
       loading={loading}
     />
   );

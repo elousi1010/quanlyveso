@@ -1,4 +1,5 @@
 import { api } from '@/utils/api';
+import { withDefaultPagination } from '@/utils';
 import type { 
   Inventory, 
   CreateInventoryDto, 

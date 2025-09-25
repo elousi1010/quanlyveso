@@ -4,23 +4,37 @@ import {
   Paper,
   Alert,
 } from '@mui/material';
+import { useTablePagination } from '@/hooks';
 import {
   CommonHeader,
-  CommonSearchAndFilter,
   CommonFormDrawer,
   CommonDeleteDialog,
   CommonSnackbar,
   CommonViewEditDrawer,
   type DetailField,
   type FormField,
-} from '../../components/common';
+} from '@/components/common';
 import { useUsers, useUserMutations } from './hooks';
-import { UserDataGrid } from './components/UserDataGrid';
-import type { CreateUserRequest, UpdateUserRequest, User } from './types';
+import { UserDataGrid, UserSearchAndFilter } from './components';
+import type { CreateUserRequest, UpdateUserRequest, User, UserSearchParams } from './types';
 import { USER_FORM_FIELDS } from './constants/userDialogConfig';
-import { USER_ROLES, USER_STATUS_OPTIONS, USER_SORT_OPTIONS } from './constants';
 
 const UserManagement: React.FC = () => {
+  // Pagination state
+  const {
+    page,
+    rowsPerPage,
+    handleChangePage,
+    handleChangeRowsPerPage,
+    apiParams,
+  } = useTablePagination({
+    initialLimit: 5,
+  });
+
+  // Search and filter state
+  const [searchParams, setSearchParams] = useState<UserSearchParams>({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
+
   // State
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -28,8 +42,12 @@ const UserManagement: React.FC = () => {
     severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
 
-  // Hooks
-  const { data: usersResponse, isLoading, error, refetch } = useUsers();
+  // API hooks - combine search params with pagination
+  const combinedParams = {
+    ...searchParams,
+    ...apiParams,
+  };
+  const { data: usersResponse, isLoading, error, refetch } = useUsers(combinedParams);
   const {
     selectedUser,
     isCreateDialogOpen,
@@ -44,20 +62,25 @@ const UserManagement: React.FC = () => {
     closeAllDialogs,
   } = useUserMutations();
 
-  
   // Debug logging removed to prevent console spam
 
   // Handlers
-  const handleSearch = () => {
-    // TODO: Implement search functionality
+  const handleSearch = (query: string) => {
+    setSearchParams(prev => ({ ...prev, searchKey: query }));
   };
 
-  const handleSort = () => {
-    // TODO: Implement sort functionality
+  const handleSort = (sortBy: string) => {
+    setSearchParams(prev => ({ ...prev, sortBy }));
   };
 
-  const handleFilter = () => {
-    // TODO: Implement filter functionality
+  const handleFilter = (filters: Record<string, string>) => {
+    setSearchParams(prev => ({ ...prev, ...filters }));
+  };
+
+  const handleFilterChange = (newFilters: Record<string, unknown>) => {
+    setFilters(newFilters);
+    const combinedParams = { ...searchParams, ...newFilters };
+    setSearchParams(combinedParams);
   };
 
   const handleRefresh = () => {
@@ -71,7 +94,6 @@ const UserManagement: React.FC = () => {
     password: '',
     role: 'user',
   }), []);
-
 
   // Success/Error handlers
   const showSnackbar = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
@@ -155,24 +177,6 @@ const UserManagement: React.FC = () => {
     );
   }
 
-  // Search and filter config
-  const searchFilterConfig = {
-    searchPlaceholder: 'Tìm kiếm người dùng...',
-    sortOptions: [...(USER_SORT_OPTIONS || [])],
-    filterOptions: [
-      {
-        key: 'role',
-        label: 'Vai trò',
-        options: [...(USER_ROLES || [])],
-      },
-      {
-        key: 'status',
-        label: 'Trạng thái',
-        options: [...(USER_STATUS_OPTIONS || [])],
-      },
-    ],
-  };
-
   // Table actions with handlers
 
   return (
@@ -187,12 +191,14 @@ const UserManagement: React.FC = () => {
       />
 
       <Box sx={{ mt: 2 }}>
-        <CommonSearchAndFilter
-          config={searchFilterConfig}
+        <UserSearchAndFilter
           onSearch={handleSearch}
           onSort={handleSort}
           onFilter={handleFilter}
+          onRefresh={handleRefresh}
           loading={isLoading}
+          onFilterChange={handleFilterChange}
+          filters={filters}
         />
       </Box>
 
@@ -207,6 +213,13 @@ const UserManagement: React.FC = () => {
             onEdit={handleEditUser}
             onDelete={handleDeleteUser}
             onSave={handleUpdateUserWithSnackbar}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={(newPage: number) => handleChangePage(null, newPage)}
+            onRowsPerPageChange={(newRowsPerPage: number) => {
+              const event = { target: { value: newRowsPerPage.toString() } } as React.ChangeEvent<HTMLInputElement>;
+              handleChangeRowsPerPage(event);
+            }}
           />
         </Paper>
       </Box>

@@ -1,4 +1,5 @@
-import api from '../../../utils/api';
+import api from '@/utils/api';
+import { DEFAULT_PAGINATION } from '@/types/pagination';
 import type {
   PartnerListResponse,
   PartnerResponse,
@@ -11,15 +12,23 @@ import type {
 // Partners page-specific API functions
 export const partnerApi = {
   // Get all partners
-  getPartners: async (searchParams?: PartnerSearchParams): Promise<PartnerListResponse> => {
+  getPartners: async (searchParams?: Partial<PartnerSearchParams>): Promise<PartnerListResponse> => {
     try {
-      console.log('API call - getPartners with params:', searchParams);
-      const response = await api.get<PartnerListResponse>('/api/v1/partners', { params: searchParams });
-      console.log('API response:', response);
+      // Apply default pagination if not provided
+      const params: PartnerSearchParams = {
+        page: searchParams?.page || DEFAULT_PAGINATION.page,
+        limit: searchParams?.limit || DEFAULT_PAGINATION.limit,
+        ...searchParams,
+      };
+      
+      const response = await api.get<PartnerListResponse>('/api/v1/partners', { params });
       return response as unknown as PartnerListResponse;
     } catch (error) {
       console.error('API error - getPartners:', error);
-      throw error;
+      // Return empty data structure on error
+      return {
+        message: 'Error fetching partners',
+      } as PartnerListResponse;
     }
   },
 

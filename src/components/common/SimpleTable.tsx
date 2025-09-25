@@ -72,8 +72,11 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
   const [internalPage, setInternalPage] = React.useState(0);
   const [internalRowsPerPage, setInternalRowsPerPage] = React.useState(10);
 
-  const currentPage = onPageChange !== undefined ? page : internalPage;
-  const currentRowsPerPage = onRowsPerPageChange !== undefined ? rowsPerPage : internalRowsPerPage;
+  // Use external pagination if callbacks are provided (server-side)
+  // Otherwise use internal pagination (client-side)
+  const isServerSidePagination = onPageChange !== undefined && onRowsPerPageChange !== undefined;
+  const currentPage = isServerSidePagination ? page : internalPage;
+  const currentRowsPerPage = isServerSidePagination ? rowsPerPage : internalRowsPerPage;
 
   const handleChangePage = (event: unknown, newPage: number) => {
     if (onPageChange) {
@@ -143,11 +146,15 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
     );
   }
 
-  // Pagination
-  const startIndex = currentPage * currentRowsPerPage;
-  const endIndex = startIndex + currentRowsPerPage;
-  const paginatedData = data.slice(startIndex, endIndex);
+  // For server-side pagination, use data as-is
+  // For client-side pagination, slice the data
+  const paginatedData = isServerSidePagination 
+    ? data 
+    : data.slice(currentPage * currentRowsPerPage, (currentPage + 1) * currentRowsPerPage);
+  
   const totalCount = total || data.length;
+
+  // Debug logging for pagination
 
   return (
     <Box>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useRefreshToken } from './useAuthApi';
-import { useAuthStore } from '../stores/authStore';
-import { isTokenExpiringSoon, isTokenExpired, decodeJWT } from '../utils/jwt';
+import { useAuthStore } from '@/stores/authStore';
+import { isTokenExpiringSoon, isTokenExpired, decodeJWT } from '@/utils/jwt';
 
 /**
  * Hook để tự động refresh token mỗi 1 phút
@@ -15,31 +15,29 @@ export const useTokenRefresh = () => {
   const refreshTokens = useCallback(async () => {
     // Prevent multiple simultaneous refresh calls
     if (isRefreshingRef.current) {
-      console.log('Token refresh already in progress, skipping...');
+
       return;
     }
 
     // Check if user is authenticated
     if (!isAuthenticated) {
-      console.log('User not authenticated, skipping token refresh');
+
       return;
     }
 
     const refreshTokenFromStorage = localStorage.getItem('refresh_token');
     if (!refreshTokenFromStorage) {
-      console.log('No refresh token available');
+
       clearAuth();
       return;
     }
 
     try {
       isRefreshingRef.current = true;
-      console.log('Refreshing tokens proactively...');
-      
+
       // Use mutateAsync để đợi kết quả
       await refreshTokenMutation.mutateAsync({ refresh_token: refreshTokenFromStorage });
-      console.log('Token refresh completed successfully');
-      
+
     } catch (error) {
       console.error('Failed to refresh tokens:', error);
       clearAuth();
@@ -50,17 +48,16 @@ export const useTokenRefresh = () => {
 
   const checkAndRefreshTokens = useCallback(() => {
     const now = new Date().toLocaleTimeString();
-    console.log(`[${now}] Token refresh check started...`);
-    
+
     // Check if user is authenticated
     if (!isAuthenticated) {
-      console.log(`[${now}] User not authenticated, skipping token check`);
+
       return;
     }
 
     const accessToken = localStorage.getItem('access_token');
     if (!accessToken) {
-      console.log(`[${now}] No access token found`);
+
       clearAuth();
       return;
     }
@@ -79,7 +76,7 @@ export const useTokenRefresh = () => {
     
     // Check if token is expired
     if (isTokenExpired(accessToken)) {
-      console.log(`[${now}] Token is expired, refreshing...`);
+
       refreshTokens();
       return;
     }
@@ -128,7 +125,7 @@ export const useTokenRefresh = () => {
   // Add immediate check when token is updated
   useEffect(() => {
     const handleTokenUpdate = () => {
-      console.log('Token updated, checking immediately...');
+
       checkAndRefreshTokens();
     };
 
@@ -138,7 +135,7 @@ export const useTokenRefresh = () => {
 
   // Force immediate refresh (for testing)
   const forceRefresh = useCallback(() => {
-    console.log('Force refresh triggered...');
+
     checkAndRefreshTokens();
   }, [checkAndRefreshTokens]);
 

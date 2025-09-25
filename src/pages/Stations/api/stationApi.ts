@@ -23,8 +23,22 @@ export const stationApi = {
     if (params.sortBy) searchParams.append('sortBy', params.sortBy);
     if (params.sortOrder) searchParams.append('sortOrder', params.sortOrder);
 
-    const response = await api.get<StationListResponse>(`${API_BASE}/stations?${searchParams.toString()}`);
-    return response;
+    try {
+      const response = await api.get<StationListResponse>(`${API_BASE}/stations?${searchParams.toString()}`);
+      return response;
+    } catch (error) {
+      console.error('Station API error:', error);
+      // Return empty data structure on error
+      return {
+        message: 'Error fetching stations',
+        error: 'Failed to fetch stations',
+        statusCode: 500,
+        data: {
+          data: [],
+          total: 0
+        }
+      };
+    }
   },
 
   // Get station by ID

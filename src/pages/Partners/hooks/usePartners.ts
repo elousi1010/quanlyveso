@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { partnerApi } from '../api';
+import { DEFAULT_PAGINATION } from '@/types/pagination';
 import type { PartnerSearchParams } from '../types';
 
 // Query keys for Partners
@@ -12,12 +13,19 @@ export const partnerKeys = {
 };
 
 // Page-specific hook for Partners list
-export const usePartners = (searchParams?: PartnerSearchParams) => {
+export const usePartners = (searchParams?: Partial<PartnerSearchParams>) => {
+  // Ensure default pagination
+  const params = {
+    page: searchParams?.page || DEFAULT_PAGINATION.page,
+    limit: searchParams?.limit || DEFAULT_PAGINATION.limit,
+    ...searchParams,
+  };
+
   return useQuery({
-    queryKey: partnerKeys.list((searchParams || {}) as Record<string, unknown>),
+    queryKey: partnerKeys.list(params as Record<string, unknown>),
     queryFn: async () => {
-      const response = await partnerApi.getPartners(searchParams);
-      console.log('Partners API Response:', response);
+      const response = await partnerApi.getPartners(params);
+
       return response;
     },
     enabled: true, // Always enabled, let the API handle empty params

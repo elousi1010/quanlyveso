@@ -21,10 +21,8 @@ import { convertToTableRow, convertToFormData, convertToDetailData } from './uti
 
 const PartnerDebtManagement: React.FC = () => {
   // State management
-  const [searchParams, setSearchParams] = useState<PartnerDebtSearchParams>({
-    page: 1,
-    limit: 10,
-  });
+  const [searchParams, setSearchParams] = useState({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
   
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -94,7 +92,6 @@ const PartnerDebtManagement: React.FC = () => {
 //   const handleSort = useCallback((field: string, order: 'asc' | 'desc') => {
 //     setSearchParams(prev => ({ ...prev, sortBy: field, sortOrder: order }));
 //   }, []);
-
 
   // Dialog handlers
   const handleCreateSubmit = useCallback(async (data: Record<string, unknown>) => {
@@ -190,8 +187,12 @@ const PartnerDebtManagement: React.FC = () => {
         <PartnerDebtSearchAndFilter
           searchParams={searchParams}
           onSearchChange={handleSearchChange}
+        onFilterChange={handleFilterChange}
+        filters={filters}
           onReset={handleReset}
         />
+          onFilterChange={handleFilterChange}
+          filters={filters}
       </Paper>
 
       <Paper sx={{ p: 2 }}>

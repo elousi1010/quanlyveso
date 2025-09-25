@@ -518,15 +518,13 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
           </Alert>
         )}
 
-
         {finalFields?.length > 0 ? (
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {finalFields.map((field) => {
               if (!field) return null;
               const value = isEditing ? formData[field.key] : data[field.key];
               const error = isEditing ? formErrors[field.key] : null;
-              
-              
+
               return (
                 <Box 
                   key={field.key}

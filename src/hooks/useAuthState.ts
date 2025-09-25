@@ -1,6 +1,6 @@
 import { useLogout } from './useAuthApi';
 import { useCallback } from 'react';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 
 export const useAuthState = () => {
   const { isAuthenticated, user, isLoading, error } = useAuthStore();

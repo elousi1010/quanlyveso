@@ -60,3 +60,31 @@ export const partnerDebtSearchConfig: PartnerDebtSearchFilter[] = [
     placeholder: 'Chọn ngày kết thúc',
   },
 ];
+
+export const filterFields = [
+  {
+    key: 'status',
+    label: 'Trạng thái',
+    type: 'select',
+    options: [
+      { value: '', label: 'Tất cả' },
+      { value: 'active', label: 'Hoạt động' },
+      { value: 'inactive', label: 'Không hoạt động' },
+    ],
+  },
+  {
+    key: 'type',
+    label: 'Loại',
+    type: 'select',
+    options: [
+      { value: '', label: 'Tất cả' },
+      { value: 'individual', label: 'Cá nhân' },
+      { value: 'company', label: 'Công ty' },
+    ],
+  },
+  {
+    key: 'dateRange',
+    label: 'Khoảng thời gian',
+    type: 'dateRange',
+  },
+];

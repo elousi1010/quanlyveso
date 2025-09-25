@@ -1,8 +1,8 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
-import { PARTNER_TABLE_COLUMNS, PARTNER_TABLE_ACTIONS } from '../constants';
+import { PARTNER_TABLE_COLUMNS } from '../constants';
 import type { Partner, PartnerListResponse } from '../types';
-import { Edit as EditIcon, Delete as DeleteIcon, Visibility as ViewIcon } from '@mui/icons-material';
+import { Delete as DeleteIcon, Visibility as ViewIcon } from '@mui/icons-material';
 
 interface PartnerDataGridProps {
   data: PartnerListResponse;
@@ -13,14 +13,22 @@ interface PartnerDataGridProps {
   onSave?: (data: Record<string, unknown>) => Promise<void>;
   selectedRows?: Partner[];
   onSelectionChange?: (selectedRows: Partner[]) => void;
+  // Pagination props
+  page?: number;
+  rowsPerPage?: number;
+  onPageChange?: (page: number) => void;
+  onRowsPerPageChange?: (rowsPerPage: number) => void;
 }
 
 export const PartnerDataGrid: React.FC<PartnerDataGridProps> = ({
   data,
   loading,
-  onEdit,
   onDelete,
   onView,
+  page = 0,
+  rowsPerPage = 5,
+  onPageChange,
+  onRowsPerPageChange,
 }) => {
   // Handle data structure - based on actual API response
   // Data structure: { data: { data: { data: Partner[], total: number } } }
@@ -54,6 +62,10 @@ export const PartnerDataGrid: React.FC<PartnerDataGridProps> = ({
       onRefresh={() => window.location.reload()}
       emptyMessage="Không có đối tác"
       total={totalCount}
+      page={page}
+      rowsPerPage={rowsPerPage}
+      onPageChange={onPageChange}
+      onRowsPerPageChange={onRowsPerPageChange}
     />
   );
 };

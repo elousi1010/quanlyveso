@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '../api';
-import type { CreateUserRequest, UpdateUserRequest } from '../types';
+import type { CreateUserRequest, UpdateUserRequest, UserSearchParams } from '../types';
 
 // Query keys
 export const userKeys = {
@@ -12,10 +12,10 @@ export const userKeys = {
 };
 
 // Hook để lấy danh sách users
-export const useUsers = () => {
+export const useUsers = (searchParams?: Partial<UserSearchParams>) => {
   return useQuery({
-    queryKey: userKeys.lists(),
-    queryFn: () => userApi.getUsers(),
+    queryKey: userKeys.list(searchParams || {}),
+    queryFn: () => userApi.getUsers(searchParams),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

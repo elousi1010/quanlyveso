@@ -1,5 +1,7 @@
 import type { DialogFieldConfig } from '@/components/common/types';
 import type { CreateTicketDto, UpdateTicketDto } from '../types';
+import { StationSelector, UserSelector } from '@/components/common';
+import React from 'react';
 
 export const ticketCreateFields: DialogFieldConfig<CreateTicketDto>[] = [
   {
@@ -22,10 +24,18 @@ export const ticketCreateFields: DialogFieldConfig<CreateTicketDto>[] = [
   },
   {
     key: 'station_id',
-    label: 'ID Trạm',
-    type: 'text',
+    label: 'Trạm',
+    type: 'custom',
     required: true,
-    placeholder: 'Nhập ID trạm',
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(StationSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('station_id', id),
+        label: 'Chọn trạm',
+        placeholder: 'Tìm kiếm trạm...',
+        required: true,
+      });
+    },
   },
   {
     key: 'draw_date',
@@ -39,6 +49,21 @@ export const ticketCreateFields: DialogFieldConfig<CreateTicketDto>[] = [
     type: 'text',
     required: false,
     placeholder: 'Nhập ghi chú',
+  },
+  {
+    key: 'created_by',
+    label: 'Người tạo',
+    type: 'custom',
+    required: false,
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(UserSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('created_by', id),
+        label: 'Chọn người tạo',
+        placeholder: 'Tìm kiếm người dùng...',
+        required: false,
+      });
+    },
   },
 ];
 
@@ -63,10 +88,18 @@ export const ticketUpdateFields: DialogFieldConfig<UpdateTicketDto>[] = [
   },
   {
     key: 'station_id',
-    label: 'ID Trạm',
-    type: 'text',
+    label: 'Trạm',
+    type: 'custom',
     required: false,
-    placeholder: 'Nhập ID trạm',
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(StationSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('station_id', id),
+        label: 'Chọn trạm',
+        placeholder: 'Tìm kiếm trạm...',
+        required: false,
+      });
+    },
   },
   {
     key: 'draw_date',
@@ -80,6 +113,21 @@ export const ticketUpdateFields: DialogFieldConfig<UpdateTicketDto>[] = [
     type: 'text',
     required: false,
     placeholder: 'Nhập ghi chú',
+  },
+  {
+    key: 'created_by',
+    label: 'Người tạo',
+    type: 'custom',
+    required: false,
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(UserSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('created_by', id),
+        label: 'Chọn người tạo',
+        placeholder: 'Tìm kiếm người dùng...',
+        required: false,
+      });
+    },
   },
 ];
 

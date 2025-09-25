@@ -90,7 +90,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-
   // Helper function to check permissions (for backward compatibility)
   const hasPermission = (permission: string): boolean => {
     if (!user) return false;
@@ -815,7 +814,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           <p>© 2024 Management System</p>
         </div>
       </motion.div>
-
 
     </motion.div>
   );

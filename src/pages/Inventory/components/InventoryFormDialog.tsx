@@ -16,16 +16,14 @@ import {
   TableHead,
   TableRow,
   Paper,
-  CircularProgress,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import CommonDrawer from '@/components/common/CommonDrawer';
-import { useQuery } from '@tanstack/react-query';
-import { partnerApi } from '../../Partners/api';
-import { stationApi } from '../../Stations/api/stationApi';
 import type { CreateInventoryDto, Ticket } from '../types';
+import type { Station } from '@/pages/Stations/types';
+import { PartnerSelector, StationSelector } from '@/components/common';
 
 interface InventoryFormDialogProps {
   open: boolean;
@@ -77,22 +75,9 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
   });
   const [selectedStation, setSelectedStation] = useState('');
   const [selectedPartner, setSelectedPartner] = useState('');
+  const [selectedStationData, setSelectedStationData] = useState<Station | null>(null);
 
-  // Fetch partners and stations data
-  const { data: partnersData, isLoading: partnersLoading } = useQuery({
-    queryKey: ['partners', 'all'],
-    queryFn: () => partnerApi.getPartners({ page: 1, limit: 1000 }),
-    enabled: open,
-  });
-
-  const { data: stationsData, isLoading: stationsLoading } = useQuery({
-    queryKey: ['stations', 'all'],
-    queryFn: () => stationApi.getAll({ limit: 1000 }),
-    enabled: open,
-  });
-
-  const partners = partnersData?.data?.data?.data || [];
-  const stations = stationsData?.data?.data || [];
+  // Partners and stations will be handled by MasterDataSelector components
 
   // Reset form when dialog opens
   useEffect(() => {
@@ -110,9 +95,9 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
       });
       setSelectedStation('');
       setSelectedPartner('');
+      setSelectedStationData(null);
     }
   }, [open]);
-
 
   const generateTicketCode = useCallback((stationCode: string, drawDate: string) => {
     const date = new Date(drawDate);
@@ -128,10 +113,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
   }, [formData.tickets]);
 
   const handleAddTicket = useCallback(() => {
-    if (!formData.station_id || !formData.draw_date) return;
-
-    const selectedStationData = stations.find(s => s.id === formData.station_id);
-    if (!selectedStationData) return;
+    if (!formData.station_id || !formData.draw_date || !selectedStationData) return;
 
     const newTicketCode = generateTicketCode(selectedStationData.code, formData.draw_date);
     const newTicket: Ticket = {
@@ -145,7 +127,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
       ...prev,
       tickets: [...prev.tickets, newTicket],
     }));
-  }, [formData.station_id, formData.draw_date, generateTicketCode, stations]);
+  }, [formData.station_id, formData.draw_date, generateTicketCode, selectedStationData]);
 
   const handleRemoveTicket = useCallback((index: number) => {
     setFormData(prev => ({
@@ -232,31 +214,15 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
               </Select>
             </FormControl>
             
-            <FormControl fullWidth>
-              <InputLabel>Đài</InputLabel>
-              <Select
-                value={selectedStation}
-                onChange={(e) => {
-                  setSelectedStation(e.target.value);
-                  setFormData(prev => ({ ...prev, station_id: e.target.value }));
-                }}
-                label="Đài"
-                disabled={stationsLoading}
-              >
-                {stationsLoading ? (
-                  <MenuItem disabled>
-                    <CircularProgress size={20} sx={{ mr: 1 }} />
-                    Đang tải...
-                  </MenuItem>
-                ) : (
-                  stations.map((station) => (
-                    <MenuItem key={station.id} value={station.id}>
-                      {station.name} ({station.code})
-                    </MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
+            <StationSelector
+              value={selectedStation}
+              onChange={(id, item) => {
+                setSelectedStation(id || '');
+                setSelectedStationData(item);
+                setFormData(prev => ({ ...prev, station_id: id || '' }));
+              }}
+              placeholder="Chọn đài..."
+            />
 
             <TextField
               fullWidth
@@ -271,7 +237,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
               <InputLabel>Loại Phụ</InputLabel>
               <Select
                 value={formData.sub_type}
-                onChange={(e) => setFormData(prev => ({ ...prev, sub_type: e.target.value as any }))}
+                onChange={(e) => setFormData(prev => ({ ...prev, sub_type: e.target.value as 'buy_from_agent' | 'sell_to_customer' | 'transfer' | 'return' }))}
                 label="Loại Phụ"
               >
                 {SUB_TYPES[formData.type].map((subType) => (
@@ -282,31 +248,14 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
               </Select>
             </FormControl>
 
-            <FormControl fullWidth>
-              <InputLabel>{formData.type === 'import' ? 'Nhà Cung Cấp' : 'Khách Hàng'}</InputLabel>
-              <Select
-                value={selectedPartner}
-                onChange={(e) => {
-                  setSelectedPartner(e.target.value);
-                  setFormData(prev => ({ ...prev, partner_id: e.target.value }));
-                }}
-                label={formData.type === 'import' ? 'Nhà Cung Cấp' : 'Khách Hàng'}
-                disabled={partnersLoading}
-              >
-                {partnersLoading ? (
-                  <MenuItem disabled>
-                    <CircularProgress size={20} sx={{ mr: 1 }} />
-                    Đang tải...
-                  </MenuItem>
-                ) : (
-                  partners.map((partner) => (
-                    <MenuItem key={partner.id} value={partner.id}>
-                      {partner.name} ({partner.type})
-                    </MenuItem>
-                  ))
-                )}
-              </Select>
-            </FormControl>
+            <PartnerSelector
+              value={selectedPartner}
+              onChange={(id) => {
+                setSelectedPartner(id || '');
+                setFormData(prev => ({ ...prev, partner_id: id || '' }));
+              }}
+              placeholder="Chọn đối tác..."
+            />
           </Box>
         </Box>
 

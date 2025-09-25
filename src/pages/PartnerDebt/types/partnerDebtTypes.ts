@@ -156,7 +156,7 @@ export interface PartnerDebtDialogConfig {
   fields: Array<{
     key: string;
     label: string;
-    type: 'text' | 'number' | 'select' | 'date' | 'textarea';
+    type: 'text' | 'number' | 'select' | 'date' | 'textarea' | 'custom';
     required: boolean;
     options?: Array<{ value: string; label: string }>;
     placeholder?: string;
@@ -166,6 +166,7 @@ export interface PartnerDebtDialogConfig {
       pattern?: string;
       message?: string;
     };
+    render?: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => React.ReactNode;
   }>;
 }
 
@@ -175,7 +176,7 @@ export interface PartnerDebtViewEditConfig {
   fields: Array<{
     key: string;
     label: string;
-    type: 'text' | 'number' | 'select' | 'date' | 'textarea' | 'readonly';
+    type: 'text' | 'number' | 'select' | 'date' | 'textarea' | 'readonly' | 'custom';
     required: boolean;
     options?: Array<{ value: string; label: string }>;
     placeholder?: string;

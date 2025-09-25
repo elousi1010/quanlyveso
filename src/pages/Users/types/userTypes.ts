@@ -75,3 +75,11 @@ export interface DeleteUserResponse {
   error: string;
   statusCode: number;
 }
+
+export interface UserSearchParams {
+  searchKey?: string;  // Search key parameter
+  page?: number;       // Page number
+  limit?: number;      // Limit number
+  sortBy?: string;     // Sort by field
+  sortOrder?: 'asc' | 'desc';  // Sort order
+}

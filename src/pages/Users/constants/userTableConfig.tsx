@@ -84,7 +84,7 @@ export const USER_TABLE_ACTIONS: SimpleTableAction[] = [
     color: 'primary.main',
     onClick: (user: User) => {
       // This will be handled by the parent component
-      console.log('View/Edit user:', user);
+
     },
   },
   {
@@ -94,7 +94,7 @@ export const USER_TABLE_ACTIONS: SimpleTableAction[] = [
     color: 'error.main',
     onClick: (user: User) => {
       // This will be handled by the parent component
-      console.log('Delete user:', user);
+
     },
   },
 ];

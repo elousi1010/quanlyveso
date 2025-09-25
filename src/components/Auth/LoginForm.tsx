@@ -10,7 +10,6 @@ import {
   Box,
 } from '@mui/material';
 import {
-  AccountBalance as BankIcon,
   Person as PersonIcon,
   Store as StoreIcon,
   Login as LoginIcon,
@@ -18,6 +17,7 @@ import {
 } from '@mui/icons-material';
 import { useLogin, useSignup } from '../../hooks/useAuthApi';
 import { debugJWT, logJWTInfo } from '../../utils/debugJWT';
+import { Logo } from '../common/Logo';
 
 const LoginForm: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
@@ -34,7 +34,6 @@ const LoginForm: React.FC = () => {
   // Debug JWT token khi login thành công
   useEffect(() => {
     if (loginMutation.isSuccess || signupMutation.isSuccess) {
-      console.log('=== Login/Signup Success - Debug JWT ===');
       debugJWT();
       logJWTInfo();
     }
@@ -66,49 +65,20 @@ const LoginForm: React.FC = () => {
     }));
   };
 
-  const getRoleInfo = (role: string) => {
-    switch (role) {
-      case 'owner':
-        return {
-          title: 'Chủ cửa hàng',
-          description: 'Toàn quyền truy cập hệ thống',
-          icon: <BankIcon className="text-blue-600" />,
-          color: 'from-blue-500 to-blue-600'
-        };
-      case 'employee':
-        return {
-          title: 'Nhân viên quầy',
-          description: 'Quản lý bán hàng và giao dịch',
-          icon: <PersonIcon className="text-green-600" />,
-          color: 'from-green-500 to-green-600'
-        };
-      case 'seller':
-        return {
-          title: 'Người bán vé dạo',
-          description: 'Bán vé và cập nhật doanh số',
-          icon: <StoreIcon className="text-purple-600" />,
-          color: 'from-purple-500 to-purple-600'
-        };
-      default:
-        return {
-          title: 'Người dùng',
-          description: 'Truy cập hệ thống',
-          icon: <PersonIcon className="text-gray-600" />,
-          color: 'from-gray-500 to-gray-600'
-        };
-    }
-  };
-
-  const roleInfo = getRoleInfo('owner');
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-2 sm:p-4">
       <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
         {/* Left Side - Branding */}
         <div className="hidden lg:flex flex-col justify-center space-y-6 lg:space-y-8">
           <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4 lg:mb-6">
-              <BankIcon className="text-white text-3xl lg:text-4xl" />
+            <div className="inline-flex items-center justify-center mb-4 lg:mb-6">
+              <Logo 
+                size={80} 
+                animated={true} 
+                showText={true} 
+                variant="full"
+                className="justify-center"
+              />
             </div>
             <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3 lg:mb-4">
               System Management Lottery Ohna12
@@ -122,7 +92,7 @@ const LoginForm: React.FC = () => {
             <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100">
               <div className="flex items-center space-x-3 lg:space-x-4">
                 <div className="p-2 lg:p-3 bg-blue-100 rounded-xl">
-                  <BankIcon className="text-blue-600 text-xl lg:text-2xl" />
+                  <Logo size={24} variant="icon" showText={false} />
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Quản lý tài chính</h3>
@@ -162,8 +132,14 @@ const LoginForm: React.FC = () => {
           <Card className="w-full max-w-md shadow-2xl border-0">
             <CardContent className="p-4 sm:p-6 lg:p-8">
               <div className="text-center mb-6 sm:mb-8">
-                <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r ${roleInfo.color} rounded-2xl mb-3 sm:mb-4`}>
-                  {tabValue === 0 ? roleInfo.icon : <SignupIcon className="text-blue-600" />}
+                <div className="inline-flex items-center justify-center mb-3 sm:mb-4">
+                  <Logo 
+                    size={64} 
+                    animated={true} 
+                    showText={false} 
+                    variant="icon"
+                    className="justify-center"
+                  />
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                   {tabValue === 0 ? 'Đăng nhập hệ thống' : 'Đăng ký tài khoản'}

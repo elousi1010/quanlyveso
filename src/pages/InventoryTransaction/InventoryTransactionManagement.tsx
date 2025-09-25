@@ -18,14 +18,11 @@ interface InventoryTransactionManagementProps {
 
 export const InventoryTransactionManagement: React.FC<InventoryTransactionManagementProps> = ({ type }) => {
   // State management
-  const [searchParams, setSearchParams] = useState<InventoryTransactionSearchParams>({
-    page: 1,
-    limit: 10,
-    type, // Set type based on prop
-  });
+  const [searchParams, setSearchParams] = useState({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
   // Update searchParams when type prop changes
   useEffect(() => {
-    console.log('Type changed to:', type);
+
     setSearchParams(prev => ({
       ...prev,
       type,
@@ -38,7 +35,6 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
 
   const items = response?.data?.data || [];
   const total = response?.data?.total || 0;
-
 
   // Handlers
   const handleSearchChange = useCallback((params: InventoryTransactionSearchParams) => {
@@ -59,7 +55,7 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
 
   const handleView = useCallback((item: InventoryTransactionItem) => {
     // View functionality - could be implemented later
-    console.log('View item:', item);
+
   }, []);
 
   const title = type === 'import' ? 'Giao Dịch Nhập Kho' : 'Giao Dịch Xuất Kho';
@@ -75,8 +71,12 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
       <InventoryTransactionSearchAndFilter
         searchParams={searchParams}
         onSearchChange={handleSearchChange}
+        onFilterChange={handleFilterChange}
+        filters={filters}
         onReset={handleReset}
       />
+          onFilterChange={handleFilterChange}
+          filters={filters}
 
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
         <InventoryTransactionDataGrid

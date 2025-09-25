@@ -128,3 +128,9 @@ export interface ApiDeleteResponse extends BaseApiResponse {
     id: string;
   };
 }
+
+// Export additional type modules
+export * from './auth';
+export * from './partner';
+export * from './dashboard';
+export * from './pagination';

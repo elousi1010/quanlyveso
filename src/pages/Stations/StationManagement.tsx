@@ -53,7 +53,6 @@ export const StationManagement: React.FC = () => {
     setSearchParams(prev => ({ ...prev, ...params, page: 1 }));
   }, []);
 
-
   const handleCreate = useCallback(() => {
     setSelectedStation(null);
     setDialogState(prev => ({ ...prev, create: true }));
@@ -73,7 +72,6 @@ export const StationManagement: React.FC = () => {
     setSelectedStation(station);
     setDialogState(prev => ({ ...prev, delete: true }));
   }, []);
-
 
   const handleRefresh = useCallback(() => {
     refetch();
@@ -190,7 +188,6 @@ export const StationManagement: React.FC = () => {
         loading={createMutation.isPending}
         width={500}
       />
-
 
       {/* Delete Dialog */}
       <StationDeleteDialog

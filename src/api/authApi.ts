@@ -1,4 +1,4 @@
-import { api } from '../utils/api';
+import { api } from '@/utils/api';
 
 // Types cho auth
 export interface LoginRequest {
@@ -130,5 +130,4 @@ export const authApi = {
     return api.post<LogoutResponse>('/auth/logout');
   },
 };
-
 

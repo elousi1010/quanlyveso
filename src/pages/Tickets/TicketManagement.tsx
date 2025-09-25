@@ -200,7 +200,6 @@ export const TicketManagement: React.FC = () => {
         width={500}
       />
 
-
       {/* Delete Dialog */}
       <TicketDeleteDialog
         open={dialogState.delete}

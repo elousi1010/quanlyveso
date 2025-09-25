@@ -19,10 +19,8 @@ import type {
 
 export const InventoryManagement: React.FC = () => {
   // State management
-  const [searchParams, setSearchParams] = useState<InventorySearchParams>({
-    page: 1,
-    limit: 5,
-  });
+  const [searchParams, setSearchParams] = useState({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [selectedRows, setSelectedRows] = useState<Inventory[]>([]);
   const [dialogState, setDialogState] = useState({
     create: false,
@@ -55,6 +53,17 @@ export const InventoryManagement: React.FC = () => {
     setSearchParams(prev => ({ ...prev, filters, page: 1 }));
   }, []);
 
+  const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
+    setFilters(newFilters);
+    const combinedParams = { ...searchParams, ...newFilters };
+    setSearchParams(combinedParams);
+  }, [searchParams]);
+
+  const handleReset = useCallback(() => {
+    setSearchParams({});
+    setFilters({});
+  }, []);
+
   const handleCreate = useCallback(() => {
     setSelectedInventory(null);
     setDialogState(prev => ({ ...prev, create: true }));
@@ -66,7 +75,7 @@ export const InventoryManagement: React.FC = () => {
   }, []);
 
   const handleView = useCallback((inventory: Inventory) => {
-    console.log('handleView', inventory);
+
     setSelectedInventory(inventory);
     setDialogState(prev => ({ ...prev, view: true }));
   }, []);
@@ -199,6 +208,8 @@ export const InventoryManagement: React.FC = () => {
           onFilter={handleFilter as (filters: Record<string, string>) => void}
           onRefresh={handleRefresh}
           loading={isLoading}
+          onFilterChange={handleFilterChange}
+          filters={filters}
         />
       </Box>
 
@@ -222,7 +233,6 @@ export const InventoryManagement: React.FC = () => {
         onSave={handleCreateSubmit}
         loading={createMutation.isPending}
       />
-
 
       {/* Delete Dialog */}
       <InventoryDeleteDialog

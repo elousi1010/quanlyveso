@@ -149,7 +149,6 @@ export const OrganizationManagement: React.FC = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-
   return (
     <Box sx={{ p: 2 }}>
       <OrganizationHeader
@@ -197,7 +196,6 @@ export const OrganizationManagement: React.FC = () => {
         loading={createMutation.isPending}
         width={500}
       />
-
 
       {/* Delete Dialog */}
       <OrganizationDeleteDialog

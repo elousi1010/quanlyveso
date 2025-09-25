@@ -109,7 +109,7 @@ export const PARTNER_TABLE_ACTIONS: SimpleTableAction[] = [
     icon: <DeleteIcon fontSize="small" />,
     color: 'error',
     onClick: (partner: Partner) => {
-      console.log('Delete partner:', partner);
+
     },
   },
 ];

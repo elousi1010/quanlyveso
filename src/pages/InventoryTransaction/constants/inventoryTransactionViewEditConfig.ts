@@ -42,10 +42,20 @@ export const inventoryTransactionFormFields: FormField[] = [
   },
   {
     key: 'transaction.partner_id',
-    label: 'Partner ID',
-    type: 'text',
+    label: 'Đối tác',
+    type: 'custom',
     required: true,
-    placeholder: 'Nhập ID đối tác',
+    // render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+    //   const { UserSelector } = require('@/components/common'); // eslint-disable-line @typescript-eslint/no-require-imports
+    //   return UserSelector({
+    //     value: value as string | null,
+    //     onChange: (id: string | null, item: any) => handleFieldChange('transaction.partner_id', id),
+    //     type: 'partner',
+    //     label: 'Chọn đối tác',
+    //     placeholder: 'Tìm kiếm đối tác...',
+    //     required: true,
+    //   });
+    // },
   },
   {
     key: 'transaction.note',

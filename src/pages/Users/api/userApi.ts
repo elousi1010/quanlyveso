@@ -1,4 +1,5 @@
-import { api } from '../../../utils/api';
+import { api } from '@/utils/api';
+import { withDefaultPagination } from '@/utils';
 import type {
   UserListResponse,
   UserResponse,
@@ -7,13 +8,15 @@ import type {
   UpdateUserRequest,
   UpdateUserResponse,
   DeleteUserResponse,
+  UserSearchParams,
 } from '../types';
 
 // User API functions
 export const userApi = {
   // Get all users
-  getUsers: async (): Promise<UserListResponse> => {
-    return api.get<UserListResponse>('/api/v1/users');
+  getUsers: async (searchParams?: Partial<UserSearchParams>): Promise<UserListResponse> => {
+    const params = withDefaultPagination(searchParams);
+    return api.get<UserListResponse>('/api/v1/users', { params });
   },
 
   // Get user by ID

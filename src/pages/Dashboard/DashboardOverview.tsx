@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Card, 
@@ -8,131 +8,334 @@ import {
   Chip,
   Avatar,
   LinearProgress,
-  Stack
+  Stack,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Divider,
+  CircularProgress,
+  Alert,
+  Button,
+  ButtonGroup,
+  Skeleton
 } from '@mui/material';
 import {
   People as PeopleIcon,
   Receipt as ReceiptIcon,
   AttachMoney as MoneyIcon,
   ConfirmationNumber as TicketIcon,
-  Assessment as AssessmentIcon,
   Refresh as RefreshIcon,
   MoreVert as MoreVertIcon,
+  Store as StoreIcon,
+  Inventory as InventoryIcon,
+  TrendingUp as TrendingUpIcon,
+  TrendingDown as TrendingDownIcon,
+  AccountBalance as AccountBalanceIcon,
+  Error as ErrorIcon,
+  CheckCircle as CheckCircleIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
+import { useDashboardOverview, useDashboardActivity, useDashboardRevenue } from '@/hooks';
+import { type DashboardFilters } from '@/types/dashboard';
+import { 
+  formatCurrency, 
+  formatNumber, 
+  formatDate, 
+  formatRelativeTime 
+} from '@/utils';
 
 const DashboardOverview: React.FC = () => {
-  // Mock data - trong thực tế sẽ fetch từ API
-  const statsData = [
+  const [filters, setFilters] = useState<DashboardFilters>({});
+  const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month' | 'year'>('today');
+  const [revenueType, setRevenueType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
+  
+  // Fetch dashboard data
+  const { 
+    data: dashboardData, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useDashboardOverview(filters);
+
+  // Fetch activity data
+  const { 
+    data: activityData, 
+    isLoading: isActivityLoading 
+  } = useDashboardActivity();
+
+  // Fetch revenue data
+  const { 
+    data: revenueData, 
+    isLoading: isRevenueLoading 
+  } = useDashboardRevenue(revenueType);
+
+  // Handle time range change
+  const handleTimeRangeChange = (range: 'today' | 'week' | 'month' | 'year') => {
+    setTimeRange(range);
+    const now = new Date();
+    let startDate: string;
+    let newRevenueType: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    
+    switch (range) {
+      case 'today':
+        startDate = formatDate(now, 'API'); // Use API format (YYYY-MM-DD)
+        newRevenueType = 'daily';
+        break;
+      case 'week': {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        startDate = formatDate(weekAgo, 'API');
+        newRevenueType = 'weekly';
+        break;
+      }
+      case 'month': {
+        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        startDate = formatDate(monthAgo, 'API');
+        newRevenueType = 'monthly';
+        break;
+      }
+      case 'year': {
+        const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        startDate = formatDate(yearAgo, 'API');
+        newRevenueType = 'yearly';
+        break;
+      }
+      default:
+        startDate = formatDate(now, 'API');
+        newRevenueType = 'daily';
+    }
+    
+    setRevenueType(newRevenueType);
+    setFilters({
+      ...filters,
+      startDate,
+      endDate: formatDate(now, 'API')
+    });
+  };
+
+  // Helper function to safely format growth percentage
+  const formatGrowth = (value: number | undefined | null): string => {
+    if (value == null || isNaN(value)) return '0.0';
+    return value.toFixed(1);
+  };
+
+  // Helper function to determine growth type
+  const getGrowthType = (value: number | undefined | null): 'positive' | 'negative' | 'neutral' => {
+    if (value == null || isNaN(value) || value === 0) return 'neutral';
+    return value > 0 ? 'positive' : 'negative';
+  };
+
+  // Helper function to safely format numbers
+  const safeFormatNumber = (value: number | undefined | null): string => {
+    if (value == null || isNaN(value)) return '0';
+    return formatNumber(value);
+  };
+
+  // Helper function to safely format currency
+  const safeFormatCurrency = (value: number | undefined | null): string => {
+    if (value == null || isNaN(value)) return formatCurrency(0);
+    return formatCurrency(value);
+  };
+
+  // Prepare stats data from API - Updated to match actual response
+  const statsData = dashboardData ? [
     {
-      title: 'Tổng doanh thu',
-      value: '2,450,000,000',
+      title: 'Tổng nợ',
+      value: safeFormatCurrency(parseFloat(dashboardData.debt.this || '0')),
       unit: 'VNĐ',
-      change: '+12.5%',
-      changeType: 'positive' as const,
+      change: dashboardData.debt.prev ? 
+        `${((parseFloat(dashboardData.debt.this || '0') - parseFloat(dashboardData.debt.prev)) / parseFloat(dashboardData.debt.prev) * 100).toFixed(1)}%` : '0%',
+      changeType: dashboardData.debt.prev ? 
+        (parseFloat(dashboardData.debt.this || '0') > parseFloat(dashboardData.debt.prev) ? 'positive' : 'negative') : 'neutral',
       icon: <MoneyIcon />,
-      color: '#4caf50',
-      bgColor: '#e8f5e8',
+      color: '#f44336',
+      bgColor: '#ffebee',
     },
     {
-      title: 'Vé đã bán',
-      value: '15,420',
+      title: 'Vé nhập',
+      value: safeFormatNumber(parseInt(dashboardData.ticketImport.this || '0')),
       unit: 'vé',
-      change: '+8.2%',
-      changeType: 'positive' as const,
+      change: dashboardData.ticketImport.prev ? 
+        `${((parseInt(dashboardData.ticketImport.this || '0') - parseInt(dashboardData.ticketImport.prev)) / parseInt(dashboardData.ticketImport.prev) * 100).toFixed(1)}%` : '0%',
+      changeType: dashboardData.ticketImport.prev ? 
+        (parseInt(dashboardData.ticketImport.this || '0') > parseInt(dashboardData.ticketImport.prev) ? 'positive' : 'negative') : 'neutral',
       icon: <TicketIcon />,
       color: '#2196f3',
       bgColor: '#e3f2fd',
     },
     {
-      title: 'Giao dịch',
-      value: '3,250',
-      unit: 'giao dịch',
-      change: '+15.3%',
-      changeType: 'positive' as const,
+      title: 'Vé xuất',
+      value: safeFormatNumber(parseInt(dashboardData.ticketExport.this || '0')),
+      unit: 'vé',
+      change: dashboardData.ticketExport.prev ? 
+        `${((parseInt(dashboardData.ticketExport.this || '0') - parseInt(dashboardData.ticketExport.prev)) / parseInt(dashboardData.ticketExport.prev) * 100).toFixed(1)}%` : '0%',
+      changeType: dashboardData.ticketExport.prev ? 
+        (parseInt(dashboardData.ticketExport.this || '0') > parseInt(dashboardData.ticketExport.prev) ? 'positive' : 'negative') : 'neutral',
       icon: <ReceiptIcon />,
       color: '#ff9800',
       bgColor: '#fff3e0',
     },
     {
-      title: 'Đối tác',
-      value: '125',
-      unit: 'đối tác',
-      change: '+2.4%',
-      changeType: 'positive' as const,
+      title: 'Giao dịch',
+      value: safeFormatNumber(parseInt(dashboardData.transaction.this || '0')),
+      unit: 'giao dịch',
+      change: dashboardData.transaction.prev ? 
+        `${((parseInt(dashboardData.transaction.this || '0') - parseInt(dashboardData.transaction.prev)) / parseInt(dashboardData.transaction.prev) * 100).toFixed(1)}%` : '0%',
+      changeType: dashboardData.transaction.prev ? 
+        (parseInt(dashboardData.transaction.this || '0') > parseInt(dashboardData.transaction.prev) ? 'positive' : 'negative') : 'neutral',
       icon: <PeopleIcon />,
       color: '#9c27b0',
       bgColor: '#f3e5f5',
     },
-  ];
+    {
+      title: 'Tổng nợ (trước)',
+      value: safeFormatCurrency(parseFloat(dashboardData.debt.prev || '0')),
+      unit: 'VNĐ',
+      change: '0%',
+      changeType: 'neutral' as const,
+      icon: <AccountBalanceIcon />,
+      color: '#607d8b',
+      bgColor: '#eceff1',
+    },
+    {
+      title: 'Vé nhập (trước)',
+      value: safeFormatNumber(parseInt(dashboardData.ticketImport.prev || '0')),
+      unit: 'vé',
+      change: '0%',
+      changeType: 'neutral' as const,
+      icon: <StoreIcon />,
+      color: '#795548',
+      bgColor: '#efebe9',
+    },
+  ] : [];
 
-  const recentActivities = [
-    {
-      id: 1,
-      title: 'Giao dịch mới',
-      description: 'Đối tác ABC vừa thực hiện giao dịch 500,000 VNĐ',
-      time: '2 phút trước',
-      type: 'transaction',
-      icon: <ReceiptIcon />,
-      color: '#4caf50',
-    },
-    {
-      id: 2,
-      title: 'Vé số mới',
-      description: 'Đã thêm 1000 vé số mới vào hệ thống',
-      time: '15 phút trước',
-      type: 'ticket',
-      icon: <TicketIcon />,
-      color: '#2196f3',
-    },
-    {
-      id: 3,
-      title: 'Đối tác mới',
-      description: 'Đối tác XYZ đã đăng ký thành công',
-      time: '1 giờ trước',
-      type: 'partner',
-      icon: <PeopleIcon />,
-      color: '#ff9800',
-    },
-    {
-      id: 4,
-      title: 'Báo cáo',
-      description: 'Báo cáo tháng 12 đã được tạo',
-      time: '2 giờ trước',
-      type: 'report',
-      icon: <AssessmentIcon />,
-      color: '#9c27b0',
-    },
-  ];
+  // Chart colors
+  const chartColors = ['#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#607d8b', '#795548'];
+
+  // Prepare chart data from revenue API
+  const revenueChartData = revenueData?.map(item => ({
+    label: item.label,
+    import: item.import,
+    export: item.export,
+    total: item.total,
+    revenue: item.total, // For backward compatibility with existing chart
+  })) || [];
+
+  const topPartnersData = dashboardData?.topPartners?.slice(0, 5) || [];
+  const topStationsData = dashboardData?.topStations?.slice(0, 5) || [];
+
+  // System health data
+  const systemHealthData = dashboardData?.systemHealth;
+  const inventoryStatus = dashboardData?.inventoryStatus;
+
+  if (error) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Có lỗi xảy ra khi tải dữ liệu dashboard. Vui lòng thử lại.
+        </Alert>
+        <Button variant="contained" onClick={() => refetch()}>
+          Thử lại
+        </Button>
+      </Box>
+    );
+  }
+
+  // Prepare recent activities from activity API or fallback to transactions
+  const recentActivities = activityData ? [{
+    id: activityData.activity.id,
+    title: `${activityData.activity.transaction.type === 'export' ? 'Xuất hàng' : 'Nhập hàng'} - ${activityData.activity.transaction.sub_type}`,
+    description: `${activityData.partner.name} - ${activityData.inventory.code}: ${safeFormatCurrency(parseFloat(activityData.activity.total))} (${activityData.activity.quantity} vé)`,
+    time: formatRelativeTime(new Date(activityData.activity.created_at)),
+    type: activityData.activity.transaction.type === 'export' ? 'warning' as const : 'success' as const,
+    avatar: undefined,
+    color: activityData.activity.transaction.type === 'export' ? '#ff9800' : '#4caf50',
+  }] : dashboardData?.recentTransactions?.slice(0, 5)?.map(transaction => ({
+    id: transaction.id,
+    title: `Giao dịch ${transaction.type || 'N/A'}`,
+    description: `${transaction.partnerName || 'N/A'} - ${transaction.stationName || 'N/A'}: ${safeFormatCurrency(transaction.amount)}`,
+    time: transaction.createdAt ? formatRelativeTime(new Date(transaction.createdAt)) : 'N/A',
+    type: transaction.status === 'completed' ? 'success' as const : 'warning' as const,
+    avatar: undefined,
+    color: transaction.status === 'completed' ? '#4caf50' : '#ff9800',
+  })) || [];
 
   return (
-    <Box sx={{ p: 2 }}>
+    <Box sx={{ p: { xs: 1, sm: 2 } }}>
       {/* Header */}
       <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-              Tổng quan hệ thống
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+              Dashboard Tổng Quan
             </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Chào mừng bạn quay trở lại! Đây là tổng quan về hoạt động của hệ thống.
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+              Thống kê và báo cáo tổng quan về hoạt động hệ thống
             </Typography>
           </Box>
-          <IconButton color="primary">
-            <RefreshIcon />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <ButtonGroup size="small" variant="outlined">
+              <Button 
+                onClick={() => handleTimeRangeChange('today')}
+                variant={timeRange === 'today' ? 'contained' : 'outlined'}
+              >
+                Hôm nay
+              </Button>
+              <Button 
+                onClick={() => handleTimeRangeChange('week')}
+                variant={timeRange === 'week' ? 'contained' : 'outlined'}
+              >
+                Tuần
+              </Button>
+              <Button 
+                onClick={() => handleTimeRangeChange('month')}
+                variant={timeRange === 'month' ? 'contained' : 'outlined'}
+              >
+                Tháng
+              </Button>
+              <Button 
+                onClick={() => handleTimeRangeChange('year')}
+                variant={timeRange === 'year' ? 'contained' : 'outlined'}
+              >
+                Năm
+              </Button>
+            </ButtonGroup>
+            <IconButton color="primary" onClick={() => refetch()} disabled={isLoading}>
+              {isLoading ? <CircularProgress size={20} /> : <RefreshIcon />}
           </IconButton>
+          </Box>
         </Box>
       </Box>
 
       {/* Statistics Cards */}
       <Box sx={{ mb: 4 }}>
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
-          gap: 2 
-        }}>
-          {statsData.map((stat, index) => (
+        <Grid container spacing={2}>
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <Grid item xs={12} sm={6} lg={4} key={index}>
+                <Card sx={{ p: 2 }}>
+                  <Skeleton variant="circular" width={48} height={48} sx={{ mb: 2 }} />
+                  <Skeleton variant="text" height={40} width="60%" />
+                  <Skeleton variant="text" height={20} width="40%" />
+                  <Skeleton variant="text" height={24} width="80%" />
+                </Card>
+              </Grid>
+            ))
+          ) : (
+            statsData.map((stat, index) => (
+              <Grid item xs={12} sm={6} lg={4} key={index}>
             <Card
-              key={index}
               sx={{
                 height: '100%',
                 background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
@@ -146,14 +349,14 @@ const DashboardOverview: React.FC = () => {
                 },
               }}
             >
-              <CardContent sx={{ p: 3 }}>
+                  <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                   <Avatar
                     sx={{
                       bgcolor: stat.bgColor,
                       color: stat.color,
-                      width: 48,
-                      height: 48,
+                          width: { xs: 40, sm: 48 },
+                          height: { xs: 40, sm: 48 },
                     }}
                   >
                     {stat.icon}
@@ -161,39 +364,86 @@ const DashboardOverview: React.FC = () => {
                   <Chip
                     label={stat.change}
                     size="small"
-                    color={stat.changeType === 'positive' ? 'success' : 'error'}
+                        color={stat.changeType === 'positive' ? 'success' : stat.changeType === 'negative' ? 'error' : 'default'}
                     sx={{ fontWeight: 600 }}
+                        icon={stat.changeType === 'positive' ? <TrendingUpIcon /> : stat.changeType === 'negative' ? <TrendingDownIcon /> : undefined}
                   />
                 </Box>
-                <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
+                    <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                   {stat.value}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                   {stat.unit}
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                   {stat.title}
                 </Typography>
               </CardContent>
             </Card>
-          ))}
-        </Box>
+              </Grid>
+            ))
+          )}
+        </Grid>
       </Box>
 
-      {/* Charts and Activities */}
-      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
-        {/* Revenue Chart Placeholder */}
-        <Box sx={{ flex: 2 }}>
-          <Card sx={{ height: '100%' }}>
+      {/* Charts and Data */}
+      <Grid container spacing={3}>
+        {/* Revenue Chart */}
+        <Grid item xs={12} lg={8}>
+          <Card>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Biểu đồ doanh thu
+                  Biểu đồ doanh thu ({revenueType === 'daily' ? 'Hàng ngày' : revenueType === 'weekly' ? 'Hàng tuần' : revenueType === 'monthly' ? 'Hàng tháng' : 'Hàng năm'})
                 </Typography>
                 <IconButton size="small">
                   <MoreVertIcon />
                 </IconButton>
               </Box>
+              {(isLoading || isRevenueLoading) ? (
+                <Skeleton variant="rectangular" height={300} />
+              ) : revenueChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={revenueChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: number, name: string) => [
+                        safeFormatCurrency(value),
+                        name === 'import' ? 'Nhập hàng' : name === 'export' ? 'Xuất hàng' : 'Tổng doanh thu'
+                      ]}
+                    />
+                    <Legend />
+                    <Area 
+                      type="monotone" 
+                      dataKey="import" 
+                      stackId="1"
+                      stroke="#2196f3" 
+                      fill="#2196f3" 
+                      fillOpacity={0.6}
+                      name="Nhập hàng"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="export" 
+                      stackId="1"
+                      stroke="#ff9800" 
+                      fill="#ff9800" 
+                      fillOpacity={0.6}
+                      name="Xuất hàng"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="total" 
+                      stroke="#4caf50" 
+                      fill="#4caf50" 
+                      fillOpacity={0.3}
+                      name="Tổng doanh thu"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
               <Box 
                 sx={{ 
                   height: 300, 
@@ -207,97 +457,237 @@ const DashboardOverview: React.FC = () => {
                 }}
               >
                 <Typography variant="body1" color="text.secondary">
-                  Biểu đồ sẽ được hiển thị ở đây
+                    Chưa có dữ liệu biểu đồ
                 </Typography>
               </Box>
+              )}
             </CardContent>
           </Card>
-        </Box>
+        </Grid>
 
         {/* Recent Activities */}
-        <Box sx={{ flex: 1 }}>
+        <Grid item xs={12} lg={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
                 Hoạt động gần đây
               </Typography>
+              {(isLoading || isActivityLoading) ? (
               <Stack spacing={2}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Box key={index} sx={{ display: 'flex', gap: 2 }}>
+                      <Skeleton variant="circular" width={40} height={40} />
+                      <Box sx={{ flex: 1 }}>
+                        <Skeleton variant="text" height={20} width="80%" />
+                        <Skeleton variant="text" height={16} width="60%" />
+                        <Skeleton variant="text" height={14} width="40%" />
+                      </Box>
+                    </Box>
+                  ))}
+                </Stack>
+              ) : recentActivities.length > 0 ? (
+                <List sx={{ p: 0 }}>
                 {recentActivities.map((activity, index) => (
-                  <Box
-                    key={activity.id}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: 2,
-                      p: 2,
-                      borderRadius: 2,
-                      bgcolor: 'grey.50',
-                      transition: 'background-color 0.2s',
-                      '&:hover': {
-                        bgcolor: 'grey.100',
-                      },
-                    }}
-                  >
+                    <React.Fragment key={activity.id}>
+                      <ListItem sx={{ px: 0, py: 1 }}>
+                        <ListItemAvatar>
                     <Avatar
                       sx={{
-                        bgcolor: activity.color + '20',
-                        color: activity.color,
+                              bgcolor: activity.color,
                         width: 32,
                         height: 32,
                       }}
                     >
-                      {activity.icon}
+                            {activity.type === 'success' ? <CheckCircleIcon /> : <WarningIcon />}
                     </Avatar>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
                         {activity.title}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
                         {activity.description}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         {activity.time}
                       </Typography>
                     </Box>
+                          }
+                        />
+                      </ListItem>
+                      {index < recentActivities.length - 1 && <Divider />}
+                    </React.Fragment>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Chưa có hoạt động nào
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Top Partners */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+                Đối tác hàng đầu
+              </Typography>
+              {isLoading ? (
+                <Stack spacing={2}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box sx={{ display: 'flex', gap: 2, flex: 1 }}>
+                        <Skeleton variant="circular" width={40} height={40} />
+                        <Box sx={{ flex: 1 }}>
+                          <Skeleton variant="text" height={20} width="60%" />
+                          <Skeleton variant="text" height={16} width="40%" />
+                        </Box>
+                      </Box>
+                      <Skeleton variant="text" height={20} width="20%" />
                   </Box>
                 ))}
               </Stack>
+              ) : topPartnersData.length > 0 ? (
+                <List sx={{ p: 0 }}>
+                  {topPartnersData.map((partner, index) => (
+                    <React.Fragment key={partner.id}>
+                      <ListItem sx={{ px: 0, py: 1 }}>
+                        <ListItemAvatar>
+                          <Avatar sx={{ bgcolor: chartColors[index % chartColors.length], width: 32, height: 32 }}>
+                            <PeopleIcon />
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                              {partner.name}
+                            </Typography>
+                          }
+                          secondary={
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                              {safeFormatNumber(partner.ticketsSold)} vé • {(partner.growth || 0) > 0 ? '+' : ''}{formatGrowth(partner.growth)}%
+                            </Typography>
+                          }
+                        />
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          {safeFormatCurrency(partner.revenue)}
+                        </Typography>
+                      </ListItem>
+                      {index < topPartnersData.length - 1 && <Divider />}
+                    </React.Fragment>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Chưa có dữ liệu đối tác
+                  </Typography>
+                </Box>
+              )}
             </CardContent>
           </Card>
+        </Grid>
+
+        {/* Top Stations */}
+        <Grid item xs={12} md={6}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+                Trạm hàng đầu
+              </Typography>
+              {isLoading ? (
+                <Stack spacing={2}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Box sx={{ display: 'flex', gap: 2, flex: 1 }}>
+                        <Skeleton variant="circular" width={40} height={40} />
+                        <Box sx={{ flex: 1 }}>
+                          <Skeleton variant="text" height={20} width="60%" />
+                          <Skeleton variant="text" height={16} width="40%" />
         </Box>
       </Box>
+                      <Skeleton variant="text" height={20} width="20%" />
+                    </Box>
+                  ))}
+                </Stack>
+              ) : topStationsData.length > 0 ? (
+                <List sx={{ p: 0 }}>
+                  {topStationsData.map((station, index) => (
+                    <React.Fragment key={station.id}>
+                      <ListItem sx={{ px: 0, py: 1 }}>
+                        <ListItemAvatar>
+                          <Avatar sx={{ bgcolor: chartColors[index % chartColors.length], width: 32, height: 32 }}>
+                            <StoreIcon />
+                          </Avatar>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                              {station.name}
+                            </Typography>
+                          }
+                          secondary={
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                              {safeFormatNumber(station.ticketsSold)} vé • {(station.growth || 0) > 0 ? '+' : ''}{formatGrowth(station.growth)}%
+                            </Typography>
+                          }
+                        />
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          {safeFormatCurrency(station.revenue)}
+                        </Typography>
+                      </ListItem>
+                      {index < topStationsData.length - 1 && <Divider />}
+                    </React.Fragment>
+                  ))}
+                </List>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Chưa có dữ liệu trạm
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
 
-      {/* Progress Section */}
-      <Box sx={{ mt: 3 }}>
+        {/* System Health */}
+        {systemHealthData && (
+          <Grid item xs={12} md={6}>
         <Card>
           <CardContent>
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-              Tiến độ thực hiện
+                  Tình trạng hệ thống
             </Typography>
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-              gap: 3 
-            }}>
+                <Stack spacing={2}>
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Mục tiêu doanh thu
+                        Uptime
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    75%
+                        {formatGrowth(systemHealthData.uptime)}%
                   </Typography>
                 </Box>
                 <LinearProgress
                   variant="determinate"
-                  value={75}
+                      value={systemHealthData.uptime}
                   sx={{
-                    height: 8,
-                    borderRadius: 4,
+                        height: 6,
+                        borderRadius: 3,
                     bgcolor: 'grey.200',
                     '& .MuiLinearProgress-bar': {
-                      borderRadius: 4,
-                      bgcolor: 'primary.main',
+                          borderRadius: 3,
+                          bgcolor: systemHealthData.uptime > 95 ? 'success.main' : 'warning.main',
                     },
                   }}
                 />
@@ -305,22 +695,32 @@ const DashboardOverview: React.FC = () => {
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Vé đã bán
+                        Người dùng hoạt động
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        {safeFormatNumber(systemHealthData.activeUsers)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Tải hệ thống
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    60%
+                        {formatGrowth(systemHealthData.systemLoad)}%
                   </Typography>
                 </Box>
                 <LinearProgress
                   variant="determinate"
-                  value={60}
+                      value={systemHealthData.systemLoad}
                   sx={{
-                    height: 8,
-                    borderRadius: 4,
+                        height: 6,
+                        borderRadius: 3,
                     bgcolor: 'grey.200',
                     '& .MuiLinearProgress-bar': {
-                      borderRadius: 4,
-                      bgcolor: 'success.main',
+                          borderRadius: 3,
+                          bgcolor: systemHealthData.systemLoad < 70 ? 'success.main' : systemHealthData.systemLoad < 85 ? 'warning.main' : 'error.main',
                     },
                   }}
                 />
@@ -328,30 +728,83 @@ const DashboardOverview: React.FC = () => {
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Đối tác mới
+                        Tỷ lệ lỗi
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    90%
+                        {(systemHealthData.errorRate || 0).toFixed(2)}%
                   </Typography>
                 </Box>
                 <LinearProgress
                   variant="determinate"
-                  value={90}
+                      value={systemHealthData.errorRate}
                   sx={{
-                    height: 8,
-                    borderRadius: 4,
+                        height: 6,
+                        borderRadius: 3,
                     bgcolor: 'grey.200',
                     '& .MuiLinearProgress-bar': {
-                      borderRadius: 4,
-                      bgcolor: 'warning.main',
+                          borderRadius: 3,
+                          bgcolor: systemHealthData.errorRate < 1 ? 'success.main' : systemHealthData.errorRate < 5 ? 'warning.main' : 'error.main',
                     },
                   }}
                 />
               </Box>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+        )}
+
+        {/* Inventory Status */}
+        {inventoryStatus && (
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
+                  Tình trạng kho
+                </Typography>
+                <Stack spacing={2}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <InventoryIcon color="primary" />
+                      <Typography variant="body2">Tổng sản phẩm</Typography>
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {safeFormatNumber(inventoryStatus.totalItems)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <WarningIcon color="warning" />
+                      <Typography variant="body2">Sắp hết hàng</Typography>
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'warning.main' }}>
+                      {safeFormatNumber(inventoryStatus.lowStockItems)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <ErrorIcon color="error" />
+                      <Typography variant="body2">Hết hàng</Typography>
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'error.main' }}>
+                      {safeFormatNumber(inventoryStatus.outOfStockItems)}
+                    </Typography>
+                  </Box>
+                  <Divider />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      Tổng giá trị kho
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                      {safeFormatCurrency(inventoryStatus.totalValue)}
+                    </Typography>
             </Box>
+                </Stack>
           </CardContent>
         </Card>
-      </Box>
+          </Grid>
+        )}
+      </Grid>
     </Box>
   );
 };

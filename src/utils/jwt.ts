@@ -1,4 +1,4 @@
-import type { UserFromToken } from '../api/authApi';
+import type { UserFromToken } from '@/api/authApi';
 
 /**
  * Decode JWT token and return payload

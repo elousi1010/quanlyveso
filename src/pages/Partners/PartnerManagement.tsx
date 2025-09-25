@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import { 
   CommonViewEditDrawer,
 } from '@/components/common';
+import { useTablePagination } from '@/hooks';
 import {
   PartnerHeader,
   PartnerDataGrid,
@@ -27,11 +28,21 @@ import type {
 } from './types';
 
 export const PartnerManagement: React.FC = () => {
-  // State management
-  const [searchParams, setSearchParams] = useState<PartnerSearchParams>({
-    page: 1,
-    limit: 5,
+  // Pagination state
+  const {
+    page,
+    rowsPerPage,
+    handleChangePage,
+    handleChangeRowsPerPage,
+    apiParams,
+    reset: resetPagination,
+  } = useTablePagination({
+    initialLimit: 5,
   });
+
+  // Search and filter state
+  const [searchParams, setSearchParams] = useState<PartnerSearchParams>({});
+  const [filters, setFilters] = useState<Record<string, unknown>>({});
   // const [selectedRows, setSelectedRows] = useState<Partner[]>([]);
   const [dialogState, setDialogState] = useState({
     create: false,
@@ -46,24 +57,51 @@ export const PartnerManagement: React.FC = () => {
     severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
 
-  // API hooks
-  const { data: partnersData, isLoading, refetch, error } = usePartners(searchParams);
+  // API hooks - combine search params with pagination
+  const combinedParams = {
+    ...searchParams,
+    ...apiParams,
+  };
+  const { data: partnersData, isLoading, refetch, error } = usePartners(combinedParams);
+
+  // Debug logging for pagination
+
   const { createMutation, updateMutation, deleteMutation } = usePartnerMutations();
 
   // Debug logging
-  console.log('PartnerManagement - partnersData:', partnersData);
-  console.log('PartnerManagement - isLoading:', isLoading);
-  console.log('PartnerManagement - error:', error);
-  console.log('PartnerManagement - searchParams:', searchParams);
 
   // Event handlers
   const handleSearchChange = useCallback((params: PartnerSearchParams) => {
-    setSearchParams(prev => ({ ...prev, ...params, page: 1 }));
-  }, []);
+    // Remove page and limit from search params as they're handled by pagination
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { page, limit, ...searchOnlyParams } = params;
+    setSearchParams(searchOnlyParams);
+    // Reset to first page when searching
+    resetPagination();
+  }, [resetPagination]);
 
   const handleReset = useCallback(() => {
-    setSearchParams({ page: 1, limit: 5 });
-  }, []);
+    setSearchParams({});
+    setFilters({});
+    resetPagination();
+  }, [resetPagination]);
+
+  const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
+    setFilters(newFilters);
+    const combinedParams = { ...searchParams, ...newFilters };
+    setSearchParams(combinedParams);
+    resetPagination();
+  }, [searchParams, resetPagination]);
+
+  // Pagination handlers for table
+  const handlePageChangeWrapper = useCallback((newPage: number) => {
+    handleChangePage(null, newPage);
+  }, [handleChangePage]);
+
+  const handleRowsPerPageChangeWrapper = useCallback((newRowsPerPage: number) => {
+    const event = { target: { value: newRowsPerPage.toString() } } as React.ChangeEvent<HTMLInputElement>;
+    handleChangeRowsPerPage(event);
+  }, [handleChangeRowsPerPage]);
 
   const handleCreate = useCallback(() => {
     setSelectedPartner(null);
@@ -196,7 +234,6 @@ export const PartnerManagement: React.FC = () => {
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <PartnerHeader
@@ -209,9 +246,11 @@ export const PartnerManagement: React.FC = () => {
 
       <Box sx={{ mt: 2 }}>
         <PartnerSearchAndFilter
-          searchParams={searchParams} 
+          searchParams={combinedParams} 
           onSearchChange={handleSearchChange}
           onReset={handleReset}
+          onFilterChange={handleFilterChange}
+          filters={filters}
         />
       </Box>
 
@@ -223,6 +262,10 @@ export const PartnerManagement: React.FC = () => {
           onDelete={handleDelete}
           onView={handleView}
           onSave={handleUpdateSubmit}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={handlePageChangeWrapper}
+          onRowsPerPageChange={handleRowsPerPageChangeWrapper}
         />
       </Box>
 

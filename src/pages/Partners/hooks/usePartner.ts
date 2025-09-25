@@ -8,8 +8,7 @@ export const usePartner = (id: string) => {
     queryKey: partnerKeys.detail(id),
     queryFn: async () => {
       const response = await partnerApi.getPartnerById(id);
-      console.log('Partner detail response:', response);
-      
+
       // Transform data để partnerDetail?.data trả về trực tiếp partner object
       return {
         ...response,

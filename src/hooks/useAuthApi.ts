@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { authApi, type LoginRequest, type SignupRequest, type RefreshTokenRequest, type UserFromToken } from '../api/authApi';
-import { useAuthStore } from '../stores/authStore';
-import { decodeJWT, isTokenExpired } from '../utils/jwt';
+import { authApi, type LoginRequest, type SignupRequest, type RefreshTokenRequest, type UserFromToken } from '@/api/authApi';
+import { useAuthStore } from '@/stores/authStore';
+import { decodeJWT, isTokenExpired } from '@/utils/jwt';
 
 // Query keys
 export const authKeys = {
@@ -109,8 +109,7 @@ export const useRefreshToken = () => {
       
       // Cập nhật token mới trong Zustand store
       updateTokens(response.data.access_token, response.data.refresh_token);
-      
-      console.log('Token refresh completed successfully');
+
     },
     onError: (error) => {
       console.error('Refresh token failed:', error);

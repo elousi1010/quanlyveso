@@ -33,10 +33,22 @@ export const transactionCreateFields: DialogFieldConfig<CreateTransactionDto>[] 
   },
   {
     key: 'partner_id',
-    label: 'ID Đối tác',
-    type: 'text',
+    label: 'Đối tác',
+    type: 'custom',
     required: true,
-    placeholder: 'Nhập ID đối tác',
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      const { UserSelector } = require('@/components/common');
+      return (
+UserSelector({
+          value: value as string | null,
+          onChange: (id: string | null, item: any) => handleFieldChange('partner_id', id),
+          type: 'partner',
+          label: 'Chọn đối tác',
+          placeholder: 'Tìm kiếm đối tác...',
+          required: true,
+        })
+      );
+    },
   },
   {
     key: 'swap_id',
@@ -93,10 +105,20 @@ export const transactionUpdateFields: DialogFieldConfig<UpdateTransactionDto>[] 
   },
   {
     key: 'partner_id',
-    label: 'ID Đối tác',
-    type: 'text',
+    label: 'Đối tác',
+    type: 'custom',
     required: false,
-    placeholder: 'Nhập ID đối tác',
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      const { UserSelector } = require('@/components/common');
+      return UserSelector({
+        value: value as string | null,
+        onChange: (id: string | null, item: any) => handleFieldChange('partner_id', id),
+        type: 'partner',
+        label: 'Chọn đối tác',
+        placeholder: 'Tìm kiếm đối tác...',
+        required: false,
+      });
+    },
   },
   {
     key: 'swap_id',

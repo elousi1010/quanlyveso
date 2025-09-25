@@ -74,9 +74,9 @@ export interface CreatePartnerResponse {
 }
 
 export interface PartnerSearchParams {
-  page: number;
-  limit: number;
-  search?: string;
+  page?: number;
+  limit?: number;
+  searchKey?: string;
   type?: string;
   status?: string;
   sortBy?: string;

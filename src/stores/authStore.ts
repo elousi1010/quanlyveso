@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { decodeJWT, isTokenExpired } from '../utils/jwt';
-import type { UserFromToken } from '../api/authApi';
+import { decodeJWT, isTokenExpired } from '@/utils/jwt';
+import type { UserFromToken } from '@/api/authApi';
 
 interface AuthState {
   // State

@@ -1,11 +1,16 @@
 import React from 'react';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import Logo from './Logo';
 
 interface LoadingScreenProps {
   message?: string;
+  size?: number;
 }
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = 'Đang tải...' }) => {
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
+  message = 'Đang tải...', 
+  size = 60 
+}) => {
   return (
     <Box
       display="flex"
@@ -13,10 +18,25 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({ message = 'Đang tải...
       alignItems="center"
       justifyContent="center"
       minHeight="400px"
-      gap={2}
+      gap={3}
     >
-      <CircularProgress size={40} />
-      <Typography variant="body1" color="text.secondary">
+      {/* Animated Logo */}
+      <Logo 
+        size={size}
+        animated={true}
+        variant="icon"
+        showText={false}
+      />
+
+      {/* Loading message */}
+      <Typography 
+        variant="body1" 
+        color="text.secondary"
+        sx={{
+          fontWeight: 500,
+          textAlign: 'center',
+        }}
+      >
         {message}
       </Typography>
     </Box>

@@ -78,7 +78,6 @@ export const AssignPermissionManagement: React.FC = () => {
     refetch();
   }, [refetch]);
 
-
   const handleCloseDialog = useCallback(() => {
     setAssignDialogOpen(false);
     setSelectedUser(null);

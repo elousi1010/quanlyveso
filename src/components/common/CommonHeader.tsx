@@ -5,8 +5,7 @@ import {
   Refresh as RefreshIcon, 
   PersonAdd as PersonAddIcon, 
   Edit as EditIcon,
-  Delete as DeleteIcon,
-  Add as AddIcon
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 
 interface CommonHeaderProps {
@@ -63,31 +62,55 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
       <Paper 
         elevation={0}
         sx={{ 
-          mb: 2, 
-          // background: 'white',
-          // border: '1px solid #e0e0e0',
+          mb: 3, 
+          p: 3,
+          background: 'transparent',
           borderRadius: 2,
-          // padding: 2,
-          // boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.12), 0px 1px 2px rgba(0, 0, 0, 0.24)',
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: { xs: 2, sm: 0 }
+        }}>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <Typography variant="h5" component="h1" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
+            <Typography 
+              variant="h4" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 700, 
+                color: 'text.primary', 
+                mb: 1,
+                fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
+                lineHeight: 1.2,
+                letterSpacing: '-0.02em'
+              }}
+            >
               {title}
             </Typography>
             {subtitle && (
-              <Typography variant="body2" color="text.secondary">
+              <Typography 
+                variant="body1" 
+                color="text.secondary"
+                sx={{
+                  fontSize: { xs: '0.875rem', sm: '1rem' },
+                  lineHeight: 1.4,
+                  opacity: 0.8,
+                  maxWidth: '600px'
+                }}
+              >
                 {subtitle}
               </Typography>
             )}
           </motion.div>
           <motion.div 
-            style={{ display: 'flex', gap: 12, alignItems: 'center' }}
+            style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}

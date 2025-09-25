@@ -1,7 +1,6 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
 import { 
-  Edit as EditIcon, 
   Delete as DeleteIcon, 
   Visibility as ViewIcon
 } from '@mui/icons-material';
@@ -17,6 +16,11 @@ interface UserDataGridProps {
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
   onSave?: (data: Record<string, unknown>, selectedRow?: User) => Promise<void>;
+  // Pagination props
+  page?: number;
+  rowsPerPage?: number;
+  onPageChange?: (page: number) => void;
+  onRowsPerPageChange?: (rowsPerPage: number) => void;
 }
 
 const UserDataGrid: React.FC<UserDataGridProps> = ({
@@ -25,21 +29,23 @@ const UserDataGrid: React.FC<UserDataGridProps> = ({
   error,
   onRefresh,
   onViewDetail,
-  onEdit,
   onDelete,
-  onSave,
+  page = 0,
+  rowsPerPage = 5,
+  onPageChange,
+  onRowsPerPageChange,
 }) => {
   const getRoleLabel = (role: string): string => {
     const roleOption = USER_ROLES.find(r => r.value === role);
     return roleOption ? roleOption.label : role;
   };
 
-
   const getStatusLabel = (isActive: boolean): string => {
     return isActive ? 'Hoạt động' : 'Không hoạt động';
   };
 
   const users = data?.data?.data || [];
+  const totalCount = data?.data?.total || 0;
 
   const columns = [
     {
@@ -138,8 +144,13 @@ const UserDataGrid: React.FC<UserDataGridProps> = ({
       error={error}
       onRefresh={onRefresh}
       emptyMessage="Không có dữ liệu"
+      total={totalCount}
+      page={page}
+      rowsPerPage={rowsPerPage}
+      onPageChange={onPageChange}
+      onRowsPerPageChange={onRowsPerPageChange}
     />
   );
 };
 
-export { UserDataGrid };
+export default UserDataGrid;

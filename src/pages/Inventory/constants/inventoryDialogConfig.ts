@@ -1,7 +1,8 @@
 import type { DialogFieldConfig } from '@/components/common/types';
-import type { CreateInventoryDto, UpdateInventoryDto } from '../types';
+import React from 'react';
+import { StationSelector, PartnerSelector } from '@/components/common';
 
-export const inventoryCreateFields: DialogFieldConfig<CreateInventoryDto>[] = [
+export const inventoryCreateFields: DialogFieldConfig[] = [
   {
     key: 'code',
     label: 'Mã Kho',
@@ -22,9 +23,6 @@ export const inventoryCreateFields: DialogFieldConfig<CreateInventoryDto>[] = [
     type: 'number',
     required: true,
     placeholder: 'Nhập số lượng',
-    inputProps: {
-      min: 0,
-    },
   },
   {
     key: 'avg_cost',
@@ -32,9 +30,6 @@ export const inventoryCreateFields: DialogFieldConfig<CreateInventoryDto>[] = [
     type: 'number',
     required: true,
     placeholder: 'Nhập giá trung bình',
-    inputProps: {
-      step: 1000,
-    },
   },
   {
     key: 'draw_date',
@@ -57,27 +52,38 @@ export const inventoryCreateFields: DialogFieldConfig<CreateInventoryDto>[] = [
   {
     key: 'partner_id',
     label: 'Đối Tác',
-    type: 'text',
+    type: 'custom',
     required: true,
-    placeholder: 'Nhập ID đối tác',
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(PartnerSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('partner_id', id),
+        placeholder: 'Chọn đối tác...',
+      });
+    },
   },
   {
     key: 'organization_id',
     label: 'Tổ Chức',
-    type: 'text',
+    type: 'custom',
     required: true,
-    placeholder: 'Nhập ID tổ chức',
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(StationSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('organization_id', id),
+        placeholder: 'Chọn tổ chức/trạm...',
+      });
+    },
   },
   {
     key: 'is_active',
     label: 'Trạng Thái',
     type: 'boolean',
     required: false,
-    defaultValue: true,
   },
 ];
 
-export const inventoryUpdateFields: DialogFieldConfig<UpdateInventoryDto>[] = [
+export const inventoryUpdateFields: DialogFieldConfig[] = [
   {
     key: 'code',
     label: 'Mã Kho',
@@ -98,9 +104,6 @@ export const inventoryUpdateFields: DialogFieldConfig<UpdateInventoryDto>[] = [
     type: 'number',
     required: false,
     placeholder: 'Nhập số lượng',
-    inputProps: {
-      min: 0,
-    },
   },
   {
     key: 'avg_cost',
@@ -108,9 +111,6 @@ export const inventoryUpdateFields: DialogFieldConfig<UpdateInventoryDto>[] = [
     type: 'number',
     required: false,
     placeholder: 'Nhập giá trung bình',
-    inputProps: {
-      step: 1000,
-    },
   },
   {
     key: 'draw_date',
@@ -133,16 +133,28 @@ export const inventoryUpdateFields: DialogFieldConfig<UpdateInventoryDto>[] = [
   {
     key: 'partner_id',
     label: 'Đối Tác',
-    type: 'text',
+    type: 'custom',
     required: false,
-    placeholder: 'Nhập ID đối tác',
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(PartnerSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('partner_id', id),
+        placeholder: 'Chọn đối tác...',
+      });
+    },
   },
   {
     key: 'organization_id',
     label: 'Tổ Chức',
-    type: 'text',
+    type: 'custom',
     required: false,
-    placeholder: 'Nhập ID tổ chức',
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(PartnerSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('organization_id', id),
+        placeholder: 'Chọn tổ chức/trạm...',
+      });
+    },
   },
   {
     key: 'is_active',
@@ -182,13 +194,6 @@ export const inventoryDetailFields: DialogFieldConfig[] = [
     label: 'Giá Trung Bình',
     type: 'number',
     readonly: true,
-    valueFormatter: (value) => {
-      if (value == null) return '';
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND',
-      }).format(value);
-    },
   },
   {
     key: 'draw_date',
@@ -201,15 +206,6 @@ export const inventoryDetailFields: DialogFieldConfig[] = [
     label: 'Loại Phụ',
     type: 'text',
     readonly: true,
-    valueFormatter: (value) => {
-      const typeMap: Record<string, string> = {
-        'buy_from_agent': 'Mua từ đại lý',
-        'sell_to_customer': 'Bán cho khách hàng',
-        'transfer': 'Chuyển kho',
-        'return': 'Trả về',
-      };
-      return typeMap[value] || value;
-    },
   },
   {
     key: 'partner_id',
@@ -228,21 +224,12 @@ export const inventoryDetailFields: DialogFieldConfig[] = [
     label: 'Trạng Thái',
     type: 'boolean',
     readonly: true,
-    valueFormatter: (value) => value ? 'Hoạt động' : 'Không hoạt động',
   },
   {
     key: 'created_at',
     label: 'Ngày Tạo',
     type: 'text',
     readonly: true,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      const date = new Date(value);
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    },
   },
   {
     key: 'created_by',
@@ -255,14 +242,6 @@ export const inventoryDetailFields: DialogFieldConfig[] = [
     label: 'Ngày Cập Nhật',
     type: 'text',
     readonly: true,
-    valueFormatter: (value) => {
-      if (!value) return '';
-      const date = new Date(value);
-      const day = date.getDate().toString().padStart(2, '0');
-      const month = (date.getMonth() + 1).toString().padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    },
   },
   {
     key: 'updated_by',

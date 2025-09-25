@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import type { User, AuthContextType, UserRole } from '../types/auth';
-import { ROLE_PERMISSIONS } from '../types/auth';
-import { useLogout } from '../hooks/useAuthApi';
-import { useAuthStore } from '../stores/authStore';
-import { mapApiRoleToSystemRole } from '../utils/roleMapping';
+import type { User, AuthContextType, UserRole } from '@/types/auth';
+import { ROLE_PERMISSIONS } from '@/types/auth';
+import { useLogout } from '@/hooks/useAuthApi';
+import { useAuthStore } from '@/stores/authStore';
+import { mapApiRoleToSystemRole } from '@/utils/roleMapping';
 import { AuthContext } from './AuthContext';
 
 interface AuthProviderProps {
@@ -22,8 +22,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (apiUser && isAuthenticated) {
       // Convert API user to local User type
       const mappedRole = mapApiRoleToSystemRole(apiUser.role);
-      console.log('API Role:', apiUser.role, '-> Mapped Role:', mappedRole);
-      
+
       const localUser: User = {
         id: apiUser?.sub || '',
         username: apiUser.phone_number,
@@ -45,7 +44,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (username: string, password: string): Promise<boolean> => {
     // This function is now handled by the LoginForm component using useLogin hook
     // Return false to indicate this method is deprecated
-    console.warn('login function is deprecated. Use useLogin hook instead.');
+
     return false;
   };
 

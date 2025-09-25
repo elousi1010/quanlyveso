@@ -36,8 +36,6 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
   selectedRows,
   onSelectionChange,
 }) => {
-  
-
 
   // Helper function to render permission badges
   const renderPermissionBadges = (actions: Record<string, number>) => {
@@ -114,7 +112,6 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
     created_at_display: permission.created_at ? new Date(permission.created_at).toLocaleDateString('vi-VN') : '',
     updated_at_display: permission.updated_at ? new Date(permission.updated_at).toLocaleDateString('vi-VN') : '',
   })) || [];
-
 
   // Define columns for the table
   const columns = [

@@ -150,6 +150,7 @@ const AppRoutes: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
+
               </Routes>
             </DashboardLayout>
           </ProtectedRoute>
