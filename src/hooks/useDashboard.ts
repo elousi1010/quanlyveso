@@ -26,10 +26,9 @@ const formatDateTimeForAPI = (dateString: string, time: string = '00:00:00'): st
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const day = date.getDate().toString().padStart(2, '0');
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  const seconds = date.getSeconds().toString().padStart(2, '0');
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  
+  // Use the time parameter instead of current time
+  return `${year}-${month}-${day} ${time}`;
 };
 
 /**
@@ -58,9 +57,11 @@ export const useDashboardOverview = (filters?: DashboardFilters) => {
 /**
  * Hook for fetching revenue report
  */
-export const useDashboardRevenue = (type?: 'daily' | 'weekly' | 'monthly' | 'yearly') => {
+export const useDashboardRevenue = (type?: 'daily' | 'weekly' | 'monthly' | 'yearly', filters?: DashboardFilters) => {
   const params: ReportsRevenueParams = {
     type: type || 'daily',
+    start_time: filters?.startDate ? formatDateTimeForAPI(filters.startDate, '00:00:00') : undefined,
+    end_time: filters?.endDate ? formatDateTimeForAPI(filters.endDate, '23:59:59') : undefined,
   };
 
   return useQuery({
@@ -68,6 +69,7 @@ export const useDashboardRevenue = (type?: 'daily' | 'weekly' | 'monthly' | 'yea
     queryFn: () => reportsApi.getRevenueReport(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
     select: (response) => response.data,
+    enabled: !!filters, // Only run query when filters are available
   });
 };
 

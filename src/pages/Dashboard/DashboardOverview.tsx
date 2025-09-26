@@ -1,43 +1,45 @@
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  Typography, 
-  IconButton,
-  Chip,
-  Avatar,
-  LinearProgress,
-  Stack,
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
   Grid,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemAvatar,
-  Divider,
-  CircularProgress,
-  Alert,
   Button,
   ButtonGroup,
+  IconButton,
+  Avatar,
+  Chip,
+  CircularProgress,
   Skeleton,
-  useTheme
+  Stack,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Divider,
+  useTheme,
+  alpha,
+  styled
 } from '@mui/material';
-import {
-  People as PeopleIcon,
-  Receipt as ReceiptIcon,
-  AttachMoney as MoneyIcon,
-  ConfirmationNumber as TicketIcon,
-  Refresh as RefreshIcon,
-  MoreVert as MoreVertIcon,
-  Store as StoreIcon,
-  Inventory as InventoryIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  AccountBalance as AccountBalanceIcon,
-  Error as ErrorIcon,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-} from '@mui/icons-material';
+import { DatePicker } from 'antd';
+import dayjs, { Dayjs } from 'dayjs';
+import 'antd/dist/reset.css';
+
+// Icons
+import RefreshIcon from '@mui/icons-material/Refresh';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import WarningIcon from '@mui/icons-material/Warning';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import PeopleIcon from '@mui/icons-material/People';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import HomeIcon from '@mui/icons-material/Home';
+
+// Charts
 import {
   AreaChart,
   Area,
@@ -46,10 +48,11 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
 } from 'recharts';
-import { useDashboardOverview, useDashboardActivity, useDashboardRevenue } from '@/hooks';
-import { type DashboardFilters } from '@/types/dashboard';
+
+// Hooks and Utils
+import { useDashboardOverview, useDashboardRevenue, useDashboardActivity } from '@/hooks/useDashboard';
 import { 
   formatCurrency, 
   formatNumber, 
@@ -57,275 +60,294 @@ import {
   formatRelativeTime 
 } from '@/utils';
 
+// MUI Minimal Dashboard Styled Components
+const MinimalCard = styled(Card)(({ theme }) => ({
+  background: theme.palette.background.paper,
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: 8,
+  boxShadow: 'none',
+  transition: 'all 0.2s ease-in-out',
+  '&:hover': {
+    boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.1)}`,
+  },
+}));
+
+const StatsCard = styled(Box)(({ theme }) => ({
+  background: theme.palette.background.paper,
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: 8,
+  padding: 24,
+  position: 'relative',
+  transition: 'all 0.2s ease-in-out',
+  '&:hover': {
+    boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.08)}`,
+  },
+}));
+
 const DashboardOverview: React.FC = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const [filters, setFilters] = useState<DashboardFilters>({});
+  const now = new Date();
+
+  // State
   const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month' | 'year'>('today');
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs] | null>([
+    dayjs().subtract(1, 'day'),
+    dayjs()
+  ]);
   const [revenueType, setRevenueType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
-  
-  // Fetch dashboard data
+  const [isDatePickerChanging, setIsDatePickerChanging] = useState(false);
+
+  // Refs for debouncing
+  const debounceRef = useRef<number | null>(null);
+
+  // Format today's date for API
+  const today = now.toISOString().split('T')[0];
+
+  // Initialize filters with today's date
+  const [filters, setFilters] = useState({
+    startDate: today,
+    endDate: today
+  });
+
+  // API calls
   const { 
-    data: dashboardData, 
+    data: overviewData, 
     isLoading, 
-    error, 
     refetch 
   } = useDashboardOverview(filters);
 
-  // Fetch activity data
+  const { 
+    data: revenueData, 
+    isLoading: isRevenueLoading 
+  } = useDashboardRevenue(revenueType, filters);
+
   const { 
     data: activityData, 
     isLoading: isActivityLoading 
   } = useDashboardActivity();
 
-  // Fetch revenue data
-  const { 
-    data: revenueData, 
-    isLoading: isRevenueLoading 
-  } = useDashboardRevenue(revenueType);
-
-  // Handle time range change
-  const handleTimeRangeChange = (range: 'today' | 'week' | 'month' | 'year') => {
+  // Time range change handler
+  const handleTimeRangeChange = useCallback((range: 'today' | 'week' | 'month' | 'year') => {
     setTimeRange(range);
-    const now = new Date();
-    let startDate: string;
-    let newRevenueType: 'daily' | 'weekly' | 'monthly' | 'yearly';
+    const today = new Date();
+    let startDate: Date;
+    let endDate: Date = new Date(today);
     
     switch (range) {
       case 'today':
-        startDate = formatDate(now, 'API'); // Use API format (YYYY-MM-DD)
-        newRevenueType = 'daily';
+        startDate = new Date(today);
         break;
-      case 'week': {
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        startDate = formatDate(weekAgo, 'API');
-        newRevenueType = 'weekly';
+      case 'week':
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 7);
         break;
-      }
-      case 'month': {
-        const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        startDate = formatDate(monthAgo, 'API');
-        newRevenueType = 'monthly';
+      case 'month':
+        startDate = new Date(today);
+        startDate.setMonth(today.getMonth() - 1);
         break;
-      }
-      case 'year': {
-        const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        startDate = formatDate(yearAgo, 'API');
-        newRevenueType = 'yearly';
+      case 'year':
+        startDate = new Date(today);
+        startDate.setFullYear(today.getFullYear() - 1);
         break;
-      }
       default:
-        startDate = formatDate(now, 'API');
-        newRevenueType = 'daily';
+        startDate = new Date(today);
     }
     
-    setRevenueType(newRevenueType);
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
+
     setFilters({
-      ...filters,
-      startDate,
-      endDate: formatDate(now, 'API')
+      startDate: startDateStr,
+      endDate: endDateStr
     });
-  };
 
-  // Helper function to safely format growth percentage
-  const formatGrowth = (value: number | undefined | null): string => {
-    if (value == null || isNaN(value)) return '0.0';
-    return value.toFixed(1);
-  };
+    // Update date range picker
+    setDateRange([dayjs(startDateStr), dayjs(endDateStr)]);
+  }, []);
 
-  // Helper function to determine growth type
-  // const getGrowthType = (value: number | undefined | null): 'positive' | 'negative' | 'neutral' => {
-  //   if (value == null || isNaN(value) || value === 0) return 'neutral';
-  //   return value > 0 ? 'positive' : 'negative';
-  // };
+  // Date range change handler with debouncing
+  const handleDateRangeChange = useCallback((dates: [Dayjs, Dayjs] | null) => {
+    if (!dates) return;
 
-  // Helper function to safely format numbers
-  const safeFormatNumber = (value: number | undefined | null): string => {
-    if (value == null || isNaN(value)) return '0';
-    return formatNumber(value);
-  };
+    setDateRange(dates);
+    setIsDatePickerChanging(true);
 
-  // Helper function to safely format currency
-  const safeFormatCurrency = (value: number | undefined | null): string => {
-    if (value == null || isNaN(value)) return formatCurrency(0);
-    return formatCurrency(value);
-  };
+    // Clear existing timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
 
-  // Prepare stats data from API - Updated to match actual response
-  const statsData = dashboardData ? [
+    // Set new timeout
+    debounceRef.current = setTimeout(() => {
+      const startDate = dates[0].format('YYYY-MM-DD');
+      const endDate = dates[1].format('YYYY-MM-DD');
+
+      setFilters({
+        startDate,
+        endDate
+      });
+
+      setIsDatePickerChanging(false);
+    }, 500);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, []);
+
+  // Debug logging
+  console.log('Dashboard Data:', {
+    overviewData,
+    revenueData,
+    activityData,
+    filters,
+    isLoading,
+    isRevenueLoading,
+    isActivityLoading
+  });
+
+  // Process data
+  const statsData = overviewData ? [
     {
-      title: 'Tổng nợ',
-      value: safeFormatCurrency(parseFloat(dashboardData.debt.this || '0')),
-      unit: 'VNĐ',
-      change: dashboardData.debt.prev ? 
-        `${((parseFloat(dashboardData.debt.this || '0') - parseFloat(dashboardData.debt.prev)) / parseFloat(dashboardData.debt.prev) * 100).toFixed(1)}%` : '0%',
-      changeType: dashboardData.debt.prev ? 
-        (parseFloat(dashboardData.debt.this || '0') > parseFloat(dashboardData.debt.prev) ? 'positive' : 'negative') : 'neutral',
-      icon: <MoneyIcon />,
-      color: '#f44336',
-      bgColor: '#ffebee',
-    },
-    {
-      title: 'Vé nhập',
-      value: safeFormatNumber(parseInt(dashboardData.ticketImport.this || '0')),
-      unit: 'vé',
-      change: dashboardData.ticketImport.prev ? 
-        `${((parseInt(dashboardData.ticketImport.this || '0') - parseInt(dashboardData.ticketImport.prev)) / parseInt(dashboardData.ticketImport.prev) * 100).toFixed(1)}%` : '0%',
-      changeType: dashboardData.ticketImport.prev ? 
-        (parseInt(dashboardData.ticketImport.this || '0') > parseInt(dashboardData.ticketImport.prev) ? 'positive' : 'negative') : 'neutral',
-      icon: <TicketIcon />,
-      color: '#2196f3',
+      title: 'Total Debt',
+      value: formatCurrency(parseFloat(overviewData.debt?.this || '0')),
+      unit: 'VND',
+      change: '+0%',
+      changeType: 'neutral' as const,
+      icon: <AttachMoneyIcon />,
       bgColor: '#e3f2fd',
+      color: '#1976d2',
     },
     {
-      title: 'Vé xuất',
-      value: safeFormatNumber(parseInt(dashboardData.ticketExport.this || '0')),
-      unit: 'vé',
-      change: dashboardData.ticketExport.prev ? 
-        `${((parseInt(dashboardData.ticketExport.this || '0') - parseInt(dashboardData.ticketExport.prev)) / parseInt(dashboardData.ticketExport.prev) * 100).toFixed(1)}%` : '0%',
-      changeType: dashboardData.ticketExport.prev ? 
-        (parseInt(dashboardData.ticketExport.this || '0') > parseInt(dashboardData.ticketExport.prev) ? 'positive' : 'negative') : 'neutral',
-      icon: <ReceiptIcon />,
-      color: '#ff9800',
-      bgColor: '#fff3e0',
-    },
-    {
-      title: 'Giao dịch',
-      value: safeFormatNumber(parseInt(dashboardData.transaction.this || '0')),
-      unit: 'giao dịch',
-      change: dashboardData.transaction.prev ? 
-        `${((parseInt(dashboardData.transaction.this || '0') - parseInt(dashboardData.transaction.prev)) / parseInt(dashboardData.transaction.prev) * 100).toFixed(1)}%` : '0%',
-      changeType: dashboardData.transaction.prev ? 
-        (parseInt(dashboardData.transaction.this || '0') > parseInt(dashboardData.transaction.prev) ? 'positive' : 'negative') : 'neutral',
-      icon: <PeopleIcon />,
-      color: '#9c27b0',
+      title: 'Tickets In',
+      value: formatNumber(parseInt(overviewData.ticketImport?.this || '0')),
+      unit: 'tickets',
+      change: '+0%',
+      changeType: 'neutral' as const,
+      icon: <InventoryIcon />,
       bgColor: '#f3e5f5',
+      color: '#7b1fa2',
     },
     {
-      title: 'Tổng nợ (trước)',
-      value: safeFormatCurrency(parseFloat(dashboardData.debt.prev || '0')),
-      unit: 'VNĐ',
-      change: '0%',
+      title: 'Tickets Out',
+      value: formatNumber(parseInt(overviewData.ticketExport?.this || '0')),
+      unit: 'tickets',
+      change: '+0%',
+      changeType: 'neutral' as const,
+      icon: <ShoppingCartIcon />,
+      bgColor: '#fff3e0',
+      color: '#f57c00',
+    },
+    {
+      title: 'Transactions',
+      value: formatNumber(parseInt(overviewData.transaction?.this || '0')),
+      unit: 'transactions',
+      change: '+0%',
+      changeType: 'neutral' as const,
+      icon: <PeopleIcon />,
+      bgColor: '#e8f5e8',
+      color: '#388e3c',
+    },
+    {
+      title: 'Previous Total Debt',
+      value: formatCurrency(parseFloat(overviewData.debt?.prev || '0')),
+      unit: 'VND',
+      change: '+0%',
       changeType: 'neutral' as const,
       icon: <AccountBalanceIcon />,
-      color: '#607d8b',
-      bgColor: '#eceff1',
+      bgColor: '#fce4ec',
+      color: '#c2185b',
     },
     {
-      title: 'Vé nhập (trước)',
-      value: safeFormatNumber(parseInt(dashboardData.ticketImport.prev || '0')),
-      unit: 'vé',
-      change: '0%',
+      title: 'Previous Tickets In',
+      value: formatNumber(parseInt(overviewData.ticketImport?.prev || '0')),
+      unit: 'tickets',
+      change: '+0%',
       changeType: 'neutral' as const,
-      icon: <StoreIcon />,
-      color: '#795548',
-      bgColor: '#efebe9',
+      icon: <HomeIcon />,
+      bgColor: '#f1f8e9',
+      color: '#689f38',
     },
   ] : [];
 
-  // Chart colors
-  const chartColors = ['#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#607d8b', '#795548'];
-
-  // Prepare chart data from revenue API
-  const revenueChartData = revenueData?.map(item => ({
+  // Process revenue chart data
+  const revenueChartData = revenueData?.map((item: any) => ({
     label: item.label,
-    import: item.import,
-    export: item.export,
-    total: item.total,
-    revenue: item.total, // For backward compatibility with existing chart
+    import: item.import || 0,
+    export: item.export || 0,
+    total: item.total || 0,
   })) || [];
 
-  const topPartnersData = (dashboardData as any)?.topPartners?.slice(0, 5) || [];
-  const topStationsData = (dashboardData as any)?.topStations?.slice(0, 5) || [];
-
-  // System health data
-  const systemHealthData = (dashboardData as any)?.systemHealth;
-  const inventoryStatus = (dashboardData as any)?.inventoryStatus;
-
-  if (error) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          Có lỗi xảy ra khi tải dữ liệu dashboard. Vui lòng thử lại.
-        </Alert>
-        <Button variant="contained" onClick={() => refetch()}>
-          Thử lại
-        </Button>
-      </Box>
-    );
-  }
-
-  // Prepare recent activities from activity API or fallback to transactions
-  const recentActivities = activityData ? [{
-    id: activityData.activity.id,
-    title: `${activityData.activity.transaction.type === 'export' ? 'Xuất hàng' : 'Nhập hàng'} - ${activityData.activity.transaction.sub_type}`,
-    description: `${activityData.partner.name} - ${activityData.inventory.code}: ${safeFormatCurrency(parseFloat(activityData.activity.total))} (${activityData.activity.quantity} vé)`,
-    time: formatRelativeTime(new Date(activityData.activity.created_at)),
-    type: activityData.activity.transaction.type === 'export' ? 'warning' as const : 'success' as const,
+  // Process recent activities
+  const recentActivities = Array.isArray(activityData) ? activityData.map((item: any) => ({
+    id: item.activity?.id || item.id,
+    title: `${item.transaction?.type || 'Transaction'} - ${item.transaction?.sub_type || 'Activity'}`,
+    description: `${item.partner?.name || 'Unknown Partner'} - ${item.inventory?.code || 'N/A'}: ${formatCurrency(parseFloat(item.activity?.total || '0'))} (${item.activity?.quantity || 0} tickets)`,
+    time: formatRelativeTime(item.activity?.created_at || new Date().toISOString()),
+    type: item.transaction?.type === 'import' ? 'success' as const : 'warning' as const,
     avatar: undefined,
-    color: activityData.activity.transaction.type === 'export' ? '#ff9800' : '#4caf50',
-  }] : (dashboardData as any)?.recentTransactions?.slice(0, 5)?.map(transaction => ({
-    id: transaction.id,
-    title: `Giao dịch ${transaction.type || 'N/A'}`,
-    description: `${transaction.partnerName || 'N/A'} - ${transaction.stationName || 'N/A'}: ${safeFormatCurrency(transaction.amount)}`,
-    time: transaction.createdAt ? formatRelativeTime(new Date(transaction.createdAt)) : 'N/A',
-    type: transaction.status === 'completed' ? 'success' as const : 'warning' as const,
-    avatar: undefined,
-    color: transaction.status === 'completed' ? '#4caf50' : '#ff9800',
-  })) || [];
+    color: item.transaction?.type === 'import' ? '#4caf50' : '#ff9800',
+  })) : [];
 
   return (
     <Box sx={{ 
-      p: { xs: 1, sm: 2 },
-      background: isDark 
-        ? 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)'
-        : 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
+      p: { xs: 2, sm: 3, md: 4 },
+      background: isDark ? '#0a0a0a' : '#f8f9fa',
       minHeight: '100vh'
     }}>
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 2 }}>
+      {/* Professional Header */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
           <Box>
             <Typography 
-              variant="h4" 
+              variant="h3" 
               component="h1" 
               sx={{ 
                 fontWeight: 700, 
-                mb: 1, 
-                fontSize: { xs: '1.5rem', sm: '2rem' },
+                fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.75rem' },
                 color: isDark ? '#ffffff' : 'text.primary',
-                textShadow: isDark ? '0 2px 4px rgba(0, 0, 0, 0.3)' : 'none'
+                mb: 1
               }}
             >
-              Dashboard Tổng Quan
+              Dashboard
             </Typography>
             <Typography 
-              variant="body1" 
-              color="text.secondary" 
+              variant="h6" 
               sx={{ 
-                fontSize: { xs: '0.875rem', sm: '1rem' },
-                color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary'
+                color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
+                fontWeight: 400
               }}
             >
-              Thống kê và báo cáo tổng quan về hoạt động hệ thống
+              Welcome back! Here's what's happening with your business today.
             </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+            {/* Professional Time Range Buttons */}
             <ButtonGroup 
-              size="small" 
+              size="medium" 
               variant="outlined"
               sx={{
                 '& .MuiButton-root': {
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  px: 3,
+                  py: 1,
+                  fontSize: '0.875rem',
                   borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
                   color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'text.primary',
                   '&:hover': {
                     borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
                   },
                   '&.Mui-selected': {
-                    backgroundColor: isDark ? 'rgba(79, 172, 254, 0.2)' : 'primary.main',
-                    color: isDark ? '#ffffff' : 'white',
-                    borderColor: isDark ? 'rgba(79, 172, 254, 0.5)' : 'primary.main'
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
                   }
                 }
               }}
@@ -334,199 +356,209 @@ const DashboardOverview: React.FC = () => {
                 onClick={() => handleTimeRangeChange('today')}
                 variant={timeRange === 'today' ? 'contained' : 'outlined'}
               >
-                Hôm nay
+                Today
               </Button>
               <Button 
                 onClick={() => handleTimeRangeChange('week')}
                 variant={timeRange === 'week' ? 'contained' : 'outlined'}
               >
-                Tuần
+                Week
               </Button>
               <Button 
                 onClick={() => handleTimeRangeChange('month')}
                 variant={timeRange === 'month' ? 'contained' : 'outlined'}
               >
-                Tháng
+                Month
               </Button>
               <Button 
                 onClick={() => handleTimeRangeChange('year')}
                 variant={timeRange === 'year' ? 'contained' : 'outlined'}
               >
-                Năm
+                Year
               </Button>
             </ButtonGroup>
+            
+            {/* Professional Date Range Picker */}
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center',
+              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
+              borderRadius: 2,
+              p: 1,
+              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+            }}>
+              <DatePicker.RangePicker
+                value={dateRange}
+                onChange={handleDateRangeChange}
+                format="DD/MM/YYYY"
+                placeholder={['From', 'To']}
+                size="small"
+                style={{
+                  width: 240,
+                  height: 40,
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                }}
+                className="antd-date-range-picker"
+              />
+            </Box>
+            
+            {/* Professional Refresh Button */}
             <IconButton 
-              color="primary" 
               onClick={() => refetch()} 
               disabled={isLoading}
               sx={{
-                color: isDark ? 'rgba(79, 172, 254, 0.8)' : 'primary.main',
+                width: 40,
+                height: 40,
+                color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'text.primary',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
                 '&:hover': {
-                  backgroundColor: isDark ? 'rgba(79, 172, 254, 0.1)' : 'rgba(25, 118, 210, 0.1)'
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
                 }
               }}
             >
               {isLoading ? <CircularProgress size={20} /> : <RefreshIcon />}
             </IconButton>
-          </Box>
+          </Stack>
         </Box>
       </Box>
 
-      {/* Statistics Cards */}
+      {/* Professional Statistics Cards */}
       <Box sx={{ mb: 4 }}>
-        <Grid container spacing={2}>
-          {isLoading ? (
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
+          gap: 3 
+        }}>
+            {isLoading ? (
             Array.from({ length: 6 }).map((_, index) => (
-              <Grid item xs={12} sm={6} lg={4} key={index}>
-                <Card sx={{ p: 2 }}>
-                  <Skeleton variant="circular" width={48} height={48} sx={{ mb: 2 }} />
-                  <Skeleton variant="text" height={40} width="60%" />
-                  <Skeleton variant="text" height={20} width="40%" />
-                  <Skeleton variant="text" height={24} width="80%" />
-                </Card>
-              </Grid>
+              <MinimalCard key={index} sx={{ p: 3 }}>
+                <Skeleton variant="circular" width={56} height={56} sx={{ mb: 2 }} />
+                <Skeleton variant="text" height={40} width="60%" sx={{ mb: 1 }} />
+                <Skeleton variant="text" height={20} width="40%" sx={{ mb: 1 }} />
+                <Skeleton variant="text" height={24} width="80%" />
+              </MinimalCard>
             ))
           ) : (
             statsData.map((stat, index) => (
-              <Grid item xs={12} sm={6} lg={4} key={index}>
-            <Card
-              sx={{
-                height: '100%',
-                background: isDark 
-                  ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
-                  : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-                border: isDark 
-                  ? '1px solid rgba(255, 255, 255, 0.1)'
-                  : '1px solid #e0e0e0',
-                borderRadius: 2,
-                overflow: 'hidden',
-                transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
-                boxShadow: isDark 
-                  ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                  : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-                backdropFilter: 'blur(10px)',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: isDark 
-                    ? '0px 8px 25px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-                    : '0px 8px 25px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
-                },
-              }}
-            >
-                  <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                  <Avatar
-                    sx={{
-                      bgcolor: stat.bgColor,
-                      color: stat.color,
-                          width: { xs: 40, sm: 48 },
-                          height: { xs: 40, sm: 48 },
+              <MinimalCard key={index} sx={{ height: '100%' }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+                <Avatar
+                  sx={{
+                    bgcolor: stat.bgColor,
+                    color: stat.color,
+                    width: 56,
+                    height: 56,
+                  }}
+                >
+                  {stat.icon}
+                </Avatar>
+                    <Chip
+                      label={stat.change}
+                      size="small"
+                      color="default"
+                      sx={{ 
+                        fontWeight: 600,
+                        fontSize: '0.75rem',
+                        height: 28
+                      }}
+                    />
+              </Box>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      fontWeight: 700, 
+                      mb: 1, 
+                      color: isDark ? '#ffffff' : 'text.primary', 
+                      fontSize: '2rem'
                     }}
                   >
-                    {stat.icon}
-                  </Avatar>
-                  <Chip
-                    label={stat.change}
-                    size="small"
-                        color={stat.changeType === 'positive' ? 'success' : stat.changeType === 'negative' ? 'error' : 'default'}
-                    sx={{ fontWeight: 600 }}
-                        icon={stat.changeType === 'positive' ? <TrendingUpIcon /> : stat.changeType === 'negative' ? <TrendingDownIcon /> : undefined}
-                  />
-                </Box>
-                    <Typography 
-                      variant="h5" 
-                      sx={{ 
-                        fontWeight: 700, 
-                        mb: 0.5, 
-                        color: isDark ? '#ffffff' : 'text.primary', 
-                        fontSize: { xs: '1.25rem', sm: '1.5rem' },
-                        textShadow: isDark ? '0 1px 2px rgba(0, 0, 0, 0.3)' : 'none'
-                      }}
-                    >
-                      {stat.value}
-                    </Typography>
-                    <Typography 
-                      variant="body2" 
-                      color="text.secondary" 
-                      sx={{ 
-                        mb: 1, 
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
-                      }}
-                    >
-                      {stat.unit}
-                    </Typography>
-                    <Typography 
-                      variant="subtitle1" 
-                      sx={{ 
-                        fontWeight: 600, 
-                        color: isDark ? 'rgba(255, 255, 255, 0.9)' : 'text.primary', 
-                        fontSize: { xs: '0.875rem', sm: '1rem' }
-                      }}
-                    >
-                      {stat.title}
-                    </Typography>
-              </CardContent>
-            </Card>
-              </Grid>
+                    {stat.value}
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      mb: 2, 
+                      color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary',
+                      fontWeight: 500
+                    }}
+                  >
+                    {stat.unit}
+                  </Typography>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      color: isDark ? 'rgba(255, 255, 255, 0.9)' : 'text.primary'
+                    }}
+                  >
+                    {stat.title}
+                  </Typography>
+                </CardContent>
+              </MinimalCard>
             ))
           )}
-        </Grid>
+        </Box>
       </Box>
 
-      {/* Charts and Data */}
-      <Grid container spacing={3}>
+      {/* Professional Charts and Data */}
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
+        gap: 3,
+        mb: 3
+      }}>
         {/* Revenue Chart */}
-        <Grid item xs={12} lg={8}>
-          <Card
-            sx={{
-              background: isDark 
-                ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
-                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-              border: isDark 
-                ? '1px solid rgba(255, 255, 255, 0.1)'
-                : '1px solid #e0e0e0',
-              boxShadow: isDark 
-                ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography 
-                  variant="h6" 
-                  sx={{ 
-                    fontWeight: 600,
-                    color: isDark ? '#ffffff' : 'text.primary'
-                  }}
-                >
-                  Biểu đồ doanh thu ({revenueType === 'daily' ? 'Hàng ngày' : revenueType === 'weekly' ? 'Hàng tuần' : revenueType === 'monthly' ? 'Hàng tháng' : 'Hàng năm'})
-                </Typography>
-                <IconButton 
-                  size="small"
-                  sx={{
-                    color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
-                    '&:hover': {
-                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                    }
-                  }}
-                >
-                  <MoreVertIcon />
-                </IconButton>
+        <MinimalCard>
+          <CardContent sx={{ p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" sx={{ 
+                fontWeight: 600,
+                color: isDark ? '#ffffff' : 'text.primary',
+                fontSize: '1.25rem'
+              }}>
+                Revenue Chart
+              </Typography>
+              <ButtonGroup size="small" variant="outlined">
+                {['daily', 'weekly', 'monthly', 'yearly'].map((type) => (
+                  <Button 
+                    key={type}
+                    onClick={() => setRevenueType(type as any)}
+                    variant={revenueType === type ? 'contained' : 'outlined'}
+                    sx={{ 
+                      textTransform: 'capitalize',
+                      fontSize: '0.875rem',
+                      px: 2,
+                      py: 0.5
+                    }}
+                  >
+                    {type === 'daily' ? 'Day' : type === 'weekly' ? 'Week' : type === 'monthly' ? 'Month' : 'Year'}
+                  </Button>
+                ))}
+              </ButtonGroup>
+            </Box>
+            {(isLoading || isRevenueLoading) ? (
+              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <CircularProgress size={32} />
               </Box>
-              {(isLoading || isRevenueLoading) ? (
-                <Skeleton variant="rectangular" height={300} />
-              ) : revenueChartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+            ) : revenueChartData.length > 0 ? (
+              <Box sx={{ height: 300 }}>
+                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={revenueChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'} />
+                    <XAxis dataKey="label" stroke={isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'} />
+                    <YAxis stroke={isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'} />
                     <Tooltip 
+                      contentStyle={{
+                        backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+                        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+                        borderRadius: 8,
+                      }}
                       formatter={(value: number, name: string) => [
-                        safeFormatCurrency(value),
-                        name === 'import' ? 'Nhập hàng' : name === 'export' ? 'Xuất hàng' : 'Tổng doanh thu'
+                        formatCurrency(value),
+                        name === 'import' ? 'Import' : name === 'export' ? 'Export' : 'Total Revenue'
                       ]}
                     />
                     <Legend />
@@ -537,7 +569,7 @@ const DashboardOverview: React.FC = () => {
                       stroke="#2196f3" 
                       fill="#2196f3" 
                       fillOpacity={0.6}
-                      name="Nhập hàng"
+                      name="Import"
                     />
                     <Area 
                       type="monotone" 
@@ -546,7 +578,7 @@ const DashboardOverview: React.FC = () => {
                       stroke="#ff9800" 
                       fill="#ff9800" 
                       fillOpacity={0.6}
-                      name="Xuất hàng"
+                      name="Export"
                     />
                     <Area 
                       type="monotone" 
@@ -554,457 +586,172 @@ const DashboardOverview: React.FC = () => {
                       stroke="#4caf50" 
                       fill="#4caf50" 
                       fillOpacity={0.3}
-                      name="Tổng doanh thu"
+                      name="Total Revenue"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
-              ) : (
-              <Box 
-                sx={{ 
-                  height: 300, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  bgcolor: isDark ? 'rgba(255, 255, 255, 0.02)' : 'grey.50',
-                  borderRadius: 2,
-                  border: '2px dashed',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'grey.300'
-                }}
-              >
-                <Typography 
-                  variant="body1" 
-                  color="text.secondary"
-                  sx={{
-                    color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
-                  }}
-                >
-                    Chưa có dữ liệu biểu đồ
-                </Typography>
               </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+            ) : (
+              <Box sx={{ 
+                height: 300, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'text.secondary'
+              }}>
+                <Typography variant="body1">No data available</Typography>
+              </Box>
+            )}
+          </CardContent>
+        </MinimalCard>
 
-        {/* Recent Activities */}
-        <Grid item xs={12} lg={4}>
-          <Card 
-            sx={{ 
-              height: '100%',
-              background: isDark 
-                ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
-                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-              border: isDark 
-                ? '1px solid rgba(255, 255, 255, 0.1)'
-                : '1px solid #e0e0e0',
-              boxShadow: isDark 
-                ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <CardContent>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontWeight: 600, 
-                  mb: 3,
-                  color: isDark ? '#ffffff' : 'text.primary'
-                }}
-              >
-                Hoạt động gần đây
-              </Typography>
-              {(isLoading || isActivityLoading) ? (
+        {/* Professional Activity Feed */}
+        <MinimalCard sx={{ height: '100%' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontWeight: 600, 
+                mb: 3,
+                color: isDark ? '#ffffff' : 'text.primary',
+                fontSize: '1.25rem'
+              }}
+            >
+              Recent Activity
+            </Typography>
+            {(isLoading || isActivityLoading) ? (
               <Stack spacing={2}>
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Box key={index} sx={{ display: 'flex', gap: 2 }}>
-                      <Skeleton variant="circular" width={40} height={40} />
-                      <Box sx={{ flex: 1 }}>
-                        <Skeleton variant="text" height={20} width="80%" />
-                        <Skeleton variant="text" height={16} width="60%" />
-                        <Skeleton variant="text" height={14} width="40%" />
-                      </Box>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Box key={index} sx={{ display: 'flex', gap: 2 }}>
+                    <Skeleton variant="circular" width={40} height={40} />
+                    <Box sx={{ flex: 1 }}>
+                      <Skeleton variant="text" height={20} width="80%" />
+                      <Skeleton variant="text" height={16} width="60%" />
+                      <Skeleton variant="text" height={14} width="40%" />
                     </Box>
-                  ))}
-                </Stack>
-              ) : recentActivities.length > 0 ? (
-                <List sx={{ p: 0 }}>
-                {recentActivities.map((activity, index) => (
-                    <React.Fragment key={activity.id}>
-                      <ListItem sx={{ px: 0, py: 1 }}>
-                        <ListItemAvatar>
-                    <Avatar
-                      sx={{
-                              bgcolor: activity.color,
-                        width: 32,
-                        height: 32,
-                      }}
-                    >
-                            {activity.type === 'success' ? <CheckCircleIcon /> : <WarningIcon />}
-                    </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                        {activity.title}
-                      </Typography>
-                          }
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
-                        {activity.description}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {activity.time}
-                      </Typography>
-                    </Box>
-                          }
-                        />
-                      </ListItem>
-                      {index < recentActivities.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{
-                      color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
-                    }}
-                  >
-                    Chưa có hoạt động nào
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Top Partners */}
-        <Grid item xs={12} md={6}>
-          <Card
-            sx={{
-              background: isDark 
-                ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
-                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-              border: isDark 
-                ? '1px solid rgba(255, 255, 255, 0.1)'
-                : '1px solid #e0e0e0',
-              boxShadow: isDark 
-                ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <CardContent>
-              <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontWeight: 600, 
-                  mb: 3,
-                  color: isDark ? '#ffffff' : 'text.primary'
-                }}
-              >
-                Đối tác hàng đầu
-              </Typography>
-              {isLoading ? (
-                <Stack spacing={2}>
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', gap: 2, flex: 1 }}>
-                        <Skeleton variant="circular" width={40} height={40} />
-                        <Box sx={{ flex: 1 }}>
-                          <Skeleton variant="text" height={20} width="60%" />
-                          <Skeleton variant="text" height={16} width="40%" />
-                        </Box>
-                      </Box>
-                      <Skeleton variant="text" height={20} width="20%" />
                   </Box>
                 ))}
               </Stack>
-              ) : topPartnersData.length > 0 ? (
-                <List sx={{ p: 0 }}>
-                  {topPartnersData.map((partner, index) => (
-                    <React.Fragment key={partner.id}>
-                      <ListItem sx={{ px: 0, py: 1 }}>
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: chartColors[index % chartColors.length], width: 32, height: 32 }}>
-                            <PeopleIcon />
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                              {partner.name}
+            ) : recentActivities.length > 0 ? (
+              <List sx={{ p: 0 }}>
+                {recentActivities.map((activity, index) => (
+                  <React.Fragment key={activity.id}>
+                    <ListItem sx={{ px: 0, py: 1.5 }}>
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            bgcolor: activity.color,
+                            width: 40,
+                            height: 40,
+                          }}
+                        >
+                          {activity.type === 'success' ? <CheckCircleIcon sx={{ fontSize: 20 }} /> : <WarningIcon sx={{ fontSize: 20 }} />}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                            {activity.title}
+                          </Typography>
+                        }
+                        secondary={
+                          <Box>
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
+                              {activity.description}
                             </Typography>
-                          }
-                          secondary={
-                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                              {safeFormatNumber(partner.ticketsSold)} vé • {(partner.growth || 0) > 0 ? '+' : ''}{formatGrowth(partner.growth)}%
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+                              {activity.time}
                             </Typography>
-                          }
-                        />
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                          {safeFormatCurrency(partner.revenue)}
-                        </Typography>
-                      </ListItem>
-                      {index < topPartnersData.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{
-                      color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
-                    }}
-                  >
-                    Chưa có dữ liệu đối tác
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+                          </Box>
+                        }
+                      />
+                    </ListItem>
+                    {index < recentActivities.length - 1 && <Divider sx={{ my: 1 }} />}
+                  </React.Fragment>
+                ))}
+              </List>
+            ) : (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary"
+                  sx={{
+                    color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  No recent activity
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </MinimalCard>
+      </Box>
 
-        {/* Top Stations */}
-        <Grid item xs={12} md={6}>
-          <Card
-            sx={{
-              background: isDark 
-                ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
-                : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-              border: isDark 
-                ? '1px solid rgba(255, 255, 255, 0.1)'
-                : '1px solid #e0e0e0',
-              boxShadow: isDark 
-                ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(10px)'
-            }}
-          >
-            <CardContent>
+      {/* Bottom Section */}
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
+        gap: 3
+      }}>
+        {/* Top Partners */}
+        <MinimalCard sx={{ height: '100%' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontWeight: 600, 
+                mb: 3,
+                color: isDark ? '#ffffff' : 'text.primary',
+                fontSize: '1.25rem'
+              }}
+            >
+              Top Partners
+            </Typography>
+            <Box sx={{ textAlign: 'center', py: 4 }}>
               <Typography 
-                variant="h6" 
-                sx={{ 
-                  fontWeight: 600, 
-                  mb: 3,
-                  color: isDark ? '#ffffff' : 'text.primary'
+                variant="body2" 
+                color="text.secondary"
+                sx={{
+                  color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary',
+                  fontSize: '0.875rem'
                 }}
               >
-                Trạm hàng đầu
+                No partner data yet
               </Typography>
-              {isLoading ? (
-                <Stack spacing={2}>
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Box sx={{ display: 'flex', gap: 2, flex: 1 }}>
-                        <Skeleton variant="circular" width={40} height={40} />
-                        <Box sx={{ flex: 1 }}>
-                          <Skeleton variant="text" height={20} width="60%" />
-                          <Skeleton variant="text" height={16} width="40%" />
-        </Box>
-      </Box>
-                      <Skeleton variant="text" height={20} width="20%" />
-                    </Box>
-                  ))}
-                </Stack>
-              ) : topStationsData.length > 0 ? (
-                <List sx={{ p: 0 }}>
-                  {topStationsData.map((station, index) => (
-                    <React.Fragment key={station.id}>
-                      <ListItem sx={{ px: 0, py: 1 }}>
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: chartColors[index % chartColors.length], width: 32, height: 32 }}>
-                            <StoreIcon />
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                              {station.name}
-                            </Typography>
-                          }
-                          secondary={
-                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                              {safeFormatNumber(station.ticketsSold)} vé • {(station.growth || 0) > 0 ? '+' : ''}{formatGrowth(station.growth)}%
-                            </Typography>
-                          }
-                        />
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                          {safeFormatCurrency(station.revenue)}
-                        </Typography>
-                      </ListItem>
-                      {index < topStationsData.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{
-                      color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary'
-                    }}
-                  >
-                    Chưa có dữ liệu trạm
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* System Health */}
-        {systemHealthData && (
-          <Grid item xs={12} md={6}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                  Tình trạng hệ thống
-            </Typography>
-                <Stack spacing={2}>
-              <Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                        Uptime
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {formatGrowth(systemHealthData.uptime)}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                      value={systemHealthData.uptime}
-                  sx={{
-                        height: 6,
-                        borderRadius: 3,
-                    bgcolor: 'grey.200',
-                    '& .MuiLinearProgress-bar': {
-                          borderRadius: 3,
-                          bgcolor: systemHealthData.uptime > 95 ? 'success.main' : 'warning.main',
-                    },
-                  }}
-                />
-              </Box>
-              <Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                        Người dùng hoạt động
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {safeFormatNumber(systemHealthData.activeUsers)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        Tải hệ thống
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {formatGrowth(systemHealthData.systemLoad)}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                      value={systemHealthData.systemLoad}
-                  sx={{
-                        height: 6,
-                        borderRadius: 3,
-                    bgcolor: 'grey.200',
-                    '& .MuiLinearProgress-bar': {
-                          borderRadius: 3,
-                          bgcolor: systemHealthData.systemLoad < 70 ? 'success.main' : systemHealthData.systemLoad < 85 ? 'warning.main' : 'error.main',
-                    },
-                  }}
-                />
-              </Box>
-              <Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                        Tỷ lệ lỗi
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {(systemHealthData.errorRate || 0).toFixed(2)}%
-                  </Typography>
-                </Box>
-                <LinearProgress
-                  variant="determinate"
-                      value={systemHealthData.errorRate}
-                  sx={{
-                        height: 6,
-                        borderRadius: 3,
-                    bgcolor: 'grey.200',
-                    '& .MuiLinearProgress-bar': {
-                          borderRadius: 3,
-                          bgcolor: systemHealthData.errorRate < 1 ? 'success.main' : systemHealthData.errorRate < 5 ? 'warning.main' : 'error.main',
-                    },
-                  }}
-                />
-              </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-
-        {/* Inventory Status */}
-        {inventoryStatus && (
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
-                  Tình trạng kho
-                </Typography>
-                <Stack spacing={2}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <InventoryIcon color="primary" />
-                      <Typography variant="body2">Tổng sản phẩm</Typography>
-                    </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {safeFormatNumber(inventoryStatus.totalItems)}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <WarningIcon color="warning" />
-                      <Typography variant="body2">Sắp hết hàng</Typography>
-                    </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'warning.main' }}>
-                      {safeFormatNumber(inventoryStatus.lowStockItems)}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <ErrorIcon color="error" />
-                      <Typography variant="body2">Hết hàng</Typography>
-                    </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'error.main' }}>
-                      {safeFormatNumber(inventoryStatus.outOfStockItems)}
-                    </Typography>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      Tổng giá trị kho
-                    </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                      {safeFormatCurrency(inventoryStatus.totalValue)}
-                    </Typography>
             </Box>
-                </Stack>
           </CardContent>
-        </Card>
-          </Grid>
-        )}
-      </Grid>
+        </MinimalCard>
+
+        {/* Top Stations */}
+        <MinimalCard sx={{ height: '100%' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                fontWeight: 600, 
+                mb: 3,
+                color: isDark ? '#ffffff' : 'text.primary',
+                fontSize: '1.25rem'
+              }}
+            >
+              Top Stations
+            </Typography>
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{
+                  color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary',
+                  fontSize: '0.875rem'
+                }}
+              >
+                No station data yet
+              </Typography>
+            </Box>
+          </CardContent>
+        </MinimalCard>
+      </Box>
     </Box>
   );
 };

@@ -25,11 +25,6 @@ export const stationTableConfig = {
       minWidth: 130,
     },
     {
-      key: 'email',
-      label: 'Email',
-      minWidth: 180,
-    },
-    {
       key: 'is_active',
       label: 'Trạng thái',
       minWidth: 100,

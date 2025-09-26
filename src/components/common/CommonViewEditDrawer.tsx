@@ -46,7 +46,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
 
   useEffect(() => {
     if (open) {
-      setFormData(data);
+      setFormData(data || {});
       setFormErrors({});
       setIsEditing(mode === 'edit');
     }
@@ -56,7 +56,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
     setIsEditing(true);
     // Only keep fields that exist in editFields for form data
     const formFields = editFields.reduce((acc, field) => {
-      acc[field.key] = data[field.key];
+      acc[field.key] = data?.[field.key] ?? null;
       return acc;
     }, {} as Record<string, unknown>);
     setFormData(formFields);
@@ -65,7 +65,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
 
   const handleCancel = () => {
     setIsEditing(false);
-    setFormData(data);
+    setFormData(data || {});
     setFormErrors({});
   };
 
@@ -119,14 +119,14 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       case 'tel':
         return (
           <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-            {String(value)}
+            {String(value || '')}
           </Typography>
         );
 
       case 'number':
         return (
           <Typography variant="body2">
-            {typeof value === 'number' ? value.toLocaleString() : String(value)}
+            {typeof value === 'number' ? value.toLocaleString() : String(value || '')}
           </Typography>
         );
 
@@ -136,7 +136,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
             {typeof value === 'number' ? value.toLocaleString('vi-VN', {
               style: 'currency',
               currency: 'VND',
-            }) : String(value)}
+            }) : String(value || '')}
           </Typography>
         );
 
@@ -166,7 +166,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
 
       case 'status': {
         const statusConfig = field.statusConfig?.[value as string] || {
-          label: String(value),
+          label: String(value || ''),
           color: 'default' as const,
           variant: 'filled' as const,
         };
@@ -185,11 +185,11 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
           return (
             <Box>
               {value.map((item, index) => {
-                if (!item) return null;
+                if (!item || item === null || item === undefined) return null;
                 return (
                   <Chip
                     key={index}
-                    label={typeof item === 'object' ? item?.name || item?.label || JSON.stringify(item) : String(item)}
+                    label={typeof item === 'object' && item !== null ? item?.name || item?.label || JSON.stringify(item) : String(item || '')}
                     size="small"
                     variant="outlined"
                     sx={{ mr: 0.5, mb: 0.5 }}
@@ -201,7 +201,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         }
         return (
           <Typography variant="body2" color="text.secondary">
-            {String(value)}
+            {String(value || '')}
           </Typography>
         );
 
@@ -215,7 +215,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
                     {key}:
                   </Typography>
                   <Typography variant="body2" sx={{ ml: 1 }}>
-                    {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                    {typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val || '')}
                   </Typography>
                 </Box>
               ))}
@@ -224,24 +224,24 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         }
         return (
           <Typography variant="body2">
-            {String(value)}
+            {String(value || '')}
           </Typography>
         );
 
       case 'custom':
         if (field.render) {
-          return field.render(value, data);
+          return field.render(value, data || {});
         }
         return (
           <Typography variant="body2">
-            {String(value)}
+            {String(value || '')}
           </Typography>
         );
 
       default:
         // Check if field has custom render function
         if (field.render) {
-          const renderedValue = field.render(value, data);
+          const renderedValue = field.render(value, data || {});
           
           // If field has chip config, wrap in Chip component
           if (field.chip) {
@@ -264,7 +264,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         
         return (
           <Typography variant="body2">
-            {String(value)}
+            {String(value || '')}
           </Typography>
         );
     }
@@ -281,7 +281,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         return (
           <input
             type={field.type}
-            value={String(value)}
+            value={String(value || '')}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             disabled={field.disabled}
@@ -300,7 +300,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         return (
           <input
             type="number"
-            value={String(value)}
+            value={String(value || '')}
             onChange={(e) => handleFieldChange(field.key, parseFloat(e.target.value) || 0)}
             placeholder={field.placeholder}
             disabled={field.disabled}
@@ -321,7 +321,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       case 'select':
         return (
           <select
-            value={String(value)}
+            value={String(value || '')}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
             disabled={field.disabled}
             style={{
@@ -348,7 +348,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
       case 'textarea':
         return (
           <textarea
-            value={String(value)}
+            value={String(value || '')}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             disabled={field.disabled}
@@ -398,12 +398,12 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
 
       case 'custom':
         if (field.render) {
-          return field.render(value, formData, handleFieldChange);
+          return field.render(value, formData || {}, handleFieldChange);
         }
         return (
           <input
             type="text"
-            value={String(value)}
+            value={String(value || '')}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             disabled={field.disabled}
@@ -422,7 +422,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
         return (
           <input
             type="text"
-            value={String(value)}
+            value={String(value || '')}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
             placeholder={field.placeholder}
             disabled={field.disabled}
@@ -479,7 +479,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
   const fieldsToUse = isEditing ? (editFields || []) : (viewFields || []);
   
   // Fallback: if no fields provided, create basic fields from data
-  const fallbackFields = fieldsToUse.length === 0 && Object.keys(data).length > 0 ? 
+  const fallbackFields = fieldsToUse.length === 0 && data && Object.keys(data).length > 0 ? 
     Object.keys(data)
       .filter(key => {
         const value = data[key];
@@ -522,7 +522,7 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
             {finalFields.map((field) => {
               if (!field) return null;
-              const value = isEditing ? formData[field.key] : data[field.key];
+              const value = isEditing ? formData[field.key] : (data?.[field.key] ?? null);
               const error = isEditing ? formErrors[field.key] : null;
 
               return (

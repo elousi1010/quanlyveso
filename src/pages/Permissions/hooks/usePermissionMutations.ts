@@ -1,6 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { permissionApi } from '../api';
-import type { CreatePermissionDto, UpdatePermissionDto, SetPermissionsForUserDto } from '../types';
+import type { 
+  CreatePermissionDto, 
+  UpdatePermissionDto, 
+  SetPermissionsForUserDto,
+  BulkPermissionAssignment,
+  CreatePermissionTemplateDto,
+  UpdatePermissionTemplateDto
+} from '../types';
 
 export const usePermissionMutations = () => {
   const queryClient = useQueryClient();
@@ -28,8 +35,47 @@ export const usePermissionMutations = () => {
   });
 
   const setForUserMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: SetPermissionsForUserDto }) =>
-      permissionApi.setForUser(id, data),
+    mutationFn: ({ permissionId, data }: { permissionId: string; data: SetPermissionsForUserDto }) =>
+      permissionApi.setForUser(permissionId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['permissions'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+
+  const bulkAssignMutation = useMutation({
+    mutationFn: (data: BulkPermissionAssignment) => permissionApi.bulkAssignPermissions(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['permissions'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
+
+  const createTemplateMutation = useMutation({
+    mutationFn: (data: CreatePermissionTemplateDto) => permissionApi.createTemplate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['permission-templates'] });
+    },
+  });
+
+  const updateTemplateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdatePermissionTemplateDto }) =>
+      permissionApi.updateTemplate(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['permission-templates'] });
+    },
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (id: string) => permissionApi.deleteTemplate(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['permission-templates'] });
+    },
+  });
+
+  const applyTemplateMutation = useMutation({
+    mutationFn: ({ userId, templateId }: { userId: string; templateId: string }) =>
+      permissionApi.applyTemplateToUser(userId, templateId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['permissions'] });
       queryClient.invalidateQueries({ queryKey: ['users'] });
@@ -41,5 +87,10 @@ export const usePermissionMutations = () => {
     updateMutation,
     deleteMutation,
     setForUserMutation,
+    bulkAssignMutation,
+    createTemplateMutation,
+    updateTemplateMutation,
+    deleteTemplateMutation,
+    applyTemplateMutation,
   };
 };

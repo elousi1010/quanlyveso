@@ -17,7 +17,7 @@ export const stationFormFields: FormField[] = [
     rows: 3,
   },
   {
-    key: 'phone',
+    key: 'phone_number',
     label: 'Số Điện Thoại',
     type: 'tel',
     required: false,
@@ -42,7 +42,7 @@ export const stationDetailFields: DetailField[] = [
     type: 'text',
   },
   {
-    key: 'phone',
+    key: 'phone_number',
     label: 'Số Điện Thoại',
     type: 'tel',
   },

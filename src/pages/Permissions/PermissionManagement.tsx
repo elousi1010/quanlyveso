@@ -10,6 +10,8 @@ import {
   PermissionFormDrawer,
   PermissionDetailView,
 } from './components';
+import UserPermissionAssignment from './components/UserPermissionAssignment';
+import BulkPermissionAssignmentWrapper from './components/BulkPermissionAssignmentWrapper';
 import PermissionFormDrawerSimple from './components/PermissionFormDrawerSimple';
 import { usePermissions, usePermissionMutations } from './hooks';
 import type { 
@@ -33,8 +35,13 @@ export const PermissionManagement: React.FC = () => {
     edit: false,
     view: false,
     delete: false,
+    userAssignment: false,
+    bulkAssignment: false,
+    matrix: false,
+    templates: false,
   });
   const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -92,6 +99,16 @@ export const PermissionManagement: React.FC = () => {
     setViewMode('list');
     // Keep selectedPermission for edit
   }, []);
+
+  const handleAssignToUser = useCallback((user: any) => {
+    setSelectedUser(user);
+    setDialogState(prev => ({ ...prev, userAssignment: true }));
+  }, []);
+
+  const handleBulkAssign = useCallback(() => {
+    setDialogState(prev => ({ ...prev, bulkAssignment: true }));
+  }, []);
+
 
   const handleDeleteSelected = useCallback(() => {
     if (selectedRows.length > 0) {
@@ -221,6 +238,7 @@ export const PermissionManagement: React.FC = () => {
         selectedCount={selectedRows.length}
         onDeleteSelected={handleDeleteSelected}
         onCreateSpecific={handleCreateSpecificPermission}
+        onBulkAssign={handleBulkAssign}
       />
 
       {viewMode === 'list' ? (
@@ -301,6 +319,34 @@ export const PermissionManagement: React.FC = () => {
         onConfirm={handleDeleteConfirm}
         permission={selectedPermission}
         loading={deleteMutation.isPending}
+      />
+
+      {/* User Permission Assignment */}
+      <UserPermissionAssignment
+        open={dialogState.userAssignment}
+        onClose={() => handleCloseDialog('userAssignment')}
+        user={selectedUser}
+        onSuccess={() => {
+          setSnackbar({
+            open: true,
+            message: 'Gán quyền cho user thành công',
+            severity: 'success',
+          });
+        }}
+      />
+
+      {/* Bulk Permission Assignment */}
+      <BulkPermissionAssignmentWrapper
+        open={dialogState.bulkAssignment}
+        onClose={() => handleCloseDialog('bulkAssignment')}
+        selectedUsers={selectedRows.map(p => ({ id: p.id, name: p.name, phone_number: '', role: '', is_active: true, created_at: '', updated_at: '' }))}
+        onSuccess={() => {
+          setSnackbar({
+            open: true,
+            message: 'Gán quyền hàng loạt thành công',
+            severity: 'success',
+          });
+        }}
       />
 
       {/* Snackbar */}

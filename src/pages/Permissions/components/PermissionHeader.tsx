@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@mui/material';
 import { CommonHeader } from '@/components/common';
 import { PERMISSION_CONSTANTS } from '../constants';
 
@@ -8,6 +9,7 @@ interface PermissionHeaderProps {
   selectedCount: number;
   onDeleteSelected: () => void;
   onCreateSpecific?: () => void;
+  onBulkAssign?: () => void;
   loading?: boolean;
 }
 
@@ -17,6 +19,7 @@ export const PermissionHeader: React.FC<PermissionHeaderProps> = ({
   selectedCount,
   onDeleteSelected,
   onCreateSpecific,
+  onBulkAssign,
   loading = false,
 }) => {
   return (
@@ -29,6 +32,16 @@ export const PermissionHeader: React.FC<PermissionHeaderProps> = ({
       selectedCount={selectedCount}
       onDeleteSelected={onDeleteSelected}
       showDeleteSelected={selectedCount > 0}
+      customActions={onBulkAssign ? (
+        <Button
+          variant="outlined"
+          onClick={onBulkAssign}
+          disabled={selectedCount === 0}
+          sx={{ ml: 1 }}
+        >
+          Gán quyền hàng loạt
+        </Button>
+      ) : undefined}
     />
   );
 };

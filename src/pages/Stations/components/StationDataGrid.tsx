@@ -45,13 +45,6 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
       onClick: (station: unknown) => onView(station as Station),
     },
     {
-      key: 'edit',
-      label: 'Sửa',
-      icon: <EditIcon />,
-      color: 'primary' as const,
-      onClick: (station: unknown) => onEdit(station as Station),
-    },
-    {
       key: 'delete',
       label: 'Xóa',
       icon: <DeleteIcon />,

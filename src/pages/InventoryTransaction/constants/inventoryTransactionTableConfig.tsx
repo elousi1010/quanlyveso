@@ -15,9 +15,6 @@ export const inventoryTransactionTableConfig = {
           <Typography variant="body2" fontWeight="medium">
             {row.inventory.code}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {row.inventory.ticket_id}
-          </Typography>
         </Box>
       ),
     },

@@ -328,7 +328,7 @@ const PermissionFormDrawerSimple: React.FC<PermissionFormDrawerSimpleProps> = ({
                                     fontWeight: 600
                                   }}
                                 >
-                                  {value}
+                                  {value as string}
                                 </Typography>
                               </Box>
                               

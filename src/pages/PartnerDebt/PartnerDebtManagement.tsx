@@ -205,8 +205,6 @@ const PartnerDebtManagement: React.FC = () => {
           loading={isLoading}
           error={null}
           onView={(item) => handleView(item.id)}
-          onEdit={(item) => handleEdit(item.id)}
-          onDelete={(item) => handleDelete(item.id)}
         />
       </Paper>
 
@@ -331,7 +329,7 @@ const PartnerDebtManagement: React.FC = () => {
       <CommonViewEditDrawer
         open={viewDrawerOpen}
         onClose={() => setViewDrawerOpen(false)}
-        onSave={handleEditSubmit}
+        // onSave={handleEditSubmit}
         viewFields={partnerDebtViewEditConfig.fields as DetailField[]}
         editFields={partnerDebtViewEditConfig.fields as FormField[]}
         data={selectedDetailData || {}}

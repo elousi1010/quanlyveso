@@ -21,6 +21,297 @@ code {
   background-color: transparent !important;
 }
 
+/* Ant Design DatePicker Custom Styles */
+.antd-date-range-picker {
+  font-family: inherit !important;
+}
+
+/* Light theme styles */
+.antd-date-range-picker .ant-picker-input > input {
+  color: rgba(0, 0, 0, 0.87) !important;
+  font-size: 14px !important;
+  background-color: transparent !important;
+}
+
+.antd-date-range-picker .ant-picker-input > input::placeholder {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.antd-date-range-picker .ant-picker-suffix {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.antd-date-range-picker .ant-picker-separator {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Dark theme support */
+[data-theme="dark"] .antd-date-range-picker .ant-picker-input > input {
+  color: rgba(255, 255, 255, 0.87) !important;
+  background-color: transparent !important;
+}
+
+[data-theme="dark"] .antd-date-range-picker .ant-picker-input > input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="dark"] .antd-date-range-picker .ant-picker-suffix {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="dark"] .antd-date-range-picker .ant-picker-separator {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* DatePicker popup styles */
+.ant-picker-dropdown {
+  z-index: 9999 !important;
+}
+
+.ant-picker-panel {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  background-color: #ffffff !important;
+  border: 1px solid #d9d9d9 !important;
+}
+
+.ant-picker-panel .ant-picker-cell {
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.ant-picker-panel .ant-picker-cell:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.ant-picker-panel .ant-picker-cell-selected {
+  background-color: #1890ff !important;
+  color: #ffffff !important;
+}
+
+.ant-picker-panel .ant-picker-header {
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+.ant-picker-panel .ant-picker-header button {
+  color: rgba(0, 0, 0, 0.87) !important;
+}
+
+/* Dark theme popup styles */
+[data-theme="dark"] .ant-picker-panel {
+  background-color: #2d2d2d !important;
+  border-color: #555 !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .ant-picker-panel .ant-picker-cell {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+[data-theme="dark"] .ant-picker-panel .ant-picker-cell:hover {
+  background-color: #404040 !important;
+}
+
+[data-theme="dark"] .ant-picker-panel .ant-picker-cell-selected {
+  background-color: #1890ff !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .ant-picker-panel .ant-picker-header {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+[data-theme="dark"] .ant-picker-panel .ant-picker-header button {
+  color: rgba(255, 255, 255, 0.87) !important;
+}
+
+[data-theme="dark"] .ant-picker-header {
+  background-color: #3d3d3d !important;
+  border-bottom-color: #555 !important;
+  color: #fff !important;
+}
+
+[data-theme="dark"] .ant-picker-cell {
+  color: #fff !important;
+}
+
+[data-theme="dark"] .ant-picker-cell:hover .ant-picker-cell-inner {
+  background-color: #4a4a4a !important;
+}
+
+[data-theme="dark"] .ant-picker-cell-selected .ant-picker-cell-inner {
+  background-color: #1976d2 !important;
+}
+
+[data-theme="dark"] .ant-picker-cell-in-range .ant-picker-cell-inner {
+  background-color: rgba(25, 118, 210, 0.3) !important;
+}
+
+[data-theme="dark"] .ant-picker-cell-range-start .ant-picker-cell-inner,
+[data-theme="dark"] .ant-picker-cell-range-end .ant-picker-cell-inner {
+  background-color: #1976d2 !important;
+}
+
+/* Modern Dashboard Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Glass morphism effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+/* Gradient text animation */
+.gradient-text {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading skeleton animation */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+[data-theme="dark"] .skeleton-shimmer {
+  background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+  background-size: 200px 100%;
+}
+
+/* Smooth transitions */
+.smooth-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 .submenu-item.Mui-selected {
   background-color: transparent !important;
 }

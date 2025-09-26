@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { 
-  CommonFormDrawer
+  CommonFormDrawer,
+  CommonViewEditDrawer
 } from '@/components/common';
 import {
   StationHeader,
@@ -12,7 +13,9 @@ import {
 } from './components';
 import { useStations, useStationMutations } from './hooks';
 import { 
-  stationCreateFields
+  stationCreateFields,
+  stationFormFields,
+  stationDetailFields
 } from './constants';
 import type { 
   Station, 
@@ -188,6 +191,22 @@ export const StationManagement: React.FC = () => {
         loading={createMutation.isPending}
         width={500}
       />
+
+      {/* View/Edit Drawer */}
+      {selectedStation && (
+        <CommonViewEditDrawer
+          open={dialogState.view || dialogState.edit}
+          onClose={() => handleCloseDialog(dialogState.view ? 'view' : 'edit')}
+          onSave={handleUpdateSubmit}
+          title={dialogState.view ? 'Chi Tiết Trạm' : 'Chỉnh Sửa Trạm'}
+          viewFields={stationDetailFields}
+          editFields={stationFormFields}
+          data={selectedStation as unknown as Record<string, unknown>}
+          mode={dialogState.view ? 'view' : 'edit'}
+          loading={updateMutation.isPending}
+          width={500}
+        />
+      )}
 
       {/* Delete Dialog */}
       <StationDeleteDialog

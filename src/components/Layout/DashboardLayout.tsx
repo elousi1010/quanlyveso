@@ -227,6 +227,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           icon: <PermissionIcon />,
           path: '/permissions',
           permission: PERMISSIONS.MANAGE_EMPLOYEES,
+          subItems: [
+            {
+              text: 'Danh sách quyền hạn',
+              path: '/permissions',
+              permission: PERMISSIONS.MANAGE_EMPLOYEES,
+            },
+            {
+              text: 'Ma trận quyền hạn',
+              path: '/permissions/matrix',
+              permission: PERMISSIONS.MANAGE_EMPLOYEES,
+            },
+            {
+              text: 'Template quyền hạn',
+              path: '/permissions/templates',
+              permission: PERMISSIONS.MANAGE_EMPLOYEES,
+            },
+          ],
         },
         {
           text: 'Station',
@@ -600,7 +617,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                         <Box
                           sx={{
                             position: 'absolute',
-                            left: 12,
+                            left: 20,
                             top: 0,
                             bottom: 0,
                             width: '1px',
@@ -712,15 +729,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                                       }}
                                       sx={{
                                         minHeight: 36,
-                                        pl: 6,
+                                        pl: 12,
                                         px: 3,
                                         py: 1,
                                         borderRadius: 2,
                                         mb: 0.5,
+                                        mt: 0.5,
                                         backgroundColor: 'transparent',
                                         color: isSubActive 
                                           ? (mode === 'light' ? '#7c3aed' : '#a855f7')
                                           : (mode === 'light' ? '#6b7280' : '#9ca3af'),
+                                        fontSize: '0.875rem',
+                                        fontWeight: isSubActive ? 500 : 400,
                                         '&:hover': {
                                           backgroundColor: mode === 'light' ? '#f9fafb' : '#374151',
                                           color: mode === 'light' ? '#7c3aed' : '#a855f7',

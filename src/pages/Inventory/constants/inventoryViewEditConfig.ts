@@ -1,4 +1,6 @@
 import type { FormField, DetailField } from '@/components/common/types';
+import React from 'react';
+import { StationSelector, PartnerSelector } from '@/components/common';
 
 export const inventoryFormFields: FormField[] = [
   {
@@ -50,6 +52,32 @@ export const inventoryFormFields: FormField[] = [
     ],
   },
   {
+    key: 'partner_id',
+    label: 'Đối Tác',
+    type: 'custom',
+    required: true,
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(PartnerSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('partner_id', id),
+        placeholder: 'Chọn đối tác...',
+      });
+    },
+  },
+  {
+    key: 'organization_id',
+    label: 'Tổ Chức',
+    type: 'custom',
+    required: true,
+    render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
+      return React.createElement(StationSelector, {
+        value: value as string | null,
+        onChange: (id: string | null) => handleFieldChange('organization_id', id),
+        placeholder: 'Chọn tổ chức/trạm...',
+      });
+    },
+  },
+  {
     key: 'is_active',
     label: 'Trạng Thái',
     type: 'boolean',
@@ -99,6 +127,16 @@ export const inventoryDetailFields: DetailField[] = [
       color: 'primary',
       variant: 'outlined',
     },
+  },
+  {
+    key: 'partner_id',
+    label: 'Đối Tác',
+    type: 'text',
+  },
+  {
+    key: 'organization_id',
+    label: 'Tổ Chức',
+    type: 'text',
   },
   {
     key: 'is_active',

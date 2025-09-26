@@ -7,3 +7,7 @@ export * from './PermissionHeader';
 export * from './PermissionSearchAndFilter';
 export * from './PermissionSnackbar';
 export * from './PermissionDetailView';
+export { default as UserPermissionAssignment } from './UserPermissionAssignment';
+export { default as BulkPermissionAssignment } from './BulkPermissionAssignment';
+export { default as PermissionMatrix } from './PermissionMatrix';
+export { default as PermissionTemplates } from './PermissionTemplates';

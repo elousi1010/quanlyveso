@@ -29,6 +29,51 @@ export interface SetPermissionsForUserDto {
   user_id: string;
 }
 
+export interface UserPermissionAssignment {
+  user_id: string;
+  user_name: string;
+  current_permissions: Permission[];
+  available_permissions: Permission[];
+}
+
+export interface BulkPermissionAssignment {
+  user_ids: string[];
+  permission_ids: string[];
+  operation: 'assign' | 'remove' | 'replace';
+}
+
+export interface PermissionMatrixData {
+  users: User[];
+  permissions: Permission[];
+  user_permissions: Record<string, string[]>; // user_id -> permission_ids
+}
+
+export interface PermissionTemplate {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  permission_ids: string[];
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePermissionTemplateDto {
+  name: string;
+  role: string;
+  description: string;
+  permission_ids: string[];
+}
+
+export interface UpdatePermissionTemplateDto {
+  name?: string;
+  role?: string;
+  description?: string;
+  permission_ids?: string[];
+  is_active?: boolean;
+}
+
 export interface ApiResponse<T> {
   message: string;
   error: string;

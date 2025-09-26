@@ -4,12 +4,14 @@ import {
   InventoryTransactionHeader,
   InventoryTransactionDataGrid,
   InventoryTransactionSearchAndFilter,
+  InventoryTransactionSnackbar,
 } from './components';
-import { useInventoryTransactions } from './hooks';
+import { useInventoryTransactions, useInventoryTransactionMutations } from './hooks';
 import type { 
   InventoryTransactionItem, 
   InventoryTransactionSearchParams,
-  InventoryTransactionType
+  InventoryTransactionType,
+  UpdateInventoryTransactionItemDto
 } from './types';
 
 interface InventoryTransactionManagementProps {
@@ -20,9 +22,20 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
   // State management
   const [searchParams, setSearchParams] = useState({});
   const [filters, setFilters] = useState<Record<string, unknown>>({});
+  const [dialogState, setDialogState] = useState({
+    edit: false,
+    view: false,
+    delete: false,
+  });
+  const [selectedItem, setSelectedItem] = useState<InventoryTransactionItem | null>(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error' | 'warning' | 'info',
+  });
+  
   // Update searchParams when type prop changes
   useEffect(() => {
-
     setSearchParams(prev => ({
       ...prev,
       type,
@@ -32,6 +45,7 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
 
   // Hooks
   const { data: response, isLoading, refetch } = useInventoryTransactions(searchParams);
+  const { updateMutation, deleteMutation } = useInventoryTransactionMutations();
 
   const items = response?.data?.data || [];
   const total = response?.data?.total || 0;
@@ -44,7 +58,7 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
   const handleReset = useCallback(() => {
     setSearchParams({
       page: 1,
-      limit: 10,
+      limit: 5,
       type, // Keep the current type
     });
   }, [type]);
@@ -53,9 +67,33 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
     refetch();
   }, [refetch]);
 
-  const handleView = useCallback((item: InventoryTransactionItem) => {
-    // View functionality - could be implemented later
+  const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
+    setFilters(newFilters);
+    setSearchParams(prev => ({ ...prev, ...newFilters, page: 1 }));
+  }, []);
 
+  const handleEdit = useCallback((item: InventoryTransactionItem) => {
+    setSelectedItem(item);
+    setDialogState(prev => ({ ...prev, edit: true }));
+  }, []);
+
+  const handleView = useCallback((item: InventoryTransactionItem) => {
+    setSelectedItem(item);
+    setDialogState(prev => ({ ...prev, view: true }));
+  }, []);
+
+  const handleDelete = useCallback((item: InventoryTransactionItem) => {
+    setSelectedItem(item);
+    setDialogState(prev => ({ ...prev, delete: true }));
+  }, []);
+
+  const handleCloseDialog = useCallback((dialogType: keyof typeof dialogState) => {
+    setDialogState(prev => ({ ...prev, [dialogType]: false }));
+    setSelectedItem(null);
+  }, []);
+
+  const handleSnackbarClose = useCallback(() => {
+    setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
   const title = type === 'import' ? 'Giao Dịch Nhập Kho' : 'Giao Dịch Xuất Kho';
@@ -75,21 +113,22 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
         filters={filters}
         onReset={handleReset}
       />
-          onFilterChange={handleFilterChange}
-          filters={filters}
 
       <Box sx={{ flex: 1, overflow: 'hidden' }}>
         <InventoryTransactionDataGrid
           data={items as InventoryTransactionItem[]}
           total={total}
           loading={isLoading}
-          onEdit={() => {}} // Empty function since we don't want edit
-          onDelete={() => {}} // Empty function since we don't want delete
-          onView={handleView}
-          selectedRows={[]}
-          onSelectionChange={() => {}} // Empty function since we don't want selection
         />
       </Box>
+
+      {/* Snackbar */}
+      <InventoryTransactionSnackbar
+        open={snackbar.open}
+        onClose={handleSnackbarClose}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
     </Box>
   );
 };

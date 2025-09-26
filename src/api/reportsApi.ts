@@ -29,6 +29,8 @@ export interface ReportsOverviewParams {
 
 export interface ReportsRevenueParams {
   type?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  start_time?: string;
+  end_time?: string;
 }
 
 export interface RevenueReport {

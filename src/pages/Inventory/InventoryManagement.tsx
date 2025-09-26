@@ -9,6 +9,7 @@ import {
   InventoryFormDialog,
   InventoryBulkEditDialog,
 } from './components';
+import { InventoryViewEditDrawer } from './components/InventoryViewEditDrawer';
 import { useInventories, useInventoryMutations } from './hooks';
 import type { 
   Inventory, 
@@ -28,6 +29,7 @@ export const InventoryManagement: React.FC = () => {
     view: false,
     delete: false,
     bulkEdit: false,
+    viewEdit: false,
   });
   const [selectedInventory, setSelectedInventory] = useState<Inventory | null>(null);
   const [snackbar, setSnackbar] = useState({
@@ -75,9 +77,8 @@ export const InventoryManagement: React.FC = () => {
   }, []);
 
   const handleView = useCallback((inventory: Inventory) => {
-
     setSelectedInventory(inventory);
-    setDialogState(prev => ({ ...prev, view: true }));
+    setDialogState(prev => ({ ...prev, viewEdit: true }));
   }, []);
 
   const handleDelete = useCallback((inventory: Inventory) => {
@@ -138,6 +139,24 @@ export const InventoryManagement: React.FC = () => {
       });
     }
   }, [selectedInventory, updateMutation, handleCloseDialog]);
+
+  const handleViewEditSave = useCallback(async (data: UpdateInventoryDto) => {
+    try {
+      await updateMutation.mutateAsync(data);
+      setSnackbar({
+        open: true,
+        message: 'Cập nhật kho thành công',
+        severity: 'success',
+      });
+      handleCloseDialog('viewEdit');
+    } catch {
+      setSnackbar({
+        open: true,
+        message: 'Có lỗi xảy ra khi cập nhật kho',
+        severity: 'error',
+      });
+    }
+  }, [updateMutation, handleCloseDialog]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!selectedInventory) return;
@@ -250,6 +269,16 @@ export const InventoryManagement: React.FC = () => {
         onSave={handleBulkEditSubmit}
         selectedInventories={selectedRows}
         loading={updateMutation.isPending}
+      />
+
+      {/* View/Edit Drawer */}
+      <InventoryViewEditDrawer
+        open={dialogState.viewEdit}
+        onClose={() => handleCloseDialog('viewEdit')}
+        inventory={selectedInventory}
+        onSave={handleViewEditSave}
+        loading={updateMutation.isPending}
+        mode="view"
       />
 
       {/* Snackbar */}

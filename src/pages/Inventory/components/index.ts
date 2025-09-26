@@ -5,3 +5,4 @@ export * from './InventorySearchAndFilter';
 export * from './InventorySnackbar';
 export * from './InventoryFormDialog';
 export * from './InventoryBulkEditDialog';
+export * from './InventoryViewEditDrawer';

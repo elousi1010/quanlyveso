@@ -1,7 +1,7 @@
 import type { DialogFieldConfig } from '@/components/common/types';
 import type { CreateStationDto, UpdateStationDto } from '../types';
 
-export const stationCreateFields: DialogFieldConfig<CreateStationDto>[] = [
+export const stationCreateFields: DialogFieldConfig[] = [
   {
     key: 'name',
     label: 'Tên trạm',
@@ -46,7 +46,7 @@ export const stationCreateFields: DialogFieldConfig<CreateStationDto>[] = [
   },
 ];
 
-export const stationUpdateFields: DialogFieldConfig<UpdateStationDto>[] = [
+export const stationUpdateFields: DialogFieldConfig[] = [
   {
     key: 'name',
     label: 'Tên trạm',
@@ -91,7 +91,7 @@ export const stationUpdateFields: DialogFieldConfig<UpdateStationDto>[] = [
   },
 ];
 
-export const stationDetailFields: DialogFieldConfig[] = [
+export const stationDialogDetailFields: DialogFieldConfig[] = [
   {
     key: 'name',
     label: 'Tên trạm',
