@@ -33,38 +33,48 @@ import {
     ResponsiveContainer,
     Cell
 } from 'recharts';
-import styled from '@emotion/styled';
 import { useTheme } from '@/contexts/ThemeContext';
 import { formatCurrency, formatNumber } from '@/utils';
 import { MOCK_AGENT_DASHBOARD_DATA } from '@/data/dashboardMockData';
 
 const { Title, Text } = Typography;
 
-// Styled components
-const DashboardCard = styled(Card) <{ isDark: boolean }>`
-  border-radius: 12px;
-  border: 1px solid ${props => props.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
-  background: ${props => props.isDark ? '#1e293b' : '#ffffff'};
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  height: 100%;
-  
-  .ant-card-body {
-    padding: 20px;
-  }
-`;
+// Custom components
+const DashboardCard: React.FC<any> = ({ isDark, style, styles, children, ...props }) => {
+    return (
+        <Card
+            {...props}
+            style={{
+                borderRadius: '12px',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}`,
+                background: isDark ? '#1e293b' : '#ffffff',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+                height: '100%',
+                ...style
+            }}
+            styles={{ body: { padding: 20 }, ...styles }}
+        >
+            {children}
+        </Card>
+    );
+};
 
-const IconWrapper = styled.div<{ gradient: string }>`
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${props => props.gradient};
-  color: #fff;
-  margin-bottom: 16px;
-  font-size: 20px;
-`;
+const IconWrapper: React.FC<{ gradient: string, children: React.ReactNode }> = ({ gradient, children }) => (
+    <div style={{
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: gradient,
+        color: '#fff',
+        marginBottom: 16,
+        fontSize: 20
+    }}>
+        {children}
+    </div>
+);
 
 const AgentLevel2Dashboard: React.FC = () => {
     const { mode } = useTheme();

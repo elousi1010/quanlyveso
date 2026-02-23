@@ -1,5 +1,7 @@
 import React, { Component, type ErrorInfo, type ReactNode } from 'react';
-import { Alert, Box, Button, Typography } from '@mui/material';
+import { Alert, Button, Typography, Result, theme as antdTheme } from 'antd';
+
+const { Paragraph, Text } = Typography;
 
 interface Props {
   children: ReactNode;
@@ -26,34 +28,37 @@ class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          minHeight="400px"
-          p={3}
-        >
-          <Alert severity="error" sx={{ mb: 2, maxWidth: 600 }}>
-            <Typography variant="h6" gutterBottom>
-              Đã xảy ra lỗi
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              {import.meta.env.DEV ? this.state.error?.message : 'Có lỗi không mong muốn xảy ra'}
-            </Typography>
-            {import.meta.env.DEV && this.state.error?.stack && (
-              <Box component="pre" sx={{ mt: 2, fontSize: '0.75rem', overflow: 'auto' }}>
-                {this.state.error.stack}
-              </Box>
-            )}
-          </Alert>
-          <Button
-            variant="contained"
-            onClick={() => this.setState({ hasError: false, error: undefined })}
+        <div style={{ padding: '48px', minHeight: '400px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <Result
+            status="error"
+            title="Đã xảy ra lỗi"
+            subTitle={import.meta.env.DEV ? this.state.error?.message : 'Có lỗi không mong muốn xảy ra'}
+            extra={[
+              <Button type="primary" key="retry" onClick={() => this.setState({ hasError: false, error: undefined })}>
+                Thử lại
+              </Button>,
+            ]}
           >
-            Thử lại
-          </Button>
-        </Box>
+            {import.meta.env.DEV && this.state.error?.stack && (
+              <div style={{ textAlign: 'left', marginTop: '24px' }}>
+                <Paragraph>
+                  <Text strong>Chi tiết lỗi (Chế độ Development):</Text>
+                </Paragraph>
+                <div style={{
+                  backgroundColor: '#f5f5f5',
+                  padding: '16px',
+                  borderRadius: '4px',
+                  overflow: 'auto',
+                  fontSize: '12px',
+                  fontFamily: 'monospace',
+                  maxHeight: '300px'
+                }}>
+                  <pre>{this.state.error.stack}</pre>
+                </div>
+              </div>
+            )}
+          </Result>
+        </div>
       );
     }
 

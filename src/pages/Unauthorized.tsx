@@ -1,24 +1,28 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Card,
-  CardContent,
   Typography,
   Button,
   Alert,
-  Chip
-} from '@mui/material';
+  Tag,
+  Result,
+  Card,
+  Flex,
+  theme as antdTheme
+} from 'antd';
 import {
-  Lock as LockIcon,
-  ArrowBack as ArrowBackIcon,
-  Home as HomeIcon
-} from '@mui/icons-material';
+  LockOutlined,
+  ArrowLeftOutlined,
+  HomeOutlined
+} from '@ant-design/icons';
+
+const { Text, Title, Paragraph } = Typography;
 
 const Unauthorized: React.FC = () => {
+  const { token } = antdTheme.useToken();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   const state = location.state as {
     from?: { pathname: string };
     requiredRole?: string;
@@ -39,92 +43,72 @@ const Unauthorized: React.FC = () => {
   };
 
   return (
-    <Box
-      display="flex"
-      justifyContent="center"
-      alignItems="center"
-      minHeight="100vh"
-      p={3}
+    <Flex
+      justify="center"
+      align="center"
+      style={{ minHeight: '100vh', padding: '24px', backgroundColor: token.colorFillAlter }}
     >
-      <Card sx={{ maxWidth: 500, width: '100%' }}>
-        <CardContent sx={{ textAlign: 'center', p: 4 }}>
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            mb={3}
-          >
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                backgroundColor: 'error.light',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mb: 2
-              }}
-            >
-              <LockIcon sx={{ fontSize: 40, color: 'error.main' }} />
-            </Box>
-          </Box>
+      <Card style={{ maxWidth: 600, width: '100%', borderRadius: '12px', boxShadow: token.boxShadow }}>
+        <Result
+          status="403"
+          title={<Title level={2} style={{ margin: 0 }}>Truy cập bị từ chối</Title>}
+          subTitle="Bạn không có quyền truy cập trang này."
+          extra={[
+            <Flex gap={12} justify="center" key="actions">
+              <Button
+                type="primary"
+                icon={<ArrowLeftOutlined />}
+                onClick={handleGoBack}
+                size="large"
+              >
+                Quay lại
+              </Button>
+              <Button
+                icon={<HomeOutlined />}
+                onClick={handleGoHome}
+                size="large"
+              >
+                Trang chủ
+              </Button>
+            </Flex>
+          ]}
+        >
+          <div style={{ textAlign: 'left' }}>
+            <Alert
+              message={<Text strong>Thông tin chi tiết</Text>}
+              description={
+                <div style={{ marginTop: '8px' }}>
+                  <Paragraph style={{ margin: 0 }}>
+                    • Vai trò hiện tại: <Tag color="default">{userRole || 'Khách'}</Tag>
+                  </Paragraph>
+                  {requiredRole && (
+                    <Paragraph style={{ margin: '4px 0 0 0' }}>
+                      • Vai trò yêu cầu: <Tag color="blue">{requiredRole}</Tag>
+                    </Paragraph>
+                  )}
+                  {requiredRoles && (
+                    <Paragraph style={{ margin: '4px 0 0 0' }}>
+                      • Vai trò yêu cầu: {requiredRoles.map(role => (
+                        <Tag key={role} color="blue">{role}</Tag>
+                      ))}
+                    </Paragraph>
+                  )}
+                  <Paragraph style={{ margin: '4px 0 0 0' }}>
+                    • Trang yêu cầu: <Text code>{from}</Text>
+                  </Paragraph>
+                </div>
+              }
+              type="warning"
+              showIcon
+            />
 
-          <Typography variant="h4" gutterBottom color="error">
-            Truy cập bị từ chối
-          </Typography>
-
-          <Typography variant="body1" color="text.secondary" paragraph>
-            Bạn không có quyền truy cập trang này.
-          </Typography>
-
-          <Alert severity="warning" sx={{ mb: 3, textAlign: 'left' }}>
-            <Typography variant="body2" gutterBottom>
-              <strong>Thông tin chi tiết:</strong>
-            </Typography>
-            <Typography variant="body2">
-              • Vai trò hiện tại: <Chip label={userRole || 'Unknown'} size="small" />
-            </Typography>
-            {requiredRole && (
-              <Typography variant="body2">
-                • Vai trò yêu cầu: <Chip label={requiredRole} size="small" color="primary" />
-              </Typography>
-            )}
-            {requiredRoles && (
-              <Typography variant="body2">
-                • Vai trò yêu cầu: {requiredRoles.map(role => (
-                  <Chip key={role} label={role} size="small" color="primary" sx={{ ml: 0.5 }} />
-                ))}
-              </Typography>
-            )}
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              • Trang yêu cầu: <code>{from}</code>
-            </Typography>
-          </Alert>
-
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Button
-              variant="contained"
-              startIcon={<ArrowBackIcon />}
-              onClick={handleGoBack}
-            >
-              Quay lại
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<HomeIcon />}
-              onClick={handleGoHome}
-            >
-              Trang chủ
-            </Button>
-          </Box>
-
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 3 }}>
-            Nếu bạn cho rằng đây là lỗi, vui lòng liên hệ quản trị viên.
-          </Typography>
-        </CardContent>
+            <Paragraph style={{ textAlign: 'center', marginTop: '24px', color: token.colorTextSecondary }}>
+              Nếu bạn cho rằng đây là lỗi, vui lòng liên hệ quản trị viên.
+            </Paragraph>
+          </div>
+        </Result>
       </Card>
-    </Box>
+    </Flex>
   );
 };
 

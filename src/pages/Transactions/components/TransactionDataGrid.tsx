@@ -1,10 +1,10 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
 import {
-  Visibility as ViewIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon
-} from '@mui/icons-material';
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined
+} from '@ant-design/icons';
 import { transactionTableConfig } from '../constants';
 import type { Transaction } from '../types';
 
@@ -42,21 +42,21 @@ export const TransactionDataGrid: React.FC<TransactionDataGridProps> = ({
     {
       key: 'view',
       label: 'Xem',
-      icon: <ViewIcon />,
+      icon: <EyeOutlined />,
       color: 'primary' as const,
       onClick: (transaction: unknown) => onView(transaction as Transaction),
     },
     {
       key: 'edit',
       label: 'Sửa',
-      icon: <EditIcon />,
+      icon: <EditOutlined />,
       color: 'primary' as const,
       onClick: (transaction: unknown) => onEdit(transaction as Transaction),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon />,
+      icon: <DeleteOutlined />,
       color: 'error' as const,
       onClick: (transaction: unknown) => onDelete(transaction as Transaction),
     },

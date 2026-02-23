@@ -2,12 +2,12 @@ import React from 'react';
 import { SimpleTable } from '@/components/common';
 import { partnerDebtTableConfig } from '../constants';
 import type { PartnerDebtTableRow } from '../types';
-import { Visibility } from '@mui/icons-material';
+import { EyeOutlined } from '@ant-design/icons';
 
 interface PartnerDebtDataGridProps {
   data: PartnerDebtTableRow[];
   loading: boolean;
-  error: unknown; 
+  error: unknown;
   onView?: (item: PartnerDebtTableRow) => void;
 }
 
@@ -21,15 +21,15 @@ export const PartnerDebtDataGrid: React.FC<PartnerDebtDataGridProps> = ({
     {
       key: 'view',
       label: 'Xem',
-      icon: <Visibility />,
+      icon: <EyeOutlined />,
       color: 'primary' as const,
-      onClick: (item: PartnerDebtTableRow) => onView?.(item),
+      onClick: (item: any) => onView?.(item as PartnerDebtTableRow),
     },
   ];
 
   return (
     <SimpleTable
-      data={data}
+      data={data || []}
       columns={partnerDebtTableConfig.columns}
       actions={actions}
       loading={loading}

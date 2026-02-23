@@ -18,211 +18,11 @@ import {
   UserAddOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
-import styled from '@emotion/styled';
 import { useLogin, useSignup } from '../../hooks/useAuthApi';
 import { debugJWT, logJWTInfo } from '../../utils/debugJWT';
 import { Logo } from '../common/Logo';
 
 const { Title, Text } = Typography;
-
-const LoginContainer = styled.div`
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: #f8fafc;
-  position: relative;
-  overflow: hidden;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  
-  /* Soft Background Gradient */
-  &::before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.03) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 40%);
-    z-index: 0;
-  }
-`;
-
-const ContentWrapper = styled.div`
-  display: flex;
-  width: 100%;
-  max-width: 1000px;
-  gap: 80px;
-  align-items: center;
-  position: relative;
-  z-index: 1;
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    gap: 40px;
-    text-align: center;
-  }
-`;
-
-const BrandingSide = styled.div`
-  flex: 1;
-  max-width: 450px;
-  
-  @media (max-width: 1024px) {
-    max-width: 100%;
-  }
-
-  .badge {
-    background: #e0e7ff;
-    padding: 6px 14px;
-    border-radius: 100px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: #4338ca;
-    font-size: 13px;
-    font-weight: 700;
-    margin-bottom: 24px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  h1 {
-    color: #0f172a !important;
-    font-size: 48px !important;
-    font-weight: 800 !important;
-    line-height: 1.1 !important;
-    margin-bottom: 24px !important;
-    letter-spacing: -2px !important;
-    
-    span {
-      display: block;
-      color: #2563eb;
-    }
-  }
-
-  p {
-    color: #475569 !important;
-    font-size: 18px !important;
-    line-height: 1.6 !important;
-    margin-bottom: 0 !important;
-    font-weight: 500;
-  }
-`;
-
-const AuthCardWrapper = styled.div`
-  flex: 0 0 420px;
-  
-  @media (max-width: 1024px) {
-    flex: 1;
-    width: 100%;
-    max-width: 420px;
-  }
-`;
-
-const StyledCard = styled(Card)`
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 28px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-
-  .ant-card-body {
-    padding: 48px;
-  }
-`;
-
-const StyledTabs = styled(Tabs)`
-  margin-bottom: 32px;
-  
-  .ant-tabs-nav::before {
-    border-bottom: 1px solid #f1f5f9;
-  }
-  
-  .ant-tabs-tab {
-    padding: 10px 0;
-    margin: 0 16px 0 0 !important;
-    
-    .ant-tabs-tab-btn {
-      color: #94a3b8;
-      font-weight: 700;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-    }
-  }
-  
-  .ant-tabs-ink-bar {
-    background: #2563eb;
-    height: 3px !important;
-    border-radius: 3px;
-  }
-`;
-
-const StyledItemLabel = styled(Text)`
-  font-weight: 700;
-  font-size: 12px;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 8px;
-  display: block;
-`;
-
-const StyledInput = styled(Input)`
-  border: 1px solid #e2e8f0 !important;
-  height: 52px;
-  border-radius: 14px !important;
-  font-family: inherit;
-  
-  &:hover, &:focus {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06) !important;
-  }
-
-  .ant-input-prefix {
-    margin-right: 12px;
-    color: #94a3b8;
-  }
-`;
-
-const StyledPassword = styled(Input.Password)`
-  border: 1px solid #e2e8f0 !important;
-  height: 52px;
-  border-radius: 14px !important;
-  font-family: inherit;
-  
-  &:hover, &:focus {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06) !important;
-  }
-
-  .ant-input-prefix {
-    margin-right: 12px;
-    color: #94a3b8;
-  }
-`;
-
-const SubmitButton = styled(Button)`
-  height: 54px;
-  border-radius: 14px;
-  font-weight: 800;
-  font-size: 16px;
-  background: #2563eb !important;
-  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25) !important;
-  margin-top: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-
-  &:hover {
-    background: #1d4ed8 !important;
-    box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.3) !important;
-    transform: translateY(-1px);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-`;
 
 const LoginForm: React.FC = () => {
   const [tabKey, setTabKey] = useState('login');
@@ -266,9 +66,172 @@ const LoginForm: React.FC = () => {
         },
       }}
     >
-      <LoginContainer>
-        <ContentWrapper>
-          <BrandingSide>
+      <style>{`
+        .login-container {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          background: #f8fafc;
+          position: relative;
+          overflow: hidden;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .login-container::before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.03) 0%, transparent 40%),
+                      radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 40%);
+          z-index: 0;
+        }
+        .content-wrapper {
+          display: flex;
+          width: 100%;
+          max-width: 1000px;
+          gap: 80px;
+          align-items: center;
+          position: relative;
+          z-index: 1;
+        }
+        @media (max-width: 1024px) {
+          .content-wrapper {
+            flex-direction: column;
+            gap: 40px;
+            text-align: center;
+          }
+        }
+        .branding-side {
+          flex: 1;
+          max-width: 450px;
+        }
+        @media (max-width: 1024px) {
+          .branding-side {
+            max-width: 100%;
+          }
+        }
+        .branding-side .badge {
+          background: #e0e7ff;
+          padding: 6px 14px;
+          border-radius: 100px;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          color: #4338ca;
+          font-size: 13px;
+          font-weight: 700;
+          margin-bottom: 24px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .branding-side h1 {
+          color: #0f172a !important;
+          font-size: 48px !important;
+          font-weight: 800 !important;
+          line-height: 1.1 !important;
+          margin-bottom: 24px !important;
+          letter-spacing: -2px !important;
+        }
+        .branding-side h1 span {
+          display: block;
+          color: #2563eb;
+        }
+        .branding-side p {
+          color: #475569 !important;
+          font-size: 18px !important;
+          line-height: 1.6 !important;
+          margin-bottom: 0 !important;
+          font-weight: 500;
+        }
+        .auth-card-wrapper {
+          flex: 0 0 420px;
+        }
+        @media (max-width: 1024px) {
+          .auth-card-wrapper {
+            flex: 1;
+            width: 100%;
+            max-width: 420px;
+          }
+        }
+        .styled-card {
+          background: #ffffff !important;
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 28px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+          overflow: hidden;
+        }
+        .styled-card .ant-card-body {
+          padding: 48px;
+        }
+        .styled-tabs {
+          margin-bottom: 32px;
+        }
+        .styled-tabs .ant-tabs-nav::before {
+          border-bottom: 1px solid #f1f5f9;
+        }
+        .styled-tabs .ant-tabs-tab {
+          padding: 10px 0;
+          margin: 0 16px 0 0 !important;
+        }
+        .styled-tabs .ant-tabs-tab-btn {
+          color: #94a3b8;
+          font-weight: 700;
+          font-size: 14px;
+          letter-spacing: 0.5px;
+        }
+        .styled-tabs .ant-tabs-ink-bar {
+          background: #2563eb;
+          height: 3px !important;
+          border-radius: 3px;
+        }
+        .styled-item-label {
+          font-weight: 700;
+          font-size: 12px;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 8px;
+          display: block;
+        }
+        .styled-input {
+          border: 1px solid #e2e8f0 !important;
+          height: 52px;
+          border-radius: 14px !important;
+          font-family: inherit;
+        }
+        .styled-input:hover, .styled-input:focus, .styled-input:focus-within {
+          border-color: #2563eb !important;
+          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06) !important;
+        }
+        .styled-input .ant-input-prefix {
+          margin-right: 12px;
+          color: #94a3b8;
+        }
+        .submit-button {
+          height: 54px;
+          border-radius: 14px;
+          font-weight: 800;
+          font-size: 16px;
+          background: #2563eb !important;
+          box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25) !important;
+          margin-top: 12px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        .submit-button:hover {
+          background: #1d4ed8 !important;
+          box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.3) !important;
+          transform: translateY(-1px);
+        }
+        .submit-button:active {
+          transform: translateY(0);
+        }
+      `}</style>
+      <div className="login-container">
+        <div className="content-wrapper">
+          <div className="branding-side">
             <div className="badge">
               <SafetyCertificateOutlined />
               Hệ thống tin cậy
@@ -280,10 +243,10 @@ const LoginForm: React.FC = () => {
             <p>
               Giải pháp quản lý hiện đại, giúp bạn vận hành doanh nghiệp một cách thông minh và bền vững.
             </p>
-          </BrandingSide>
+          </div>
 
-          <AuthCardWrapper>
-            <StyledCard>
+          <div className="auth-card-wrapper">
+            <Card className="styled-card">
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
                 <Logo size={60} variant="icon" showText={false} style={{ margin: '0 auto 16px' }} />
                 <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px' }}>
@@ -291,7 +254,8 @@ const LoginForm: React.FC = () => {
                 </Title>
               </div>
 
-              <StyledTabs
+              <Tabs
+                className="styled-tabs"
                 activeKey={tabKey}
                 onChange={setTabKey}
                 centered
@@ -310,31 +274,31 @@ const LoginForm: React.FC = () => {
                 {tabKey === 'signup' && (
                   <Form.Item
                     name="name"
-                    label={<StyledItemLabel>Họ và tên</StyledItemLabel>}
+                    label={<div className="styled-item-label">Họ và tên</div>}
                     rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
                     style={{ marginBottom: '24px' }}
                   >
-                    <StyledInput prefix={<UserOutlined />} placeholder="Nguyễn Văn A" />
+                    <Input className="styled-input" prefix={<UserOutlined />} placeholder="Nguyễn Văn A" />
                   </Form.Item>
                 )}
 
                 <Form.Item
                   name="phone_number"
-                  label={<StyledItemLabel>Số điện thoại</StyledItemLabel>}
+                  label={<div className="styled-item-label">Số điện thoại</div>}
                   rules={[
                     { required: true, message: 'Vui lòng nhập số điện thoại' },
                     { pattern: /^[0-9+ ]+$/, message: 'Số điện thoại không hợp lệ' }
                   ]}
                   style={{ marginBottom: '24px' }}
                 >
-                  <StyledInput prefix={<PhoneOutlined />} placeholder="09xx xxx xxx" />
+                  <Input className="styled-input" prefix={<PhoneOutlined />} placeholder="09xx xxx xxx" />
                 </Form.Item>
 
                 <Form.Item
                   name="password"
                   label={
                     <Flex justify="space-between" align="center" style={{ width: '100%' }}>
-                      <StyledItemLabel style={{ marginBottom: 0 }}>Mật khẩu</StyledItemLabel>
+                      <div className="styled-item-label" style={{ marginBottom: 0 }}>Mật khẩu</div>
                       {tabKey === 'login' && (
                         <Button type="link" size="small" style={{ padding: 0, fontWeight: 600, fontSize: '12px' }}>
                           Quên mật khẩu?
@@ -345,7 +309,7 @@ const LoginForm: React.FC = () => {
                   rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
                   style={{ marginBottom: '32px' }}
                 >
-                  <StyledPassword prefix={<LockOutlined />} placeholder="••••••••" />
+                  <Input.Password className="styled-input" prefix={<LockOutlined />} placeholder="••••••••" />
                 </Form.Item>
 
                 {(loginMutation.error || signupMutation.error) && (
@@ -358,14 +322,15 @@ const LoginForm: React.FC = () => {
                 )}
 
                 <Form.Item style={{ marginBottom: 0 }}>
-                  <SubmitButton
+                  <Button
                     type="primary"
                     htmlType="submit"
                     block
+                    className="submit-button"
                     loading={loginMutation.isPending || signupMutation.isPending}
                   >
                     {tabKey === 'login' ? 'Đăng nhập ngay' : 'Đăng ký ngay'}
-                  </SubmitButton>
+                  </Button>
                 </Form.Item>
               </Form>
 
@@ -374,10 +339,10 @@ const LoginForm: React.FC = () => {
                   © 2024 DAILY VESO SYSTEM
                 </Text>
               </div>
-            </StyledCard>
-          </AuthCardWrapper>
-        </ContentWrapper>
-      </LoginContainer>
+            </Card>
+          </div>
+        </div>
+      </div>
     </ConfigProvider>
   );
 };

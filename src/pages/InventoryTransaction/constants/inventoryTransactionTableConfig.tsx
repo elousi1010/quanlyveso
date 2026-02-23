@@ -1,8 +1,10 @@
 import React from 'react';
-import { Chip, Typography, Box } from '@mui/material';
+import { Tag, Typography, Flex } from 'antd';
 import type { SimpleTableColumn } from '@/components/common/SimpleTable';
 import type { InventoryTransactionItem } from '../types';
 import { formatDate } from '@/utils/format';
+
+const { Text } = Typography;
 
 export const inventoryTransactionTableConfig = {
   columns: [
@@ -11,11 +13,7 @@ export const inventoryTransactionTableConfig = {
       label: 'Mã Kho',
       minWidth: 150,
       render: (value: unknown, row: InventoryTransactionItem) => (
-        <Box>
-          <Typography variant="body2" fontWeight="medium">
-            {row.inventory.code}
-          </Typography>
-        </Box>
+        <Text strong>{row.inventory.code}</Text>
       ),
     },
     {
@@ -24,9 +22,7 @@ export const inventoryTransactionTableConfig = {
       minWidth: 100,
       align: 'right' as const,
       render: (value: unknown) => (
-        <Typography variant="body2" fontWeight="medium">
-          {Number(value).toLocaleString()}
-        </Typography>
+        <Text>{Number(value).toLocaleString()}</Text>
       ),
     },
     {
@@ -35,12 +31,10 @@ export const inventoryTransactionTableConfig = {
       minWidth: 120,
       align: 'right' as const,
       render: (value: unknown) => (
-        <Typography variant="body2" fontWeight="medium">
-          {Number(value).toLocaleString('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-          })}
-        </Typography>
+        <Text>{Number(value).toLocaleString('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        })}</Text>
       ),
     },
     {
@@ -49,12 +43,10 @@ export const inventoryTransactionTableConfig = {
       minWidth: 120,
       align: 'right' as const,
       render: (value: unknown) => (
-        <Typography variant="body2" fontWeight="medium" color="primary.main">
-          {Number(value).toLocaleString('vi-VN', {
-            style: 'currency',
-            currency: 'VND',
-          })}
-        </Typography>
+        <Text strong style={{ color: '#1677ff' }}>{Number(value).toLocaleString('vi-VN', {
+          style: 'currency',
+          currency: 'VND',
+        })}</Text>
       ),
     },
     {
@@ -62,18 +54,15 @@ export const inventoryTransactionTableConfig = {
       label: 'Loại',
       minWidth: 100,
       render: (value: unknown, row: InventoryTransactionItem) => {
-        const typeMap: Record<string, { label: string; color: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' | 'default' }> = {
+        const typeMap: Record<string, { label: string; color: string }> = {
           'import': { label: 'Nhập', color: 'success' },
           'export': { label: 'Xuất', color: 'warning' },
         };
         const config = typeMap[row.transaction.type] || { label: String(row.transaction.type), color: 'default' };
         return (
-          <Chip
-            label={config.label}
-            color={config.color}
-            size="small"
-            variant="outlined"
-          />
+          <Tag color={config.color} bordered={false}>
+            {config.label}
+          </Tag>
         );
       },
     },
@@ -90,9 +79,9 @@ export const inventoryTransactionTableConfig = {
           'return': 'Trả hàng',
         };
         return (
-          <Typography variant="body2" color="text.secondary">
+          <Text type="secondary">
             {subTypeMap[row.transaction.sub_type] || String(row.transaction.sub_type)}
-          </Typography>
+          </Text>
         );
       },
     },
@@ -101,9 +90,9 @@ export const inventoryTransactionTableConfig = {
       label: 'Ngày Quay',
       minWidth: 120,
       render: (value: unknown, row: InventoryTransactionItem) => (
-        <Typography variant="body2" color="text.secondary">
+        <Text type="secondary">
           {row.inventory.draw_date ? formatDate(row.inventory.draw_date) : 'N/A'}
-        </Typography>
+        </Text>
       ),
     },
     {
@@ -111,12 +100,12 @@ export const inventoryTransactionTableConfig = {
       label: 'Trạng Thái',
       minWidth: 100,
       render: (value: unknown) => (
-        <Chip
-          label={value ? 'Hoạt động' : 'Không hoạt động'}
+        <Tag
           color={value ? 'success' : 'default'}
-          size="small"
-          variant="filled"
-        />
+          bordered={false}
+        >
+          {value ? 'Hoạt động' : 'Khoá'}
+        </Tag>
       ),
     },
     {
@@ -124,9 +113,9 @@ export const inventoryTransactionTableConfig = {
       label: 'Ngày Tạo',
       minWidth: 120,
       render: (value: unknown) => (
-        <Typography variant="body2" color="text.secondary">
+        <Text type="secondary" style={{ fontSize: '12px' }}>
           {value ? formatDate(value as string) : 'N/A'}
-        </Typography>
+        </Text>
       ),
     },
   ] as SimpleTableColumn[],

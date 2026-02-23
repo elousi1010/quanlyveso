@@ -1,12 +1,13 @@
 import React from 'react';
-import { Chip } from '@mui/material';
-import { Tag } from 'antd';
+import { Tag, Typography, Flex } from 'antd';
 import type { SimpleTableColumn } from '@/components/common/SimpleTable';
 import { formatCurrency, formatDate } from '../../../utils/format';
 import {
   formatTransactionSubType,
   getStatusColor
 } from '../utils/partnerDebtHelpers';
+
+const { Text } = Typography;
 
 // Table columns configuration
 export const partnerDebtTableColumns: SimpleTableColumn[] = [
@@ -22,14 +23,14 @@ export const partnerDebtTableColumns: SimpleTableColumn[] = [
     minWidth: 150,
     align: 'right',
     render: (value, row: any) => (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-        <span style={{ fontWeight: 'bold' }}>{formatCurrency(Number(value))}</span>
+      <Flex vertical align="end">
+        <Text strong>{formatCurrency(Number(value))}</Text>
         {row.tax_amount > 0 && (
-          <span style={{ fontSize: '11px', color: '#e64a19' }}>
+          <Text type="danger" style={{ fontSize: '11px' }}>
             Thuế: -{formatCurrency(row.tax_amount)}
-          </span>
+          </Text>
         )}
-      </div>
+      </Flex>
     ),
   },
   {
@@ -52,24 +53,21 @@ export const partnerDebtTableColumns: SimpleTableColumn[] = [
     minWidth: 140,
     align: 'center',
     render: (value) => {
-      const methodConfig = {
+      const methodConfig: Record<string, { label: string; color: string }> = {
         cash: { label: 'Tiền mặt', color: 'success' },
-        bank_transfer: { label: 'Chuyển khoản', color: 'info' },
+        bank_transfer: { label: 'Chuyển khoản', color: 'processing' },
         credit_card: { label: 'Thẻ tín dụng', color: 'warning' },
         winning_ticket: { label: 'Vé trúng', color: 'purple' },
-        seasonal_bonus: { label: 'Thưởng Tết', color: 'red' },
+        seasonal_bonus: { label: 'error', color: 'red' },
         other: { label: 'Khác', color: 'default' },
       };
 
-      const config = methodConfig[String(value) as keyof typeof methodConfig] || { label: String(value), color: 'default' };
+      const config = methodConfig[String(value)] || { label: String(value), color: 'default' };
 
       return (
-        <Chip
-          label={config.label}
-          color={config.color as any}
-          size="small"
-          variant="outlined"
-        />
+        <Tag color={config.color} bordered={false}>
+          {config.label}
+        </Tag>
       );
     },
   },
@@ -82,16 +80,14 @@ export const partnerDebtTableColumns: SimpleTableColumn[] = [
       const typeMap: Record<string, { label: string; color: string }> = {
         income: { label: 'Thu nhập', color: 'success' },
         expense: { label: 'Chi phí', color: 'error' },
-        adjustment: { label: 'Điều chỉnh', color: 'secondary' },
+        adjustment: { label: 'Điều chỉnh', color: 'default' },
         tax_withholding: { label: 'Khấu trừ thuế', color: 'warning' },
       };
       const config = typeMap[String(value)] || { label: String(value), color: 'default' };
       return (
-        <Chip
-          label={config.label}
-          color={config.color as any}
-          size="small"
-        />
+        <Tag color={config.color} style={{ borderRadius: '12px' }}>
+          {config.label}
+        </Tag>
       );
     },
   },
@@ -121,12 +117,12 @@ export const partnerDebtTableColumns: SimpleTableColumn[] = [
     minWidth: 100,
     align: 'center',
     render: (value) => (
-      <Chip
-        label={value ? 'Hoạt động' : 'Không hoạt động'}
+      <Tag
         color={value ? 'success' : 'error'}
-        size="small"
-        variant="outlined"
-      />
+        bordered={false}
+      >
+        {value ? 'Hoạt động' : 'Vô hiệu'}
+      </Tag>
     ),
   },
 ];

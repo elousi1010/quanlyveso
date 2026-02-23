@@ -1,19 +1,23 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
-import { 
-  Chip, 
-  Box, 
+import {
+  Tag,
   Typography,
-  IconButton,
-  Tooltip
-} from '@mui/material';
-import { 
-  Visibility,
-  Edit,
-  Delete
-} from '@mui/icons-material';
-import { permissionFormFields, permissionDetailFields } from '../constants/permissionViewEditConfig';
+  Tooltip,
+  Flex,
+  theme as antdTheme
+} from 'antd';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CodeOutlined,
+  CheckCircleFilled,
+  CloseCircleFilled,
+} from '@ant-design/icons';
 import type { Permission } from '../types';
+
+const { Text } = Typography;
 
 interface PermissionDataGridProps {
   data: Permission[];
@@ -36,72 +40,56 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
   selectedRows,
   onSelectionChange,
 }) => {
+  const { token } = antdTheme.useToken();
 
   // Helper function to render permission badges
   const renderPermissionBadges = (actions: Record<string, number>) => {
-    return Object.entries(actions || {}).map(([resource, value]) => {
-      const permissions = [];
-      if (value & 1) permissions.push('Đọc');
-      if (value & 2) permissions.push('Tạo');
-      if (value & 4) permissions.push('Cập nhật');
-      if (value & 8) permissions.push('Xóa');
-      
-      const hasPermissions = permissions.length > 0;
-      
-      return (
-        <Box key={resource} sx={{ mb: 1 }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            mb: 0.5,
-            p: 1,
-            borderRadius: 1,
-            background: hasPermissions ? '#f8f9fa' : '#f5f5f5',
-            border: `1px solid ${hasPermissions ? '#dee2e6' : '#e9ecef'}`
-          }}>
-            <Typography sx={{ 
-              fontSize: '12px', 
-              mr: 0.5,
-              fontWeight: 500,
-              color: hasPermissions ? 'text.primary' : 'text.secondary'
+    return (
+      <Flex vertical gap={4} style={{ padding: '8px 0' }}>
+        {Object.entries(actions || {}).map(([resource, value]) => {
+          const permissions = [];
+          if (value & 1) permissions.push('Đọc');
+          if (value & 2) permissions.push('Tạo');
+          if (value & 4) permissions.push('Cập nhật');
+          if (value & 8) permissions.push('Xóa');
+
+          const hasPermissions = permissions.length > 0;
+
+          return (
+            <Flex key={resource} vertical gap={4} style={{
+              backgroundColor: token.colorFillAlter,
+              padding: '8px',
+              borderRadius: '8px',
+              border: `1px solid ${token.colorBorderSecondary}`
             }}>
-              {resource.toUpperCase()}
-            </Typography>
-            <Typography variant="caption" sx={{ 
-              color: hasPermissions ? 'text.primary' : 'text.secondary',
-              fontWeight: 500,
-              fontSize: '11px'
-            }}>
-              {hasPermissions ? `${permissions.length} quyền` : 'Không có quyền'}
-            </Typography>
-          </Box>
-          
-          {hasPermissions && (
-            <Box sx={{ 
-              display: 'flex', 
-              flexWrap: 'wrap', 
-              gap: 0.5, 
-              ml: 1
-            }}>
-              {permissions.map(perm => (
-                <Chip
-                  key={perm}
-                  label={perm}
-                  size="small"
-                  sx={{ 
-                    fontSize: '10px', 
-                    height: '20px',
-                    backgroundColor: '#6c757d',
-                    color: 'white',
-                    fontWeight: 500
-                  }}
-                />
-              ))}
-            </Box>
-          )}
-        </Box>
-      );
-    });
+              <Flex justify="space-between" align="center">
+                <Text strong style={{ fontSize: '11px', color: token.colorPrimary }}>
+                  {resource.toUpperCase()}
+                </Text>
+                <Text type="secondary" style={{ fontSize: '10px' }}>
+                  {hasPermissions ? `${permissions.length} quyền` : 'Không có quyền'}
+                </Text>
+              </Flex>
+
+              {hasPermissions && (
+                <Flex wrap="wrap" gap={4}>
+                  {permissions.map(perm => (
+                    <Tag
+                      key={perm}
+                      color="default"
+                      bordered={false}
+                      style={{ fontSize: '10px', lineHeight: '18px', margin: 0 }}
+                    >
+                      {perm}
+                    </Tag>
+                  ))}
+                </Flex>
+              )}
+            </Flex>
+          );
+        })}
+      </Flex>
+    );
   };
 
   // Transform data for SimpleTable
@@ -118,74 +106,44 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
     {
       key: 'name',
       label: 'Tên quyền',
-      render: (value) => (
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-          {value as React.ReactNode}
-        </Typography>
+      render: (value: any) => (
+        <Text strong>{value}</Text>
       )
     },
     {
       key: 'code',
       label: 'Mã quyền',
-      render: (value) => (
-        <Typography 
-          variant="body2" 
-          sx={{ 
-            fontFamily: 'monospace',
-            backgroundColor: '#f5f5f5',
-            px: 1,
-            py: 0.25,
-            borderRadius: 0.5,
-            fontSize: '12px'
-          }}
-        >
-          {value as React.ReactNode}
-        </Typography>
+      render: (value: any) => (
+        <Tag icon={<CodeOutlined />} color="cyan" style={{ fontFamily: 'monospace' }}>
+          {value}
+        </Tag>
       )
     },
     {
       key: 'is_active',
       label: 'Trạng thái',
-      render: (value) => (
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: 0.5,
-          borderRadius: 1,
-          background: value ? '#d4edda' : '#f8d7da',
-          border: `1px solid ${value ? '#c3e6cb' : '#f5c6cb'}`,
-          color: value ? '#155724' : '#721c24',
-          fontWeight: 500,
-          fontSize: '11px'
-        }}>
-          <Box sx={{
-            width: 4,
-            height: 4,
-            borderRadius: '50%',
-            backgroundColor: value ? '#28a745' : '#dc3545',
-            mr: 0.5
-          }} />
-          {value ? 'Hoạt động' : 'Không hoạt động'}
-        </Box>
+      render: (value: any) => (
+        <Tag
+          icon={value ? <CheckCircleFilled /> : <CloseCircleFilled />}
+          color={value ? 'success' : 'error'}
+          bordered={false}
+        >
+          {value ? 'Hoạt động' : 'Vô hiệu'}
+        </Tag>
       )
     },
     {
       key: 'created_at_display',
       label: 'Ngày tạo',
-      render: (value) => (
-        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-          {value as React.ReactNode}
-        </Typography>
+      render: (value: any) => (
+        <Text type="secondary" style={{ fontSize: '12px' }}>{value}</Text>
       )
     },
     {
       key: 'updated_at_display',
       label: 'Cập nhật',
-      render: (value) => (
-        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '12px' }}>
-          {value as React.ReactNode}
-        </Typography>
+      render: (value: any) => (
+        <Text type="secondary" style={{ fontSize: '12px' }}>{value}</Text>
       )
     }
   ];
@@ -194,16 +152,16 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
     {
       key: 'view',
       label: 'Xem',
-      icon: <Visibility />,
+      icon: <EyeOutlined />,
       color: 'primary' as const,
-      onClick: (permission: unknown) => onView(permission as Permission),
+      onClick: (permission: any) => onView(permission as Permission),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <Delete />,
+      icon: <DeleteOutlined />,
       color: 'error' as const,
-      onClick: (permission: unknown) => onDelete(permission as Permission),
+      onClick: (permission: any) => onDelete(permission as Permission),
     },
   ];
 
@@ -213,7 +171,7 @@ export const PermissionDataGrid: React.FC<PermissionDataGridProps> = ({
       columns={columns}
       actions={actions}
       loading={loading}
-      onRefresh={() => {}}
+      onRefresh={() => { }}
       emptyMessage="Không có quyền hạn nào"
     />
   );

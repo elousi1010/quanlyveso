@@ -1,7 +1,9 @@
 import React from 'react';
-import { Box, CircularProgress, Alert } from '@mui/material';
+import { Flex, Spin, Alert, Typography, Result, Button } from 'antd';
 import { useIsAuthenticated } from '../../hooks/useAuthApi';
 import LoginForm from './LoginForm';
+
+const { Text, Title } = Typography;
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -9,79 +11,80 @@ interface AuthGuardProps {
   fallback?: React.ReactNode;
 }
 
-const AuthGuard: React.FC<AuthGuardProps> = ({ 
-  children, 
-  requiredRole, 
-  fallback 
+const AuthGuard: React.FC<AuthGuardProps> = ({
+  children,
+  requiredRole,
+  fallback
 }) => {
   const { isAuthenticated, user, isLoading, error } = useIsAuthenticated();
 
   // Loading state
   if (isLoading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        flexDirection="column"
-        gap={2}
+      <Flex
+        vertical
+        justify="center"
+        align="center"
+        style={{ minHeight: '100vh' }}
+        gap={16}
       >
-        <CircularProgress size={60} />
-        <Box>Đang kiểm tra xác thực...</Box>
-      </Box>
+        <Spin size="large" />
+        <Text strong>Đang kiểm tra xác thực...</Text>
+      </Flex>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        flexDirection="column"
-        gap={2}
-        p={3}
+      <Flex
+        vertical
+        justify="center"
+        align="center"
+        style={{ minHeight: '100vh', padding: '24px' }}
+        gap={16}
       >
-        <Alert severity="error" sx={{ maxWidth: 500 }}>
-          <strong>Lỗi xác thực:</strong> {error}
-        </Alert>
-        <Box>
-          Vui lòng thử lại hoặc liên hệ quản trị viên.
-        </Box>
-      </Box>
+        <Result
+          status="error"
+          title="Lỗi xác thực"
+          subTitle={error}
+          extra={[
+            <Text key="desc" type="secondary">Vui lòng thử lại hoặc liên hệ quản trị viên.</Text>
+          ]}
+        />
+      </Flex>
     );
   }
 
   // Not authenticated
   if (!isAuthenticated || !user) {
-    return fallback || <LoginForm />;
+    return (fallback as any) || <LoginForm />;
   }
 
   // Check role permission
   if (requiredRole && user.role !== requiredRole) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        flexDirection="column"
-        gap={2}
-        p={3}
+      <Flex
+        vertical
+        justify="center"
+        align="center"
+        style={{ minHeight: '100vh', padding: '24px' }}
+        gap={16}
       >
-        <Alert severity="warning" sx={{ maxWidth: 500 }}>
-          <strong>Không có quyền truy cập</strong>
-        </Alert>
-        <Box>
-          Bạn không có quyền truy cập trang này. Vai trò yêu cầu: {requiredRole}
-        </Box>
-        <Box>
-          Vai trò hiện tại: {user.role}
-        </Box>
-      </Box>
+        <Result
+          status="warning"
+          title="Không có quyền truy cập"
+          subTitle={`Bạn không có quyền truy cập trang này. Vai trò yêu cầu: ${requiredRole}`}
+          extra={[
+            <Flex vertical align="center" gap={8} key="role-info">
+              <Text>Vai trò hiện tại: <Text strong>{user.role}</Text></Text>
+              <Button type="primary" onClick={() => window.location.href = '/'}>
+                Về Trang Chủ
+              </Button>
+            </Flex>
+          ]}
+        />
+      </Flex>
     );
   }
 

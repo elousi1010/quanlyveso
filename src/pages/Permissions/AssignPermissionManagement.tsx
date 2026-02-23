@@ -1,23 +1,22 @@
 import React, { useState, useCallback } from 'react';
 import {
-  Box,
-  Paper,
   Typography,
   Button,
-  Grid,
   Card,
-  CardContent,
   Avatar,
-  Chip,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+  Tag,
+  Row,
+  Col,
+  Empty,
+  Flex,
+  theme as antdTheme,
+  Spin,
+} from 'antd';
 import {
-  Person,
-  Security,
-  Assignment,
-  Refresh,
-} from '@mui/icons-material';
+  UserOutlined,
+  SafetyCertificateOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { userApi } from '../Users/api';
 import { usePermissionMutations } from './hooks/usePermissionMutations';
@@ -26,7 +25,10 @@ import { UserPermissionAssignment } from './components';
 import { CommonSnackbar, CommonHeader } from '@/components/common';
 import type { User } from './types';
 
+const { Text, Title } = Typography;
+
 export const AssignPermissionManagement: React.FC = () => {
+  const { token } = antdTheme.useToken();
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({
@@ -45,28 +47,10 @@ export const AssignPermissionManagement: React.FC = () => {
   // Fetch permissions to calculate user permissions
   const { data: permissionsData } = usePermissions();
 
-  const { setForUserMutation } = usePermissionMutations();
-
   const handleAssignPermission = useCallback((user: User) => {
     setSelectedUser(user);
     setAssignDialogOpen(true);
   }, []);
-
-  const handleAssignSubmit = useCallback(async (permissionId: string, userId: string) => {
-    try {
-      await setForUserMutation.mutateAsync({
-        permissionId,
-        data: { user_id: userId }
-      });
-    } catch (error) {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi gán quyền hạn',
-        severity: 'error',
-      });
-      throw error;
-    }
-  }, [setForUserMutation]);
 
   const handleAssignSuccess = useCallback(() => {
     setSnackbar({
@@ -106,16 +90,19 @@ export const AssignPermissionManagement: React.FC = () => {
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Typography color="error">
-          Lỗi khi tải danh sách người dùng: {(error as Error).message}
-        </Typography>
-      </Box>
+      <Flex style={{ padding: '24px' }}>
+        <Alert
+          message="Lỗi"
+          description={`Lỗi khi tải danh sách người dùng: ${(error as Error).message}`}
+          type="error"
+          showIcon
+        />
+      </Flex>
     );
   }
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Flex vertical style={{ height: '100%' }}>
       {/* Header */}
       <CommonHeader
         title="Gán quyền hạn"
@@ -129,122 +116,101 @@ export const AssignPermissionManagement: React.FC = () => {
       />
 
       {/* Users Grid */}
-      <Box sx={{ mt: 2, flex: 1, overflow: 'hidden' }}>
-        <Paper elevation={3} sx={{ p: 3, borderRadius: 3, background: 'white', height: '100%', overflow: 'auto' }}>
-          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'primary.dark' }}>
-            Danh sách người dùng ({users.length})
-          </Typography>
+      <div style={{
+        marginTop: '16px',
+        flex: 1,
+        overflow: 'auto',
+        padding: '24px',
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: token.boxShadowSecondary
+      }}>
+        <Title level={4} style={{ marginBottom: '24px', fontWeight: 600 }}>
+          Danh sách người dùng ({users.length})
+        </Title>
 
-          {isLoading ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <Typography variant="h6" color="text.secondary">
-                Đang tải danh sách người dùng...
-              </Typography>
-            </Box>
-          ) : users.length === 0 ? (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-              <Person sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary">
-                Không có người dùng nào
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Chưa có người dùng nào trong hệ thống
-              </Typography>
-            </Box>
-          ) : (
-            <Grid container spacing={3}>
-              {users.map((user: User) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={user.id}>
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      borderRadius: 3,
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      transition: 'all 0.3s ease-in-out',
-                      '&:hover': {
-                        boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
-                        transform: 'translateY(-2px)',
-                      }
-                    }}
-                  >
-                    <CardContent sx={{ flexGrow: 1, p: 3 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar
-                          sx={{
-                            width: 48,
-                            height: 48,
-                            mr: 2,
-                            background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                          }}
-                        >
-                          <Person />
-                        </Avatar>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 600, color: 'primary.dark' }}>
-                            {user.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                            {user.phone_number}
-                          </Typography>
-                        </Box>
-                      </Box>
+        {isLoading ? (
+          <Flex justify="center" align="center" style={{ padding: '64px' }}>
+            <Spin size="large" tip="Đang tải danh sách người dùng..." />
+          </Flex>
+        ) : users.length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <Flex vertical align="center">
+                <Text type="secondary">Không có người dùng nào</Text>
+                <Text type="secondary" style={{ fontSize: '12px' }}>Chưa có người dùng nào trong hệ thống</Text>
+              </Flex>
+            }
+          />
+        ) : (
+          <Row gutter={[24, 24]}>
+            {users.map((user: User) => (
+              <Col xs={24} sm={12} md={8} xl={6} key={user.id}>
+                <Card
+                  hoverable
+                  style={{
+                    height: '100%',
+                    borderRadius: '12px',
+                    border: `1px solid ${token.colorBorderSecondary}`
+                  }}
+                  styles={{ body: { padding: '24px' } }}
+                  actions={[
+                    <Button
+                      type="link"
+                      icon={<SafetyCertificateOutlined />}
+                      onClick={() => handleAssignPermission(user)}
+                      key="assign"
+                    >
+                      Gán quyền hạn
+                    </Button>
+                  ]}
+                >
+                  <Card.Meta
+                    avatar={
+                      <Avatar
+                        size={48}
+                        icon={<UserOutlined />}
+                        style={{ backgroundColor: token.colorPrimary }}
+                      />
+                    }
+                    title={
+                      <Text strong style={{ fontSize: '16px' }}>{user.name}</Text>
+                    }
+                    description={
+                      <Flex vertical gap={12}>
+                        <Text type="secondary" style={{ fontFamily: 'monospace' }}>
+                          {user.phone_number}
+                        </Text>
 
-                      <Box sx={{ mb: 2 }}>
-                        <Chip
-                          label={user.role.toUpperCase()}
-                          size="small"
-                          sx={{
-                            backgroundColor: user.role === 'admin' ? '#f44336' : '#2196f3',
-                            color: 'white',
-                            fontWeight: 600,
-                            mr: 1
-                          }}
-                        />
-                        <Chip
-                          label={user.is_active ? 'Hoạt động' : 'Không hoạt động'}
-                          size="small"
-                          color={user.is_active ? 'success' : 'error'}
-                          sx={{ fontWeight: 600 }}
-                        />
-                      </Box>
+                        <Flex gap={8}>
+                          <Tag color={user.role === 'admin' ? 'error' : 'processing'} bordered={false}>
+                            {user.role.toUpperCase()}
+                          </Tag>
+                          <Tag color={user.is_active ? 'success' : 'error'} bordered={false}>
+                            {user.is_active ? 'Hoạt động' : 'Không hoạt động'}
+                          </Tag>
+                        </Flex>
 
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Quyền hạn: {getUserPermissionsCount(user.id)} quyền
-                      </Typography>
+                        <div style={{ marginTop: '8px' }}>
+                          <Text type="secondary" style={{ display: 'block' }}>
+                            Quyền hạn: <Text strong color={token.colorPrimary}>{getUserPermissionsCount(user.id)}</Text> quyền
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            Tạo: {new Date(user.created_at).toLocaleDateString('vi-VN')}
+                          </Text>
+                        </div>
+                      </Flex>
+                    }
+                  />
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </div>
 
-                      <Typography variant="caption" color="text.secondary">
-                        Tạo: {new Date(user.created_at).toLocaleDateString('vi-VN')}
-                      </Typography>
-                    </CardContent>
-
-                    <Box sx={{ p: 2, borderTop: '1px solid #e0e0e0' }}>
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<Security />}
-                        onClick={() => handleAssignPermission(user)}
-                        sx={{
-                          borderRadius: 2,
-                          background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                          '&:hover': {
-                            background: 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
-                          }
-                        }}
-                      >
-                        Gán quyền hạn
-                      </Button>
-                    </Box>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          )}
-        </Paper>
-      </Box>
-
-      {/* User Permission Assignment */}
+      {/* User Permission Assignment Modal */}
       <UserPermissionAssignment
         open={assignDialogOpen}
         onClose={handleCloseDialog}
@@ -259,6 +225,6 @@ export const AssignPermissionManagement: React.FC = () => {
         message={snackbar.message}
         severity={snackbar.severity}
       />
-    </Box>
+    </Flex>
   );
 };

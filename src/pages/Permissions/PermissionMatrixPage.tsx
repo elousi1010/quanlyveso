@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Paper, Alert, CircularProgress } from '@mui/material';
+import { Typography, Flex, Alert, Spin, message, theme as antdTheme } from 'antd';
 import PermissionMatrix from './components/PermissionMatrix';
 import { useUsers } from '@/pages/Users/hooks/useUserApi';
 import type { User } from '@/pages/Users/types/userTypes';
 
+const { Title, Paragraph } = Typography;
+
 const PermissionMatrixPage: React.FC = () => {
+  const { token } = antdTheme.useToken();
   const [users, setUsers] = useState<User[]>([]);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'warning' | 'info',
-  });
+  const [messageApi, contextHolder] = message.useMessage();
 
   // Lấy danh sách users
   const { data: usersData, isLoading, error } = useUsers({ limit: 1000 });
@@ -22,76 +21,79 @@ const PermissionMatrixPage: React.FC = () => {
   }, [usersData]);
 
   const handleSuccess = () => {
-    setSnackbar({
-      open: true,
-      message: 'Cập nhật ma trận quyền hạn thành công!',
-      severity: 'success',
-    });
-  };
-
-  const handleSnackbarClose = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+    messageApi.success('Cập nhật ma trận quyền hạn thành công!');
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 400 }}>
-        <CircularProgress />
-      </Box>
+      <Flex justify="center" align="center" style={{ height: '400px' }}>
+        <Spin size="large" tip="Đang tải danh sách người dùng..." />
+      </Flex>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ mt: 0 }}>
-        <Paper sx={{ p: 2, mb: 2 }}>
-          <Typography variant="h4" sx={{ mb: 1 }}>
-            Ma trận quyền hạn
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+      <Flex vertical gap={24}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '24px',
+          borderRadius: '12px',
+          boxShadow: token.boxShadowSecondary
+        }}>
+          <Title level={2} style={{ margin: 0 }}>Ma trận quyền hạn</Title>
+          <Paragraph type="secondary" style={{ margin: '8px 0 0 0' }}>
             Quản lý quyền hạn dạng ma trận trực quan cho tất cả user
-          </Typography>
-        </Paper>
-        <Alert severity="error">
-          Không thể tải danh sách user. Vui lòng thử lại sau.
-        </Alert>
-      </Box>
+          </Paragraph>
+        </div>
+        <Alert
+          message="Lỗi"
+          description="Không thể tải danh sách user. Vui lòng thử lại sau."
+          type="error"
+          showIcon
+        />
+      </Flex>
     );
   }
 
   return (
-    <Box sx={{ mt: 0 }}>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Typography variant="h4" sx={{ mb: 1 }}>
-          Ma trận quyền hạn
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+    <Flex vertical gap={24}>
+      {contextHolder}
+      <div style={{
+        backgroundColor: 'white',
+        padding: '24px',
+        borderRadius: '12px',
+        boxShadow: token.boxShadowSecondary,
+        border: `1px solid ${token.colorBorderSecondary}`
+      }}>
+        <Title level={2} style={{ margin: 0 }}>Ma trận quyền hạn</Title>
+        <Paragraph type="secondary" style={{ margin: '8px 0 0 0' }}>
           Quản lý quyền hạn dạng ma trận trực quan cho tất cả user ({users.length} user)
-        </Typography>
-      </Paper>
+        </Paragraph>
+      </div>
 
       {users.length === 0 ? (
-        <Alert severity="info">
-          Không có user nào để hiển thị ma trận quyền hạn.
-        </Alert>
-      ) : (
-        <PermissionMatrix
-          users={users}
-          onSuccess={handleSuccess}
+        <Alert
+          message="Thông báo"
+          description="Không có user nào để hiển thị ma trận quyền hạn."
+          type="info"
+          showIcon
         />
+      ) : (
+        <div style={{
+          backgroundColor: 'white',
+          padding: '24px',
+          borderRadius: '12px',
+          boxShadow: token.boxShadowSecondary,
+          border: `1px solid ${token.colorBorderSecondary}`
+        }}>
+          <PermissionMatrix
+            users={users}
+            onSuccess={handleSuccess}
+          />
+        </div>
       )}
-
-      {/* Snackbar */}
-      {snackbar.open && (
-        <Alert 
-          severity={snackbar.severity} 
-          onClose={handleSnackbarClose}
-          sx={{ position: 'fixed', bottom: 16, right: 16, zIndex: 9999 }}
-        >
-          {snackbar.message}
-        </Alert>
-      )}
-    </Box>
+    </Flex>
   );
 };
 

@@ -1,27 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
-  Button,
-  TextField,
+  Form,
+  Input,
   Typography,
   Card,
-  CardContent,
   Switch,
-  Paper,
-  IconButton,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import { LoadingButton } from '@mui/lab';
-import { 
-  Save, 
-  Cancel, 
-  Security, 
-  Close
-} from '@mui/icons-material';
+  Button,
+  theme as antdTheme,
+  Flex,
+  Divider,
+} from 'antd';
+import {
+  SaveOutlined,
+  CloseOutlined,
+  SafetyCertificateOutlined,
+  EditOutlined,
+} from '@ant-design/icons';
 import CommonDrawer from '@/components/common/CommonDrawer';
 import { useBasePermissions } from '../hooks/useBasePermissions';
 import type { Permission, CreatePermissionDto } from '../types';
+
+const { Text, Title, Paragraph } = Typography;
 
 interface PermissionFormDrawerSimpleProps {
   open: boolean;
@@ -44,8 +43,8 @@ const PermissionFormDrawerSimple: React.FC<PermissionFormDrawerSimpleProps> = ({
   mode = 'edit',
   onEdit,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { token } = antdTheme.useToken();
+  const [form] = Form.useForm();
   const { data: basePermissions, isLoading: basePermissionsLoading } = useBasePermissions();
 
   const [formData, setFormData] = useState({
@@ -54,14 +53,17 @@ const PermissionFormDrawerSimple: React.FC<PermissionFormDrawerSimpleProps> = ({
     actions: {} as Record<string, Record<string, boolean>>
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
   useEffect(() => {
     if (permission) {
+      const initialActions = convertActionsToBoolean(permission.actions || {});
       setFormData({
         name: permission.name || '',
         code: permission.code || '',
-        actions: convertActionsToBoolean(permission.actions || {})
+        actions: initialActions
+      });
+      form.setFieldsValue({
+        name: permission.name,
+        code: permission.code,
       });
     } else {
       setFormData({
@@ -69,12 +71,13 @@ const PermissionFormDrawerSimple: React.FC<PermissionFormDrawerSimpleProps> = ({
         code: '',
         actions: {}
       });
+      form.resetFields();
     }
-  }, [permission]);
+  }, [permission, form]);
 
   const convertActionsToBoolean = (actions: Record<string, number>) => {
     const result: Record<string, Record<string, boolean>> = {};
-    
+
     Object.entries(actions).forEach(([module, value]) => {
       result[module] = {
         read: !!(value & 1),
@@ -83,13 +86,13 @@ const PermissionFormDrawerSimple: React.FC<PermissionFormDrawerSimpleProps> = ({
         delete: !!(value & 8)
       };
     });
-    
+
     return result;
   };
 
   const convertActionsToStringArray = (actions: Record<string, Record<string, boolean>>) => {
     const result: Record<string, string[]> = {};
-    
+
     Object.entries(actions).forEach(([module, perms]) => {
       const permissionList: string[] = [];
       if (perms.read) permissionList.push('read');
@@ -98,18 +101,12 @@ const PermissionFormDrawerSimple: React.FC<PermissionFormDrawerSimpleProps> = ({
       if (perms.delete) permissionList.push('delete');
       result[module] = permissionList;
     });
-    
+
     return result;
   };
 
-  const handleFieldChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
-    }
-  };
-
   const togglePermission = (module: string, action: string) => {
+    if (mode === 'view') return;
     setFormData(prev => ({
       ...prev,
       actions: {
@@ -126,268 +123,161 @@ const PermissionFormDrawerSimple: React.FC<PermissionFormDrawerSimpleProps> = ({
     return formData.actions[module]?.[action] || false;
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Tên quyền là bắt buộc';
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      const submitData: CreatePermissionDto = {
+        name: values.name,
+        code: values.code,
+        actions: convertActionsToStringArray(formData.actions)
+      };
+      onSave(submitData);
+    } catch (error) {
+      console.error('Validation failed:', error);
     }
-    
-    if (!formData.code.trim()) {
-      newErrors.code = 'Mã quyền là bắt buộc';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSave = () => {
-    if (!validateForm()) return;
-
-    const submitData: CreatePermissionDto = {
-      name: formData.name,
-      code: formData.code,
-      actions: convertActionsToStringArray(formData.actions)
-    };
-
-    onSave(submitData);
   };
 
   const handleClose = () => {
-    setFormData({
-      name: '',
-      code: '',
-      actions: {}
-    });
-    setErrors({});
+    form.resetFields();
     onClose();
   };
-
-  if (basePermissionsLoading) {
-    return (
-      <CommonDrawer
-        open={open}
-        onClose={handleClose}
-        title={title}
-        width={isMobile ? '100%' : 800}
-        loading={basePermissionsLoading}
-      >
-        <Box sx={{ p: 3, textAlign: 'center' }}>
-          <Typography variant="h6" color="text.secondary">
-            Đang tải base permissions...
-          </Typography>
-        </Box>
-      </CommonDrawer>
-    );
-  }
 
   return (
     <CommonDrawer
       open={open}
       onClose={handleClose}
       title={title}
-      width={isMobile ? '100%' : 800}
-      loading={loading}
+      width={700}
+      loading={loading || basePermissionsLoading}
     >
-      <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Content */}
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
-          {/* Basic Information */}
-          <Paper 
-            elevation={1}
-            sx={{ 
-              p: 3, 
-              mb: 3, 
-              borderRadius: 2,
-              background: 'white',
-              border: '1px solid #e0e0e0'
-            }}
+      <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={{ name: formData.name, code: formData.code }}
           >
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-              Thông tin cơ bản
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-              <TextField
-                fullWidth
-                label="Tên quyền"
-                placeholder="Tên quyền"
-                value={formData.name}
-                onChange={(e) => handleFieldChange('name', e.target.value)}
-                error={!!errors.name}
-                helperText={errors.name}
-                size="small"
-                disabled={mode === 'view'}
-              />
-              <TextField
-                fullWidth
-                label="Mã quyền"
-                placeholder="Mã quyền"
-                value={formData.code}
-                onChange={(e) => handleFieldChange('code', e.target.value)}
-                error={!!errors.code}
-                helperText={errors.code}
-                size="small"
-                disabled={mode === 'view'}
-              />
-            </Box>
-          </Paper>
+            {/* Basic Information */}
+            <div style={{
+              backgroundColor: token.colorFillAlter,
+              padding: '24px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              border: `1px solid ${token.colorBorderSecondary}`
+            }}>
+              <Title level={5} style={{ marginBottom: '20px' }}>Thông tin cơ bản</Title>
+              <Flex gap={16}>
+                <Form.Item
+                  name="name"
+                  label="Tên quyền"
+                  rules={[{ required: true, message: 'Tên quyền là bắt buộc' }]}
+                  style={{ flex: 1 }}
+                >
+                  <Input placeholder="Nhập tên quyền ví dụ: Quản lý bài viết" disabled={mode === 'view'} />
+                </Form.Item>
+                <Form.Item
+                  name="code"
+                  label="Mã quyền"
+                  rules={[{ required: true, message: 'Mã quyền là bắt buộc' }]}
+                  style={{ flex: 1 }}
+                >
+                  <Input placeholder="Nhập mã ví dụ: posts_manage" disabled={mode === 'view'} />
+                </Form.Item>
+              </Flex>
+            </div>
 
-          {/* Permissions Matrix */}
-          <Paper 
-            elevation={1}
-            sx={{ 
-              p: 3, 
-              borderRadius: 2,
-              background: 'white',
-              border: '1px solid #e0e0e0'
-            }}
-          >
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'primary.main' }}>
-              Phân quyền chi tiết
-            </Typography>
-            
+            {/* Phân quyền chi tiết */}
+            <Title level={5} style={{ marginBottom: '16px' }}>Phân quyền chi tiết</Title>
+
             {basePermissions && (
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 3 }}>
+              <Flex vertical gap={16}>
                 {Object.entries(basePermissions).map(([module, actions]) => {
                   const modulePermissions = Object.values(formData.actions[module] || {});
                   const hasAnyPermission = modulePermissions.some(Boolean);
-                  
+
                   return (
-                    <Card 
+                    <Card
                       key={module}
-                      elevation={1}
-                      sx={{ 
-                        borderRadius: 2,
-                        background: hasAnyPermission ? '#f5f5f5' : '#fafafa',
-                        border: '1px solid #e0e0e0',
-                        transition: 'all 0.3s ease',
+                      size="small"
+                      title={
+                        <Flex align="center" gap={8}>
+                          <SafetyCertificateOutlined style={{ color: hasAnyPermission ? token.colorPrimary : token.colorTextSecondary }} />
+                          <Text strong style={{ textTransform: 'uppercase', fontSize: '13px' }}>{module}</Text>
+                        </Flex>
+                      }
+                      style={{
+                        borderRadius: '12px',
+                        border: `1px solid ${hasAnyPermission ? token.colorPrimaryBorder : token.colorBorderSecondary}`,
+                        backgroundColor: hasAnyPermission ? '#f0faff' : 'white'
                       }}
                     >
-                      <CardContent sx={{ p: 2 }}>
-                        {/* Module Header */}
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          mb: 2,
-                          pb: 1,
-                          borderBottom: '1px solid #e0e0e0'
-                        }}>
-                          <Security sx={{ 
-                            mr: 1, 
-                            fontSize: 20, 
-                            color: 'text.secondary' 
-                          }} />
-                          <Typography variant="h6" sx={{ 
-                            fontWeight: 700, 
-                            textTransform: 'uppercase',
-                            color: 'text.primary',
-                            fontSize: '14px'
-                          }}>
-                            {module}
-                          </Typography>
-                        </Box>
-                        
-                        {/* Permission Toggles */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                          {Object.entries(actions).map(([action, value]) => (
-                            <Box 
-                              key={action}
-                              sx={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'space-between',
-                                p: 1.5,
-                                borderRadius: 1,
-                                background: hasPermission(module, action) 
-                                  ? 'rgba(25, 118, 210, 0.05)' 
-                                  : 'transparent',
-                                border: '1px solid',
-                                borderColor: hasPermission(module, action) 
-                                  ? 'primary.main' 
-                                  : 'divider',
-                                transition: 'all 0.2s ease'
-                              }}
-                            >
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography 
-                                  variant="body2" 
-                                  sx={{ 
-                                    fontWeight: 500,
-                                    color: hasPermission(module, action) ? 'primary.main' : 'text.primary',
-                                    textTransform: 'capitalize',
-                                    fontSize: '0.875rem'
-                                  }}
-                                >
-                                  {action}
-                                </Typography>
-                                <Typography 
-                                  variant="caption" 
-                                  sx={{ 
-                                    color: 'text.secondary',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 600
-                                  }}
-                                >
-                                  {value as string}
-                                </Typography>
-                              </Box>
-                              
-                              <Switch
-                                checked={hasPermission(module, action)}
-                                onChange={() => togglePermission(module, action)}
-                                size="small"
-                                color="primary"
-                                disabled={mode === 'view'}
-                              />
-                            </Box>
-                          ))}
-                        </Box>
-                      </CardContent>
+                      <Flex vertical gap={8}>
+                        {Object.entries(actions).map(([action, label]) => (
+                          <Flex
+                            key={action}
+                            align="center"
+                            justify="space-between"
+                            style={{
+                              padding: '8px 12px',
+                              borderRadius: '8px',
+                              backgroundColor: hasPermission(module, action) ? 'white' : 'transparent',
+                              border: `1px solid ${hasPermission(module, action) ? token.colorBorderSecondary : 'transparent'}`
+                            }}
+                          >
+                            <Flex vertical>
+                              <Text strong style={{ textTransform: 'capitalize', fontSize: '14px' }}>{action}</Text>
+                              <Text type="secondary" style={{ fontSize: '12px' }}>{label as string}</Text>
+                            </Flex>
+                            <Switch
+                              checked={hasPermission(module, action)}
+                              onChange={() => togglePermission(module, action)}
+                              disabled={mode === 'view'}
+                              size="small"
+                            />
+                          </Flex>
+                        ))}
+                      </Flex>
                     </Card>
                   );
                 })}
-              </Box>
+              </Flex>
             )}
-          </Paper>
-        </Box>
+          </Form>
+        </div>
 
-        {/* Actions */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'flex-end', 
-          gap: 2, 
-          pt: 3, 
-          borderTop: '1px solid #e0e0e0',
-          mt: 3
+        {/* Actions Footer */}
+        <div style={{
+          marginTop: '24px',
+          paddingTop: '20px',
+          borderTop: `1px solid ${token.colorBorderSecondary}`,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '12px'
         }}>
-          <Button
-            variant="outlined"
-            onClick={handleClose}
-            startIcon={<Cancel />}
-            disabled={loading}
-          >
+          <Button onClick={handleClose} icon={<CloseOutlined />} disabled={loading}>
             {mode === 'view' ? 'Đóng' : 'Hủy'}
           </Button>
           {mode === 'view' && onEdit ? (
             <Button
-              variant="contained"
+              type="primary"
               onClick={onEdit}
-              startIcon={<Save />}
+              icon={<EditOutlined />}
             >
               Chỉnh sửa
             </Button>
           ) : (
-            <LoadingButton
-              variant="contained"
+            <Button
+              type="primary"
               onClick={handleSave}
               loading={loading}
-              startIcon={<Save />}
+              icon={<SaveOutlined />}
+              style={{ minWidth: '100px' }}
             >
-              Lưu
-            </LoadingButton>
+              Lưu thay đổi
+            </Button>
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
     </CommonDrawer>
   );
 };

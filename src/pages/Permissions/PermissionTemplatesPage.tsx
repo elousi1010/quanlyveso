@@ -1,21 +1,39 @@
 import React from 'react';
-import { Box, Typography, Paper } from '@mui/material';
+import { Typography, Flex, theme as antdTheme } from 'antd';
 import PermissionTemplates from './components/PermissionTemplates';
 
-const PermissionTemplatesPage: React.FC = () => {
-  return (
-    <Box sx={{ mt: 0 }}>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Typography variant="h4" sx={{ mb: 1 }}>
-          Template quyền hạn
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Quản lý template quyền hạn theo role để gán nhanh cho user
-        </Typography>
-      </Paper>
+const { Title, Paragraph } = Typography;
 
-      <PermissionTemplates />
-    </Box>
+const PermissionTemplatesPage: React.FC = () => {
+  const { token } = antdTheme.useToken();
+
+  return (
+    <Flex vertical gap={24}>
+      <div style={{
+        backgroundColor: 'white',
+        padding: '24px',
+        borderRadius: '12px',
+        boxShadow: token.boxShadowSecondary,
+        border: `1px solid ${token.colorBorderSecondary}`
+      }}>
+        <Title level={2} style={{ margin: 0 }}>
+          Template quyền hạn
+        </Title>
+        <Paragraph type="secondary" style={{ margin: '8px 0 0 0' }}>
+          Quản lý template quyền hạn theo role để gán nhanh cho user
+        </Paragraph>
+      </div>
+
+      <div style={{
+        backgroundColor: 'white',
+        padding: '24px',
+        borderRadius: '12px',
+        boxShadow: token.boxShadowSecondary,
+        border: `1px solid ${token.colorBorderSecondary}`
+      }}>
+        <PermissionTemplates />
+      </div>
+    </Flex>
   );
 };
 
