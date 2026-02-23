@@ -1,293 +1,246 @@
-import React, { useState, useCallback } from 'react';
-import { Box } from '@mui/material';
+import React, { useState, useCallback, useMemo } from 'react';
+import { theme as antdTheme, Alert } from 'antd';
 import {
-  InventoryHeader,
+  CommonHeader,
+  CommonSnackbar,
+  CommonDeleteDialog,
+  type DetailField,
+  type FormField
+} from '@/components/common';
+import {
   InventoryDataGrid,
   InventorySearchAndFilter,
-  InventoryDeleteDialog,
-  InventorySnackbar,
   InventoryFormDialog,
   InventoryBulkEditDialog,
 } from './components';
 import { InventoryViewEditDrawer } from './components/InventoryViewEditDrawer';
 import { useInventories, useInventoryMutations } from './hooks';
-import type { 
-  Inventory, 
-  CreateInventoryDto, 
-  UpdateInventoryDto, 
-  InventorySearchParams 
+import {
+  inventoryDetailFields,
+  inventoryFormFields
+} from './constants/inventoryViewEditConfig';
+import type {
+  Inventory,
+  CreateInventoryDto,
+  UpdateInventoryDto,
+  InventorySearchParams
 } from './types';
 
 export const InventoryManagement: React.FC = () => {
+  const { token } = antdTheme.useToken();
+
   // State management
-  const [searchParams, setSearchParams] = useState({});
+  const [searchParams, setSearchParams] = useState<InventorySearchParams>({});
   const [filters, setFilters] = useState<Record<string, unknown>>({});
   const [selectedRows, setSelectedRows] = useState<Inventory[]>([]);
-  const [dialogState, setDialogState] = useState({
-    create: false,
-    edit: false,
-    view: false,
-    delete: false,
-    bulkEdit: false,
-    viewEdit: false,
-  });
-  const [selectedInventory, setSelectedInventory] = useState<Inventory | null>(null);
+
+  /**
+   * Universal state to control which view or dialog is currently active.
+   * This approach is highly maintainable as it prevents "zombie dialogs" and 
+   * ensures only one major UI flow is active at a time.
+   */
+  const [activeView, setActiveView] = useState<{
+    type: 'create' | 'edit' | 'view' | 'delete' | 'bulkEdit' | 'viewEdit' | null;
+    inventory: Inventory | null;
+  }>({ type: null, inventory: null });
+
+  // Snackbar state for user feedback
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
 
-  // API hooks
-  const { data: inventoriesData, isLoading, refetch } = useInventories(searchParams);
+  // API hooks for data fetching and mutations
+  const { data: inventoriesData, isLoading, error, refetch } = useInventories(searchParams);
   const { createMutation, updateMutation, deleteMutation } = useInventoryMutations();
 
-  // Event handlers
-  const handleSearchChange = useCallback((params: InventorySearchParams) => {
-    setSearchParams(prev => ({ ...prev, ...params, page: 1 }));
+  // Memoized inventory list to prevent unnecessary computations during re-renders
+  const inventories = useMemo(() => inventoriesData?.data || [], [inventoriesData]);
+
+  // Event handlers for search, sort, and filter
+  const handleSearchChange = useCallback((query: string) => {
+    setSearchParams(prev => ({ ...prev, searchKey: query, page: 1 }));
   }, []);
 
   const handleSort = useCallback((sortBy: string) => {
     setSearchParams(prev => ({ ...prev, sortBy, page: 1 }));
   }, []);
 
-  const handleFilter = useCallback((filters: Record<string, string>) => {
-    setSearchParams(prev => ({ ...prev, filters, page: 1 }));
-  }, []);
-
   const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
     setFilters(newFilters);
-    const combinedParams = { ...searchParams, ...newFilters };
-    setSearchParams(combinedParams);
-  }, [searchParams]);
+    setSearchParams(prev => ({ ...prev, ...newFilters, page: 1 }));
+  }, []);
 
   const handleReset = useCallback(() => {
     setSearchParams({});
     setFilters({});
   }, []);
 
-  const handleCreate = useCallback(() => {
-    setSelectedInventory(null);
-    setDialogState(prev => ({ ...prev, create: true }));
-  }, []);
-
-  const handleEdit = useCallback((inventory: Inventory) => {
-    setSelectedInventory(inventory);
-    setDialogState(prev => ({ ...prev, edit: true }));
-  }, []);
-
-  const handleView = useCallback((inventory: Inventory) => {
-    setSelectedInventory(inventory);
-    setDialogState(prev => ({ ...prev, viewEdit: true }));
-  }, []);
-
-  const handleDelete = useCallback((inventory: Inventory) => {
-    setSelectedInventory(inventory);
-    setDialogState(prev => ({ ...prev, delete: true }));
-  }, []);
-
-  const handleBulkEdit = useCallback(() => {
-    if (selectedRows.length > 0) {
-      setDialogState(prev => ({ ...prev, bulkEdit: true }));
-    }
-  }, [selectedRows]);
-
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
 
-  const handleCloseDialog = useCallback((dialogType: keyof typeof dialogState) => {
-    setDialogState(prev => ({ ...prev, [dialogType]: false }));
-    setSelectedInventory(null);
+  // View control handlers - centralized logic for opening and closing drawers/dialogs
+  const openView = useCallback((type: typeof activeView['type'], inventory: Inventory | null = null) => {
+    setActiveView({ type, inventory });
   }, []);
+
+  const closeView = useCallback(() => {
+    setActiveView({ type: null, inventory: null });
+  }, []);
+
+  const showSnackbar = useCallback((message: string, severity: typeof snackbar['severity'] = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
+
+  /**
+   * Data Mutation Handlers
+   */
 
   const handleCreateSubmit = useCallback(async (data: CreateInventoryDto) => {
     try {
       await createMutation.mutateAsync(data);
-      setSnackbar({
-        open: true,
-        message: 'Tạo kho thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('create');
+      showSnackbar('Tạo kho thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi tạo kho',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi tạo kho', 'error');
     }
-  }, [createMutation, handleCloseDialog]);
+  }, [createMutation, closeView, showSnackbar]);
 
   const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Inventory) => {
-    const inventoryToUpdate = selectedRow || selectedInventory;
-    if (!inventoryToUpdate) return;
-    
-    try {
-      await updateMutation.mutateAsync({ ...data as UpdateInventoryDto, id: inventoryToUpdate.id });
-      setSnackbar({
-        open: true,
-        message: 'Cập nhật kho thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('edit');
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi cập nhật kho',
-        severity: 'error',
-      });
-    }
-  }, [selectedInventory, updateMutation, handleCloseDialog]);
+    const target = selectedRow || activeView.inventory;
+    if (!target) return;
 
-  const handleViewEditSave = useCallback(async (data: UpdateInventoryDto) => {
     try {
-      await updateMutation.mutateAsync(data);
-      setSnackbar({
-        open: true,
-        message: 'Cập nhật kho thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('viewEdit');
+      // Ensure we merge the ID for the update request
+      await updateMutation.mutateAsync({ ...data as UpdateInventoryDto, id: target.id });
+      showSnackbar('Cập nhật kho thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi cập nhật kho',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi cập nhật kho', 'error');
     }
-  }, [updateMutation, handleCloseDialog]);
+  }, [activeView.inventory, updateMutation, closeView, showSnackbar]);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!selectedInventory) return;
-    
+    if (!activeView.inventory) return;
+
     try {
-      await deleteMutation.mutateAsync(selectedInventory.id);
-      setSnackbar({
-        open: true,
-        message: 'Xóa kho thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('delete');
+      await deleteMutation.mutateAsync(activeView.inventory.id);
+      showSnackbar('Xóa kho thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi xóa kho',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi xóa kho', 'error');
     }
-  }, [selectedInventory, deleteMutation, handleCloseDialog]);
+  }, [activeView.inventory, deleteMutation, closeView, showSnackbar]);
 
   const handleBulkEditSubmit = useCallback(async (updates: Array<{ id: string; data: UpdateInventoryDto }>) => {
     try {
-      // Update each inventory
-      await Promise.all(
-        updates.map(({ data }) => updateMutation.mutateAsync(data))
-      );
-      
-      setSnackbar({
-        open: true,
-        message: `Cập nhật thành công ${updates.length} kho`,
-        severity: 'success',
-      });
-      handleCloseDialog('bulkEdit');
-      setSelectedRows([]); // Clear selection after successful update
+      await Promise.all(updates.map(({ data }) => updateMutation.mutateAsync(data)));
+      showSnackbar(`Cập nhật thành công ${updates.length} kho`);
+      closeView();
+      setSelectedRows([]);
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi cập nhật kho',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi cập nhật kho', 'error');
     }
-  }, [updateMutation, handleCloseDialog]);
+  }, [updateMutation, closeView, showSnackbar]);
 
-  const handleSnackbarClose = useCallback(() => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  }, []);
-
-  // const inventories = React.useMemo(() => {
-  //   console.log('Inventory data from API:', inventoriesData);
-  //   console.log('Inventories array:', inventoriesData?.data);
-  //   return inventoriesData?.data || [];
-  // }, [inventoriesData?.data]);
+  if (error) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Lỗi"
+          description={`Không thể tải danh sách kho: ${(error as Error).message}`}
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
 
   return (
-    <Box sx={{ p: 2 }}>
-      <InventoryHeader
-        onCreate={handleCreate}
+    <div style={{ padding: '0 0 24px 0', minHeight: '100%' }}>
+      <CommonHeader
+        title="Quản lý Kho"
+        subtitle="Theo dõi và quản lý hàng tồn kho"
         onRefresh={handleRefresh}
-        onBulkEdit={handleBulkEdit}
+        onCreate={() => openView('create')}
+        onBulkEdit={() => openView('bulkEdit')}
         showBulkEdit={selectedRows.length > 0}
+        loading={isLoading}
       />
 
-      <Box sx={{ mt: 2 }}>
+      <div style={{ marginTop: '16px' }}>
         <InventorySearchAndFilter
-          onSearch={handleSearchChange as (query: string) => void}
-          onSort={handleSort as (sortBy: string) => void}
-          onFilter={handleFilter as (filters: Record<string, string>) => void}
+          onSearch={handleSearchChange}
+          onSort={handleSort}
+          onFilter={(f) => handleFilterChange(f)}
           onRefresh={handleRefresh}
           loading={isLoading}
           onFilterChange={handleFilterChange}
           filters={filters}
         />
-      </Box>
+      </div>
 
-      <Box sx={{ mt: 2 }}>
+      <div style={{
+        marginTop: '16px',
+        background: token.colorBgContainer,
+        borderRadius: '12px',
+        overflow: 'hidden'
+      }}>
         <InventoryDataGrid
-          data={inventoriesData?.data || []}
+          data={inventories}
           loading={isLoading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onView={handleView}
+          onEdit={(inv) => openView('edit', inv)}
+          onDelete={(inv) => openView('delete', inv)}
+          onView={(inv) => openView('viewEdit', inv)}
           onSave={handleUpdateSubmit}
           selectedRows={selectedRows}
           onSelectionChange={setSelectedRows}
         />
-      </Box>
+      </div>
 
-      {/* Create Dialog */}
+      {/* Dialogs & Drawers */}
       <InventoryFormDialog
-        open={dialogState.create}
-        onClose={() => handleCloseDialog('create')}
+        open={activeView.type === 'create'}
+        onClose={closeView}
         onSave={handleCreateSubmit}
         loading={createMutation.isPending}
       />
 
-      {/* Delete Dialog */}
-      <InventoryDeleteDialog
-        open={dialogState.delete}
-        onClose={() => handleCloseDialog('delete')}
+      <CommonDeleteDialog
+        open={activeView.type === 'delete'}
+        onClose={closeView}
         onConfirm={handleDeleteConfirm}
-        inventory={selectedInventory}
-        loading={deleteMutation.isPending}
+        title="Xóa Kho"
+        itemName={activeView.inventory?.code}
+        itemType="kho"
+        isDeleting={deleteMutation.isPending}
       />
 
-      {/* Bulk Edit Dialog */}
       <InventoryBulkEditDialog
-        open={dialogState.bulkEdit}
-        onClose={() => handleCloseDialog('bulkEdit')}
+        open={activeView.type === 'bulkEdit'}
+        onClose={closeView}
         onSave={handleBulkEditSubmit}
         selectedInventories={selectedRows}
         loading={updateMutation.isPending}
       />
 
-      {/* View/Edit Drawer */}
       <InventoryViewEditDrawer
-        open={dialogState.viewEdit}
-        onClose={() => handleCloseDialog('viewEdit')}
-        inventory={selectedInventory}
-        onSave={handleViewEditSave}
+        open={activeView.type === 'viewEdit'}
+        onClose={closeView}
+        inventory={activeView.inventory}
+        onSave={handleUpdateSubmit}
         loading={updateMutation.isPending}
         mode="view"
       />
 
-      {/* Snackbar */}
-      <InventorySnackbar
+      <CommonSnackbar
         open={snackbar.open}
-        onClose={handleSnackbarClose}
         message={snackbar.message}
         severity={snackbar.severity}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
       />
-    </Box>
+    </div>
   );
 };

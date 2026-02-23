@@ -1,15 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Box,
+  Drawer,
   Button,
   Typography,
-  Chip,
-  Paper,
+  Tag,
+  Space,
+  Divider,
+  Flex,
+  Descriptions,
+  Form,
+  Input,
+  Select,
+  DatePicker,
   Alert,
-  CircularProgress,
-} from '@mui/material';
-import { Edit as EditIcon, Save as SaveIcon, Cancel as CancelIcon } from '@mui/icons-material';
-import { CommonDrawer, type DetailField, type FormField } from './index';
+  theme as antdTheme,
+} from 'antd';
+import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
+import CommonDrawer from './CommonDrawer';
+import type { DetailField, FormField } from './types';
+
+const { Text } = Typography;
+const { TextArea } = Input;
 
 export interface CommonViewEditDrawerProps {
   open: boolean;
@@ -40,553 +52,156 @@ const CommonViewEditDrawer: React.FC<CommonViewEditDrawerProps> = ({
   mode = 'view',
   enableEdit = true,
 }) => {
+  const { token } = antdTheme.useToken();
   const [isEditing, setIsEditing] = useState(mode === 'edit');
-  const [formData, setFormData] = useState<Record<string, unknown>>({});
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [form] = Form.useForm();
 
   useEffect(() => {
     if (open) {
-      setFormData(data || {});
-      setFormErrors({});
       setIsEditing(mode === 'edit');
+      if (mode === 'edit' || (enableEdit && isEditing)) {
+        const processedData = { ...data };
+        editFields.forEach(field => {
+          if (field.type === 'date' && processedData[field.key]) {
+            processedData[field.key] = dayjs(processedData[field.key] as string);
+          }
+        });
+        form.setFieldsValue(processedData);
+      }
     }
-  }, [open, data, mode]);
+  }, [open, data, mode, isEditing, editFields, form, enableEdit]);
 
   const handleEdit = () => {
     setIsEditing(true);
-    // Only keep fields that exist in editFields for form data
-    const formFields = editFields.reduce((acc, field) => {
-      acc[field.key] = data?.[field.key] ?? null;
-      return acc;
-    }, {} as Record<string, unknown>);
-    setFormData(formFields);
-    setFormErrors({});
+    const processedData = { ...data };
+    editFields.forEach(field => {
+      if (field.type === 'date' && processedData[field.key]) {
+        processedData[field.key] = dayjs(processedData[field.key] as string);
+      }
+    });
+    form.setFieldsValue(processedData);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    setFormData(data || {});
-    setFormErrors({});
+    form.resetFields();
   };
 
   const handleSave = async () => {
     try {
-      setFormErrors({});
-      await onSave?.(formData);
+      const values = await form.validateFields();
+      const processedValues = { ...values };
+      editFields.forEach(field => {
+        if (field.type === 'date' && processedValues[field.key]) {
+          processedValues[field.key] = (processedValues[field.key] as dayjs.Dayjs).toISOString();
+        }
+      });
+      await onSave?.(processedValues);
       setIsEditing(false);
-      onClose(); // Đóng drawer sau khi save thành công
     } catch (err) {
-      console.error('Save error:', err);
+      console.error('Validate Failed:', err);
     }
   };
 
-  const handleFieldChange = (fieldName: string, value: unknown) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-    
-    // Clear error when user starts typing
-    if (formErrors[fieldName]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [fieldName]: '',
-      }));
-    }
-  };
-
-  const renderFieldValue = (field: DetailField, value: unknown) => {
+  const renderFieldValue = (field: DetailField, value: any) => {
     if (value === null || value === undefined || value === '') {
-      return (
-        <Typography variant="body2" color="text.secondary" fontStyle="italic">
-          Không có dữ liệu
-        </Typography>
-      );
-    }
-
-    // Handle objects that shouldn't be rendered directly
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      return (
-        <Typography variant="body2" color="text.secondary" fontStyle="italic">
-          [Object - {Object.keys(value).join(', ')}]
-        </Typography>
-      );
+      return <Text type="secondary" italic>Không có dữ liệu</Text>;
     }
 
     switch (field.type) {
-      case 'text':
-      case 'email':
-      case 'tel':
-        return (
-          <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
-            {String(value || '')}
-          </Typography>
-        );
-
-      case 'number':
-        return (
-          <Typography variant="body2">
-            {typeof value === 'number' ? value.toLocaleString() : String(value || '')}
-          </Typography>
-        );
-
       case 'currency':
-        return (
-          <Typography variant="body2" fontWeight="medium">
-            {typeof value === 'number' ? value.toLocaleString('vi-VN', {
-              style: 'currency',
-              currency: 'VND',
-            }) : String(value || '')}
-          </Typography>
-        );
-
+        return <Text strong>{typeof value === 'number' ? value.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' }) : value}</Text>;
       case 'date':
-        return (
-          <Typography variant="body2">
-            {value ? new Date(value as string | number | Date).toLocaleDateString('vi-VN') : 'N/A'}
-          </Typography>
-        );
-
+        return dayjs(value).format('DD/MM/YYYY');
       case 'datetime':
-        return (
-          <Typography variant="body2">
-            {value ? new Date(value as string | number | Date).toLocaleString('vi-VN') : 'N/A'}
-          </Typography>
-        );
-
+        return dayjs(value).format('DD/MM/YYYY HH:mm');
       case 'boolean':
-        return (
-          <Chip
-            label={value ? 'Có' : 'Không'}
-            color={value ? 'success' : 'default'}
-            size="small"
-            variant="outlined"
-          />
-        );
-
+        return <Tag color={value ? 'success' : 'default'}>{value ? 'Có' : 'Không'}</Tag>;
       case 'status': {
-        const statusConfig = field.statusConfig?.[value as string] || {
-          label: String(value || ''),
-          color: 'default' as const,
-          variant: 'filled' as const,
-        };
-        return (
-          <Chip
-            label={statusConfig.label}
-            color={statusConfig.color}
-            size="small"
-            variant={statusConfig.variant || 'filled'}
-          />
-        );
+        const config = field.statusConfig?.[value] || { label: String(value), color: 'default' };
+        return <Tag color={config.color}>{config.label}</Tag>;
       }
-
       case 'array':
-        if (Array.isArray(value)) {
-          return (
-            <Box>
-              {value.map((item, index) => {
-                if (!item || item === null || item === undefined) return null;
-                return (
-                  <Chip
-                    key={index}
-                    label={typeof item === 'object' && item !== null ? item?.name || item?.label || JSON.stringify(item) : String(item || '')}
-                    size="small"
-                    variant="outlined"
-                    sx={{ mr: 0.5, mb: 0.5 }}
-                  />
-                );
-              })}
-            </Box>
-          );
-        }
         return (
-          <Typography variant="body2" color="text.secondary">
-            {String(value || '')}
-          </Typography>
+          <Space wrap>
+            {Array.isArray(value) && value.map((item, i) => (
+              <Tag key={i} variant="outlined">{typeof item === 'object' ? item?.name || item?.label || JSON.stringify(item) : String(item)}</Tag>
+            ))}
+          </Space>
         );
-
-      case 'object':
-        if (typeof value === 'object' && value !== null) {
-          return (
-            <Box>
-              {Object.entries(value).map(([key, val]) => (
-                <Box key={key} sx={{ mb: 0.5 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    {key}:
-                  </Typography>
-                  <Typography variant="body2" sx={{ ml: 1 }}>
-                    {typeof val === 'object' && val !== null ? JSON.stringify(val) : String(val || '')}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          );
-        }
-        return (
-          <Typography variant="body2">
-            {String(value || '')}
-          </Typography>
-        );
-
-      case 'custom':
-        if (field.render) {
-          return field.render(value, data || {});
-        }
-        return (
-          <Typography variant="body2">
-            {String(value || '')}
-          </Typography>
-        );
-
       default:
-        // Check if field has custom render function
-        if (field.render) {
-          const renderedValue = field.render(value, data || {});
-          
-          // If field has chip config, wrap in Chip component
-          if (field.chip) {
-            return (
-              <Chip
-                label={renderedValue}
-                color={field.chip.color}
-                size="small"
-                variant={field.chip.variant || 'filled'}
-              />
-            );
-          }
-          
-          return (
-            <Typography variant="body2">
-              {renderedValue}
-            </Typography>
-          );
-        }
-        
-        return (
-          <Typography variant="body2">
-            {String(value || '')}
-          </Typography>
-        );
+        return field.render ? field.render(value, data) : String(value);
     }
   };
 
   const renderEditField = (field: FormField) => {
-    const value = formData[field.key] || '';
-    const error = formErrors[field.key];
-
     switch (field.type) {
-      case 'text':
-      case 'email':
-      case 'tel':
-        return (
-          <input
-            type={field.type}
-            value={String(value || '')}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            placeholder={field.placeholder}
-            disabled={field.disabled}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${error ? '#d32f2f' : '#c4c4c4'}`,
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-            }}
-          />
-        );
-
-      case 'number':
-        return (
-          <input
-            type="number"
-            value={String(value || '')}
-            onChange={(e) => handleFieldChange(field.key, parseFloat(e.target.value) || 0)}
-            placeholder={field.placeholder}
-            disabled={field.disabled}
-            min={field.min}
-            max={field.max}
-            step={field.step}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${error ? '#d32f2f' : '#c4c4c4'}`,
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-            }}
-          />
-        );
-
       case 'select':
-        return (
-          <select
-            value={String(value || '')}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            disabled={field.disabled}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${error ? '#d32f2f' : '#c4c4c4'}`,
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-            }}
-          >
-            <option value="">{field.placeholder || 'Chọn...'}</option>
-            {field.options?.map((option) => {
-              if (!option) return null;
-              return (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              );
-            })}
-          </select>
-        );
-
+        return <Select options={field.options} style={{ width: '100%' }} />;
       case 'textarea':
-        return (
-          <textarea
-            value={String(value || '')}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            placeholder={field.placeholder}
-            disabled={field.disabled}
-            rows={field.rows || 3}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${error ? '#d32f2f' : '#c4c4c4'}`,
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-              resize: 'vertical',
-            }}
-          />
-        );
-
-      case 'boolean':
-        return (
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input
-              type="checkbox"
-              checked={Boolean(value)}
-              onChange={(e) => handleFieldChange(field.key, e.target.checked)}
-              disabled={field.disabled}
-            />
-            <span>{field.placeholder || 'Bật/Tắt'}</span>
-          </label>
-        );
-
+        return <TextArea rows={field.rows || 3} />;
       case 'date':
-        return (
-          <input
-            type="date"
-            value={value ? new Date(value as string | number | Date).toISOString().split('T')[0] : ''}
-            onChange={(e) => handleFieldChange(field.key, e.target.value ? new Date(e.target.value).toISOString() : '')}
-            disabled={field.disabled}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${error ? '#d32f2f' : '#c4c4c4'}`,
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-            }}
-          />
-        );
-
-      case 'custom':
-        if (field.render) {
-          return field.render(value, formData || {}, handleFieldChange);
-        }
-        return (
-          <input
-            type="text"
-            value={String(value || '')}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            placeholder={field.placeholder}
-            disabled={field.disabled}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${error ? '#d32f2f' : '#c4c4c4'}`,
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-            }}
-          />
-        );
-
+        return <DatePicker style={{ width: '100%' }} format="DD/MM/YYYY" />;
+      case 'password':
+        return <Input.Password />;
       default:
-        return (
-          <input
-            type="text"
-            value={String(value || '')}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            placeholder={field.placeholder}
-            disabled={field.disabled}
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              border: `1px solid ${error ? '#d32f2f' : '#c4c4c4'}`,
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontFamily: 'inherit',
-            }}
-          />
-        );
+        return <Input type={field.type as any} />;
     }
   };
 
-  const footerContent = (
-    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-      {isEditing ? (
-        <>
-          <Button
-            onClick={handleCancel}
-            startIcon={<CancelIcon />}
-            disabled={loading}
-            size="small"
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={handleSave}
-            startIcon={loading ? <CircularProgress size={16} /> : <SaveIcon />}
-            variant="contained"
-            disabled={loading}
-            size="small"
-          >
-            {loading ? 'Đang lưu...' : 'Lưu'}
-          </Button>
-        </>
-      ) : (
-        onSave && (
-          <Button
-            onClick={handleEdit}
-            startIcon={<EditIcon />}
-            variant="contained"
-            size="small"
-          >
-            Chỉnh sửa
-          </Button>
-        )
-      )}
-    </Box>
-  );
-
-  const fieldsToUse = isEditing ? (editFields || []) : (viewFields || []);
-  
-  // Fallback: if no fields provided, create basic fields from data
-  const fallbackFields = fieldsToUse.length === 0 && data && Object.keys(data).length > 0 ? 
-    Object.keys(data)
-      .filter(key => {
-        const value = data[key];
-        // Filter out ID and organization_id fields
-        if (key === 'id' || key === 'organization_id') {
-          return false;
-        }
-        // Only include primitive values, not objects
-        return value !== null && value !== undefined && 
-               (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean');
-      })
-      .map(key => ({
-        key,
-        label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
-        type: 'text' as const
-      })) : [];
-  
-  // Filter out ID and organization_id fields from provided fields as well
-  const filteredFields = fieldsToUse.filter(field => 
-    field.key !== 'id' && field.key !== 'organization_id'
-  );
-  
-  const finalFields = filteredFields.length > 0 ? filteredFields : fallbackFields;
-
   return (
-    <CommonDrawer
-      open={open}
-      onClose={onClose}
-      title={title}
-      width={width}
-    >
-      <Box sx={{ p: 2 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+    <CommonDrawer open={open} onClose={onClose} title={title} width={width}>
+      <Flex vertical style={{ height: '100%', padding: '24px' }}>
+        {error && <Alert message={error} type="error" showIcon style={{ marginBottom: '16px' }} />}
 
-        {finalFields?.length > 0 ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-            {finalFields.map((field) => {
-              if (!field) return null;
-              const value = isEditing ? formData[field.key] : (data?.[field.key] ?? null);
-              const error = isEditing ? formErrors[field.key] : null;
-
-              return (
-                <Box 
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {isEditing ? (
+            <Form form={form} layout="vertical" requiredMark="optional">
+              {editFields.map(field => (
+                <Form.Item
                   key={field.key}
-                  sx={{ 
-                    flex: field.fullWidth ? '1 1 100%' : '1 1 calc(50% - 8px)',
-                    minWidth: '300px'
-                  }}
+                  name={field.key}
+                  label={<Text strong style={{ fontSize: '13px' }}>{field.label}</Text>}
+                  rules={[{ required: field.required, message: `${field.label} là bắt buộc` }]}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      border: 1,
-                      borderColor: error ? 'error.main' : 'divider',
-                      borderRadius: 1,
-                      height: '100%',
-                    }}
-                  >
-                    <Typography
-                      variant="subtitle2"
-                      color={error ? 'error.main' : 'text.secondary'}
-                      gutterBottom
-                      sx={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}
-                    >
-                      {field.label}
-                      {field.required && <span style={{ color: '#d32f2f' }}> *</span>}
-                    </Typography>
-                    <Box sx={{ mt: 0.5 }}>
-                      {isEditing ? renderEditField(field as FormField) : renderFieldValue(field as DetailField, value)}
-                    </Box>
-                    {error && (
-                      <Typography variant="caption" color="error" sx={{ mt: 0.5, display: 'block' }}>
-                        {error}
-                      </Typography>
-                    )}
-                  </Paper>
-                </Box>
-              );
-            })}
-          </Box>
-        ) : (
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              py: 4,
-              textAlign: 'center',
-            }}
-          >
-            <Typography variant="body2" color="text.secondary">
-              Không có thông tin chi tiết
-            </Typography>
-          </Box>
-        )}
-      </Box>
-      
-      {/* Footer with action buttons */}
-      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-        {footerContent}
-      </Box>
+                  {renderEditField(field)}
+                </Form.Item>
+              ))}
+            </Form>
+          ) : (
+            <Descriptions
+              column={1}
+              bordered
+              size="small"
+              labelStyle={{ width: '140px', fontWeight: 600, background: token.colorFillAlter }}
+            >
+              {viewFields.map(field => (
+                <Descriptions.Item key={field.key} label={field.label}>
+                  {renderFieldValue(field, data[field.key])}
+                </Descriptions.Item>
+              ))}
+            </Descriptions>
+          )}
+        </div>
+
+        <Divider style={{ margin: '24px 0 16px' }} />
+
+        <Flex justify="end" gap={12}>
+          {isEditing ? (
+            <>
+              <Button onClick={handleCancel} disabled={loading}>Hủy</Button>
+              <Button type="primary" icon={<SaveOutlined />} onClick={handleSave} loading={loading}>Lưu thay đổi</Button>
+            </>
+          ) : (
+            <>
+              <Button onClick={onClose}>Đóng</Button>
+              {enableEdit && onSave && (
+                <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>Chỉnh sửa</Button>
+              )}
+            </>
+          )}
+        </Flex>
+      </Flex>
     </CommonDrawer>
   );
 };

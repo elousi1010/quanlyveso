@@ -7,10 +7,10 @@ export const formatTransactionData = (transaction: Transaction) => {
       style: 'currency',
       currency: 'VND',
     }).format(transaction.amount),
-    created_at: transaction.created_at 
+    created_at: transaction.created_at
       ? new Date(transaction.created_at).toLocaleDateString('vi-VN')
       : '',
-    updated_at: transaction.updated_at 
+    updated_at: transaction.updated_at
       ? new Date(transaction.updated_at).toLocaleDateString('vi-VN')
       : '',
   };
@@ -61,4 +61,12 @@ export const getSubTypeLabel = (subType: string) => {
     'refund': 'Hoàn tiền',
   };
   return subTypeMap[subType] || subType;
+};
+export const checkCreditLimit = (currentDebt: number, creditLimit: number, transactionAmount: number) => {
+  const totalDebtAfter = currentDebt + transactionAmount;
+  return {
+    isExceeded: totalDebtAfter > creditLimit,
+    remainingLimit: creditLimit - currentDebt,
+    totalDebtAfter,
+  };
 };

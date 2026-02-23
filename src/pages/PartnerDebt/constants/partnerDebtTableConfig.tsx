@@ -1,7 +1,12 @@
 import React from 'react';
 import { Chip } from '@mui/material';
+import { Tag } from 'antd';
 import type { SimpleTableColumn } from '@/components/common/SimpleTable';
 import { formatCurrency, formatDate } from '../../../utils/format';
+import {
+  formatTransactionSubType,
+  getStatusColor
+} from '../utils/partnerDebtHelpers';
 
 // Table columns configuration
 export const partnerDebtTableColumns: SimpleTableColumn[] = [
@@ -14,32 +19,54 @@ export const partnerDebtTableColumns: SimpleTableColumn[] = [
   {
     key: 'amount',
     label: 'Số tiền',
-    minWidth: 120,
+    minWidth: 150,
     align: 'right',
+    render: (value, row: any) => (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+        <span style={{ fontWeight: 'bold' }}>{formatCurrency(Number(value))}</span>
+        {row.tax_amount > 0 && (
+          <span style={{ fontSize: '11px', color: '#e64a19' }}>
+            Thuế: -{formatCurrency(row.tax_amount)}
+          </span>
+        )}
+      </div>
+    ),
+  },
+  {
+    key: 'transaction_sub_type',
+    label: 'Nghiệp vụ',
+    minWidth: 140,
+    align: 'center',
     render: (value) => {
-      if (!value) return '';
-      return formatCurrency(Number(value));
+      const label = formatTransactionSubType(String(value));
+      return (
+        <Tag color={getStatusColor(String(value))} style={{ margin: 0 }}>
+          {label}
+        </Tag>
+      );
     },
   },
   {
     key: 'payment_method',
     label: 'Phương thức',
-    minWidth: 120,
+    minWidth: 140,
     align: 'center',
     render: (value) => {
       const methodConfig = {
-        cash: { label: 'Tiền mặt', color: 'success' as const },
-        bank_transfer: { label: 'Chuyển khoản', color: 'info' as const },
-        credit_card: { label: 'Thẻ tín dụng', color: 'warning' as const },
-        other: { label: 'Khác', color: 'default' as const },
+        cash: { label: 'Tiền mặt', color: 'success' },
+        bank_transfer: { label: 'Chuyển khoản', color: 'info' },
+        credit_card: { label: 'Thẻ tín dụng', color: 'warning' },
+        winning_ticket: { label: 'Vé trúng', color: 'purple' },
+        seasonal_bonus: { label: 'Thưởng Tết', color: 'red' },
+        other: { label: 'Khác', color: 'default' },
       };
-      
-      const config = methodConfig[String(value) as keyof typeof methodConfig] || { label: String(value), color: 'default' as const };
-      
+
+      const config = methodConfig[String(value) as keyof typeof methodConfig] || { label: String(value), color: 'default' };
+
       return (
         <Chip
           label={config.label}
-          color={config.color}
+          color={config.color as any}
           size="small"
           variant="outlined"
         />
@@ -48,17 +75,25 @@ export const partnerDebtTableColumns: SimpleTableColumn[] = [
   },
   {
     key: 'payment_type',
-    label: 'Loại giao dịch',
+    label: 'Loại GD',
     minWidth: 120,
     align: 'center',
-    render: (value) => (
-      <Chip
-        label={String(value) === 'income' ? 'Thu nhập' : 'Chi phí'}
-        color={String(value) === 'income' ? 'success' : 'error'}
-        size="small"
-        variant="outlined"
-      />
-    ),
+    render: (value) => {
+      const typeMap: Record<string, { label: string; color: string }> = {
+        income: { label: 'Thu nhập', color: 'success' },
+        expense: { label: 'Chi phí', color: 'error' },
+        adjustment: { label: 'Điều chỉnh', color: 'secondary' },
+        tax_withholding: { label: 'Khấu trừ thuế', color: 'warning' },
+      };
+      const config = typeMap[String(value)] || { label: String(value), color: 'default' };
+      return (
+        <Chip
+          label={config.label}
+          color={config.color as any}
+          size="small"
+        />
+      );
+    },
   },
   {
     key: 'description',

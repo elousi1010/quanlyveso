@@ -1,3 +1,11 @@
+export const INVENTORY_TRANSACTION_CONSTANTS = {
+  MODULE_NAME: 'InventoryTransaction',
+  MODULE_TITLE: 'Giao Dịch Kho',
+  API_ENDPOINTS: {
+    BASE: '/api/v1/inventory-transaction-items',
+  }
+} as const;
+
 export const INVENTORY_TRANSACTION_TYPES = [
   { value: 'import', label: 'Nhập' },
   { value: 'export', label: 'Xuất' },

@@ -1,49 +1,51 @@
 import { api } from '@/utils/api';
-import type { 
-  Ticket, 
-  CreateTicketDto, 
-  UpdateTicketDto, 
-  TicketResponse, 
-  TicketSearchParams 
+import { TICKET_CONSTANTS } from '../constants';
+import type {
+  Ticket,
+  CreateTicketDto,
+  UpdateTicketDto,
+  TicketResponse,
+  TicketSearchParams
 } from '../types';
 
-const API_BASE = 'https://lottery.esimvn.net/api/v1';
-
 export const ticketApi = {
-  // Get all tickets with pagination and search
+  /**
+   * Get all tickets with pagination and search
+   * Uses consolidated params for maintainability.
+   */
   getAll: async (params: TicketSearchParams = {}): Promise<TicketResponse> => {
-    const searchParams = new URLSearchParams();
-    
-    if (params.searchKey) searchParams.append('searchKey', params.searchKey);
-    if (params.page) searchParams.append('page', params.page.toString());
-    if (params.limit) searchParams.append('limit', params.limit.toString());
-    if (params.sortBy) searchParams.append('sortBy', params.sortBy);
-    if (params.sortOrder) searchParams.append('sortOrder', params.sortOrder);
-
-    const response = await api.get(`${API_BASE}/tickets?${searchParams.toString()}`);
-    return (response as any).data;
+    const response = await api.get(TICKET_CONSTANTS.API_ENDPOINTS.BASE, { params });
+    return response as unknown as TicketResponse;
   },
 
-  // Get ticket by ID
+  /**
+   * Get ticket by ID
+   */
   getById: async (id: string): Promise<Ticket> => {
-    const response = await api.get(`${API_BASE}/tickets/${id}`);
-    return (response as any).data;
+    const response = await api.get(`${TICKET_CONSTANTS.API_ENDPOINTS.BASE}/${id}`);
+    return response as unknown as any;
   },
 
-  // Create new ticket
+  /**
+   * Create new ticket
+   */
   create: async (data: CreateTicketDto): Promise<Ticket> => {
-    const response = await api.post(`${API_BASE}/tickets`, data);
-    return (response as any).data;
+    const response = await api.post(TICKET_CONSTANTS.API_ENDPOINTS.CREATE, data);
+    return response as unknown as any;
   },
 
-  // Update ticket
+  /**
+   * Update ticket
+   */
   update: async (id: string, data: UpdateTicketDto): Promise<Ticket> => {
-    const response = await api.patch(`${API_BASE}/tickets/${id}`, data);
-    return (response as any).data;
+    const response = await api.patch(`${TICKET_CONSTANTS.API_ENDPOINTS.UPDATE}/${id}`, data);
+    return response as unknown as any;
   },
 
-  // Delete ticket
+  /**
+   * Delete ticket
+   */
   delete: async (id: string): Promise<void> => {
-    await api.delete(`${API_BASE}/tickets/${id}`);
+    await api.delete(`${TICKET_CONSTANTS.API_ENDPOINTS.DELETE}/${id}`);
   },
 };

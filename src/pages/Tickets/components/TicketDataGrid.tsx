@@ -1,10 +1,10 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
-import { 
-  Visibility as ViewIcon, 
-  Edit as EditIcon, 
-  Delete as DeleteIcon 
-} from '@mui/icons-material';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined
+} from '@ant-design/icons';
 import { ticketTableConfig } from '../constants';
 import type { Ticket } from '../types';
 
@@ -17,6 +17,12 @@ interface TicketDataGridProps {
   onSave?: (data: Record<string, unknown>, selectedRow?: Ticket) => Promise<void>;
   selectedRows: Ticket[];
   onSelectionChange: (tickets: Ticket[]) => void;
+  // Pagination props
+  page?: number;
+  rowsPerPage?: number;
+  total?: number;
+  onPageChange?: (page: number) => void;
+  onRowsPerPageChange?: (rowsPerPage: number) => void;
 }
 
 export const TicketDataGrid: React.FC<TicketDataGridProps> = ({
@@ -25,9 +31,11 @@ export const TicketDataGrid: React.FC<TicketDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
-  onSave,
-  selectedRows,
-  onSelectionChange,
+  page,
+  rowsPerPage,
+  total,
+  onPageChange,
+  onRowsPerPageChange,
 }) => {
 
   // Simple table actions
@@ -35,21 +43,21 @@ export const TicketDataGrid: React.FC<TicketDataGridProps> = ({
     {
       key: 'view',
       label: 'Xem',
-      icon: <ViewIcon />,
+      icon: <EyeOutlined />,
       color: 'primary' as const,
       onClick: (ticket: unknown) => onView(ticket as Ticket),
     },
     {
       key: 'edit',
       label: 'Sửa',
-      icon: <EditIcon />,
+      icon: <EditOutlined />,
       color: 'primary' as const,
       onClick: (ticket: unknown) => onEdit(ticket as Ticket),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon />,
+      icon: <DeleteOutlined />,
       color: 'error' as const,
       onClick: (ticket: unknown) => onDelete(ticket as Ticket),
     },
@@ -61,8 +69,13 @@ export const TicketDataGrid: React.FC<TicketDataGridProps> = ({
       columns={ticketTableConfig.columns}
       actions={actions}
       loading={loading}
-      onRefresh={() => {}}
+      onRefresh={() => { }}
       emptyMessage="Không có vé số"
+      page={page}
+      rowsPerPage={rowsPerPage}
+      total={total}
+      onPageChange={onPageChange}
+      onRowsPerPageChange={onRowsPerPageChange}
     />
   );
 };

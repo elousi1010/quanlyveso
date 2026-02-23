@@ -5,11 +5,6 @@ import { formatDate } from '@/utils/format';
 export const ticketTableConfig = {
   columns: [
     {
-      key: 'id',
-      label: 'ID',
-      minWidth: 200,
-    },
-    {
       key: 'ticket_code',
       label: 'Mã vé',
       minWidth: 150,

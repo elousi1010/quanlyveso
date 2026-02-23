@@ -1,22 +1,9 @@
 import React from 'react';
-import {
-  Box,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  Paper,
-  Typography,
-  CircularProgress,
-  Alert,
-  Button,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
-import { Refresh as RefreshIcon } from '@mui/icons-material';
+import { Table, Button, Space, Typography, Flex, Tooltip, Alert, Spin, theme as antdTheme } from 'antd';
+import { ReloadOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+
+const { Text, Title } = Typography;
 
 export interface SimpleTableColumn {
   key: string;
@@ -35,7 +22,7 @@ export interface SimpleTableAction {
 }
 
 interface SimpleTableProps {
-  data: unknown[] | undefined;
+  data: any[] | undefined;
   columns: SimpleTableColumn[];
   actions?: SimpleTableAction[];
   loading?: boolean;
@@ -69,180 +56,99 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
   maxHeight = 600,
   stickyHeader = true,
 }) => {
-  const [internalPage, setInternalPage] = React.useState(0);
-  const [internalRowsPerPage, setInternalRowsPerPage] = React.useState(10);
+  const { token } = antdTheme.useToken();
 
-  // Use external pagination if callbacks are provided (server-side)
-  // Otherwise use internal pagination (client-side)
-  const isServerSidePagination = onPageChange !== undefined && onRowsPerPageChange !== undefined;
-  const currentPage = isServerSidePagination ? page : internalPage;
-  const currentRowsPerPage = isServerSidePagination ? rowsPerPage : internalRowsPerPage;
-
-  const handleChangePage = (event: unknown, newPage: number) => {
-    if (onPageChange) {
-      onPageChange(newPage);
-    } else {
-      setInternalPage(newPage);
-    }
-  };
-
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newRowsPerPage = parseInt(event.target.value, 10);
-    if (onRowsPerPageChange) {
-      onRowsPerPageChange(newRowsPerPage);
-    } else {
-      setInternalRowsPerPage(newRowsPerPage);
-    }
-    if (onPageChange) {
-      onPageChange(0);
-    } else {
-      setInternalPage(0);
-    }
-  };
-
-  // Error state
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert 
-          severity="error" 
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Lỗi tải dữ liệu"
+          description={(error as Error).message}
+          type="error"
+          showIcon
           action={
-            onRefresh ? (
-              <Button color="inherit" size="small" onClick={onRefresh} startIcon={<RefreshIcon />}>
+            onRefresh && (
+              <Button size="small" type="primary" danger onClick={onRefresh} icon={<ReloadOutlined />}>
                 Thử lại
               </Button>
-            ) : undefined
+            )
           }
-        >
-          Không thể tải dữ liệu: {(error as Error).message}
-        </Alert>
-      </Box>
+        />
+      </div>
     );
   }
 
-  // Loading state
-  if (loading) {
-    return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <CircularProgress size={24} sx={{ mr: 2 }} />
-        <Typography component="span">Đang tải...</Typography>
-      </Box>
-    );
+  const antdColumns: ColumnsType<any> = columns.map(col => ({
+    title: col.label,
+    dataIndex: col.key,
+    key: col.key,
+    align: col.align || 'left',
+    width: col.minWidth,
+    render: (text, record) => col.render ? col.render(text, record) : (text || '-'),
+  }));
+
+  if (actions.length > 0) {
+    antdColumns.push({
+      title: 'Thao tác',
+      key: 'actions',
+      align: 'center',
+      fixed: 'right',
+      width: 120,
+      render: (_, record) => (
+        <Space size="small">
+          {actions.map(action => (
+            <Tooltip key={action.key} title={action.label}>
+              <Button
+                type="text"
+                size="small"
+                icon={action.icon}
+                onClick={() => action.onClick(record)}
+                danger={action.color === 'error'}
+                style={{
+                  color: action.color === 'error' ? token.colorError : (action.color === 'primary' ? token.colorPrimary : undefined)
+                }}
+              />
+            </Tooltip>
+          ))}
+        </Space>
+      ),
+    });
   }
-
-  // Empty state
-  if (!data || data.length === 0) {
-    return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography variant="h6" color="text.secondary" gutterBottom>
-          {emptyMessage}
-        </Typography>
-        {onRefresh && (
-          <Button variant="outlined" onClick={onRefresh} startIcon={<RefreshIcon />} sx={{ mt: 1 }}>
-            Làm mới
-          </Button>
-        )}
-      </Box>
-    );
-  }
-
-  // For server-side pagination, use data as-is
-  // For client-side pagination, slice the data
-  const paginatedData = isServerSidePagination 
-    ? data 
-    : data.slice(currentPage * currentRowsPerPage, (currentPage + 1) * currentRowsPerPage);
-  
-  const totalCount = total || data.length;
-
-  // Debug logging for pagination
 
   return (
-    <Box>
-      <TableContainer component={Paper} sx={{ maxHeight, mt: 2 }}>
-        <Table stickyHeader={stickyHeader}>
-          <TableHead>
-            <TableRow>
-              {columns.map((column) => (
-                <TableCell 
-                  key={column.key}
-                  sx={{ 
-                    fontWeight: 'bold', 
-                    minWidth: column.minWidth || 120,
-                    textAlign: column.align || 'left'
-                  }}
-                >
-                  {column.label}
-                </TableCell>
-              ))}
-              {actions.length > 0 && (
-                <TableCell sx={{ fontWeight: 'bold', minWidth: 120, textAlign: 'center' }}>
-                  Thao tác
-                </TableCell>
+    <div style={{ width: '100%' }}>
+      <Table
+        dataSource={data}
+        columns={antdColumns}
+        loading={loading}
+        pagination={{
+          current: (page || 0) + 1,
+          pageSize: rowsPerPage || 10,
+          total: total || data?.length || 0,
+          onChange: (p, ps) => {
+            if (onPageChange) onPageChange(p - 1);
+            if (onRowsPerPageChange && ps !== rowsPerPage) onRowsPerPageChange(ps);
+          },
+          showSizeChanger: true,
+          pageSizeOptions: ['5', '10', '25', '50'],
+          locale: { items_per_page: '/ trang' },
+        }}
+        scroll={{ y: maxHeight, x: 'max-content' }}
+        rowKey={(record) => record.id || record.key || Math.random().toString()}
+        bordered={false}
+        size="middle"
+        locale={{
+          emptyText: (
+            <Flex vertical align="center" gap={12} style={{ padding: '32px 0' }}>
+              <Text type="secondary">{emptyMessage}</Text>
+              {onRefresh && (
+                <Button onClick={onRefresh} icon={<ReloadOutlined />}>Làm mới</Button>
               )}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {paginatedData.map((row, index) => {
-              // Try to get a unique identifier from the row, fallback to index
-              const rowKey = (row as Record<string, unknown>).id || 
-                            (row as Record<string, unknown>).key || 
-                            `row-${index}`;
-              
-              return (
-                <TableRow 
-                  key={String(rowKey)} 
-                  hover
-                  sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                >
-                {columns.map((column) => (
-                  <TableCell 
-                    key={column.key}
-                    sx={{ textAlign: column.align || 'left' }}
-                  >
-                    {column.render 
-                      ? column.render((row as Record<string, unknown>)[column.key], row) as React.ReactNode
-                      : ((row as Record<string, unknown>)[column.key] as React.ReactNode) || '-'
-                    }
-                  </TableCell>
-                ))}
-                {actions.length > 0 && (
-                  <TableCell sx={{ textAlign: 'center' }}>
-                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
-                      {actions.map((action) => (
-                        <Tooltip key={action.key} title={action.label}>
-                          <IconButton
-                            size="small"
-                            onClick={() => action.onClick(row)}
-                            color={action.color || 'primary'}
-                          >
-                            {action.icon}
-                          </IconButton>
-                        </Tooltip>
-                      ))}
-                    </Box>
-                  </TableCell>
-                )}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
-      
-      <TablePagination
-        rowsPerPageOptions={[5, 10, 25, 50]}
-        component="div"
-        count={totalCount}
-        rowsPerPage={currentRowsPerPage}
-        page={currentPage}
-        onPageChange={handleChangePage}
-        onRowsPerPageChange={handleChangeRowsPerPage}
-        labelRowsPerPage="Số dòng mỗi trang:"
-        labelDisplayedRows={({ from, to, count }) => 
-          `${from}-${to} của ${count !== -1 ? count : `nhiều hơn ${to}`}`
-        }
+            </Flex>
+          )
+        }}
       />
-    </Box>
+    </div>
   );
 };
 

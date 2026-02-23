@@ -39,7 +39,7 @@ export const transactionCreateFields: DialogFieldConfig<CreateTransactionDto>[] 
     render: (value: unknown, formData: Record<string, unknown>, handleFieldChange: (fieldKey: string, value: unknown) => void) => {
       const { UserSelector } = require('@/components/common');
       return (
-UserSelector({
+        UserSelector({
           value: value as string | null,
           onChange: (id: string | null, item: any) => handleFieldChange('partner_id', id),
           type: 'partner',
@@ -49,13 +49,6 @@ UserSelector({
         })
       );
     },
-  },
-  {
-    key: 'swap_id',
-    label: 'ID Swap',
-    type: 'text',
-    required: false,
-    placeholder: 'Nhập ID swap',
   },
   {
     key: 'note',
@@ -121,13 +114,6 @@ export const transactionUpdateFields: DialogFieldConfig<UpdateTransactionDto>[] 
     },
   },
   {
-    key: 'swap_id',
-    label: 'ID Swap',
-    type: 'text',
-    required: false,
-    placeholder: 'Nhập ID swap',
-  },
-  {
     key: 'note',
     label: 'Ghi chú',
     type: 'text',
@@ -145,12 +131,6 @@ export const transactionUpdateFields: DialogFieldConfig<UpdateTransactionDto>[] 
 
 export const transactionDetailFields: DialogFieldConfig[] = [
   {
-    key: 'id',
-    label: 'ID',
-    type: 'text',
-    readonly: true,
-  },
-  {
     key: 'amount',
     label: 'Số tiền',
     type: 'text',
@@ -165,18 +145,6 @@ export const transactionDetailFields: DialogFieldConfig[] = [
   {
     key: 'subType',
     label: 'Loại phụ',
-    type: 'text',
-    readonly: true,
-  },
-  {
-    key: 'partner_id',
-    label: 'ID Đối tác',
-    type: 'text',
-    readonly: true,
-  },
-  {
-    key: 'swap_id',
-    label: 'ID Swap',
     type: 'text',
     readonly: true,
   },
@@ -205,3 +173,4 @@ export const transactionDetailFields: DialogFieldConfig[] = [
     readonly: true,
   },
 ];
+

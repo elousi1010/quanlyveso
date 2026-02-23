@@ -20,9 +20,12 @@ export const formatNumber = (num: number): string => {
 /**
  * Format date to display format
  */
-export const formatDate = (date: Date | string, format: string = DATE_FORMATS.DISPLAY): string => {
+export const formatDate = (date: Date | string | null | undefined, format: string = DATE_FORMATS.DISPLAY): string => {
+  if (!date) {
+    return '---';
+  }
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
+
   if (isNaN(dateObj.getTime())) {
     return 'Ngày không hợp lệ';
   }
@@ -64,15 +67,15 @@ export const formatDate = (date: Date | string, format: string = DATE_FORMATS.DI
  */
 export const formatPhoneNumber = (phone: string): string => {
   const cleaned = phone.replace(/\D/g, '');
-  
+
   if (cleaned.length === 10) {
     return cleaned.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
   }
-  
+
   if (cleaned.length === 11) {
     return cleaned.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3');
   }
-  
+
   return phone;
 };
 
@@ -113,11 +116,11 @@ export const getInitials = (name: string): string => {
  */
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
-  
+
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
@@ -126,7 +129,7 @@ export const formatFileSize = (bytes: number): string => {
  */
 export const formatDateVietnamese = (date: Date | string): string => {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
+
   if (isNaN(dateObj.getTime())) {
     return 'Ngày không hợp lệ';
   }
@@ -146,29 +149,32 @@ export const formatDateVietnamese = (date: Date | string): string => {
 /**
  * Format relative time
  */
-export const formatRelativeTime = (date: Date | string): string => {
+export const formatRelativeTime = (date: Date | string | null | undefined): string => {
+  if (!date) {
+    return '---';
+  }
   const dateObj = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) {
     return 'Vừa xong';
   }
-  
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `${diffInMinutes} phút trước`;
   }
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
     return `${diffInHours} giờ trước`;
   }
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 7) {
     return `${diffInDays} ngày trước`;
   }
-  
+
   return formatDate(dateObj, 'FULL_DATE');
 };

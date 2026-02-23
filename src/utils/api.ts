@@ -1,7 +1,7 @@
-import axios, { type AxiosInstance, type AxiosRequestConfig, type  AxiosResponse } from 'axios';
+import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
 
 // Base URL cho API
-const BASE_URL = 'https://lottery.esimvn.net';
+const BASE_URL = 'https://adl.loginestcyber.com';
 
 // Tạo axios instance
 const apiClient: AxiosInstance = axios.create({
@@ -34,12 +34,12 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
     // Chỉ xử lý 401 error và chưa retry, và không phải logout request
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/logout')) {
       // Đánh dấu request này đã retry
       originalRequest._retry = true;
-      
+
       // Kiểm tra xem có refresh token không
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
@@ -48,15 +48,15 @@ apiClient.interceptors.response.use(
           const response = await axios.post(`${BASE_URL}/auth/refresh-token`, {
             refresh_token: refreshToken
           });
-          
+
           // Cập nhật token mới
           const { access_token, refresh_token: newRefreshToken } = response.data.data;
           localStorage.setItem('access_token', access_token);
           localStorage.setItem('refresh_token', newRefreshToken);
-          
+
           // Cập nhật header cho request gốc
           originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          
+
           // Retry request gốc với token mới
           return apiClient(originalRequest);
         } catch (refreshError) {

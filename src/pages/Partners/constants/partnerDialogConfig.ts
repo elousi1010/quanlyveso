@@ -60,6 +60,35 @@ export const PARTNER_FORM_FIELDS: FormField[] = [
     required: false,
     placeholder: 'Nhập số nợ',
   },
+  {
+    key: 'credit_limit',
+    label: 'Hạn mức tín dụng (VNĐ)',
+    type: 'number',
+    required: false,
+    placeholder: 'Nhập hạn mức tín dụng',
+  },
+  {
+    key: 'commission_rate',
+    label: 'Hoa hồng (%)',
+    type: 'number',
+    required: false,
+    placeholder: 'Nhập mức hoa hồng (ví dụ: 10)',
+  },
+  {
+    key: 'work_area',
+    label: 'Khu vực bán (Cho người bán dạo)',
+    type: 'text',
+    required: false,
+    placeholder: 'Nhập khu vực (ví dụ: Công viên Lê Văn Tám)',
+  },
+  {
+    key: 'notes',
+    label: 'Ghi chú thêm',
+    type: 'textarea',
+    required: false,
+    placeholder: 'Ví dụ: Tình trạng thiết bị, thâm niên...',
+    rows: 2,
+  },
 ];
 
 export const PARTNER_DETAIL_FIELDS: DetailField[] = [
@@ -103,9 +132,33 @@ export const PARTNER_DETAIL_FIELDS: DetailField[] = [
   },
   {
     key: 'debt',
-    label: 'Nợ (VNĐ)',
+    label: 'Nợ hiện tại (VNĐ)',
     type: 'currency',
     render: (debt: number) => debt ? debt.toLocaleString('vi-VN') + ' VNĐ' : '0 VNĐ',
+  },
+  {
+    key: 'credit_limit',
+    label: 'Hạn mức tín dụng (VNĐ)',
+    type: 'currency',
+    render: (limit: number) => limit ? limit.toLocaleString('vi-VN') + ' VNĐ' : 'Chưa thiết lập',
+  },
+  {
+    key: 'commission_rate',
+    label: 'Hoa hồng (%)',
+    type: 'text',
+    render: (rate: number) => rate ? `${rate}%` : 'Chưa thiết lập',
+  },
+  {
+    key: 'work_area',
+    label: 'Khu vực bán',
+    type: 'text',
+    render: (area: string) => area || 'Chưa xác định',
+  },
+  {
+    key: 'notes',
+    label: 'Ghi chú',
+    type: 'text',
+    render: (notes: string) => notes || 'Không có ghi chú',
   },
   {
     key: 'is_active',

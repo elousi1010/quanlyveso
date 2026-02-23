@@ -166,12 +166,6 @@ export const inventoryUpdateFields: DialogFieldConfig[] = [
 
 export const inventoryDetailFields: DialogFieldConfig[] = [
   {
-    key: 'id',
-    label: 'ID',
-    type: 'text',
-    readonly: true,
-  },
-  {
     key: 'code',
     label: 'Mã Kho',
     type: 'text',
@@ -204,18 +198,6 @@ export const inventoryDetailFields: DialogFieldConfig[] = [
   {
     key: 'sub_type',
     label: 'Loại Phụ',
-    type: 'text',
-    readonly: true,
-  },
-  {
-    key: 'partner_id',
-    label: 'Đối Tác',
-    type: 'text',
-    readonly: true,
-  },
-  {
-    key: 'organization_id',
-    label: 'Tổ Chức',
     type: 'text',
     readonly: true,
   },

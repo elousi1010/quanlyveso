@@ -5,11 +5,6 @@ import { formatDate } from '@/utils/format';
 export const transactionTableConfig = {
   columns: [
     {
-      key: 'id',
-      label: 'ID',
-      minWidth: 200,
-    },
-    {
       key: 'amount',
       label: 'Số tiền',
       minWidth: 120,
@@ -45,16 +40,6 @@ export const transactionTableConfig = {
         };
         return subTypeMap[value] || value;
       },
-    },
-    {
-      key: 'partner_id',
-      label: 'ID Đối tác',
-      minWidth: 150,
-    },
-    {
-      key: 'swap_id',
-      label: 'ID Swap',
-      minWidth: 150,
     },
     {
       key: 'note',

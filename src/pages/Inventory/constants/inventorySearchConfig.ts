@@ -1,4 +1,5 @@
 import type { SearchAndFilterConfig } from '@/components/common';
+import type { SearchFieldConfig } from '@/components/common/types';
 
 export const inventorySearchFields: SearchAndFilterConfig = {
   searchPlaceholder: 'Tìm kiếm theo mã kho, mã vé...',
@@ -83,7 +84,7 @@ export const inventoryFilterFields: SearchFieldConfig[] = [
     key: 'partner_id',
     label: 'Đối Tác',
     type: 'text',
-    placeholder: 'Tìm kiếm theo ID đối tác',
+    placeholder: 'Tìm kiếm theo đối tác',
   },
 ];
 

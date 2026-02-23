@@ -27,6 +27,14 @@ export interface Partner {
   address: string;
   level: number;
   debt: number;
+  credit_limit: number;
+  commission_rate: number; // Percent %
+  last_payment_at: string | null;
+  debt_overdue_days: number;
+  status_risk: 'normal' | 'warning' | 'high_risk' | 'blacklisted';
+  work_area?: string; // Khu vực bán dạo (ví dụ: Quận 1, Ngã tư Bảy Hiền)
+  equipment_rented?: string[]; // Danh sách thiết bị thuê (bàn, ghế, dù...)
+  notes?: string;
   organization_id: string;
   organization: Organization;
 }
@@ -37,14 +45,21 @@ export interface CreatePartnerRequest {
   phone_number: string;
   type: 'agent' | 'seller' | 'customer' | 'supplier' | 'other';
   level: number;
+  debt?: number;
+  credit_limit?: number;
+  commission_rate?: number;
 }
 
 export interface UpdatePartnerRequest {
-  name: string;
-  address: string;
-  phone_number: string;
-  type: 'agent' | 'seller' | 'customer' | 'supplier' | 'other';
-  level: number;
+  name?: string;
+  address?: string;
+  phone_number?: string;
+  type?: 'agent' | 'seller' | 'customer' | 'supplier' | 'other';
+  level?: number;
+  debt?: number;
+  credit_limit?: number;
+  commission_rate?: number;
+  status_risk?: 'normal' | 'warning' | 'high_risk' | 'blacklisted';
 }
 
 export interface PartnerListResponse {

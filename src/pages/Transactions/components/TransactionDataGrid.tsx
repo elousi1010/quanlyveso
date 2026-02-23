@@ -1,9 +1,9 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
-import { 
-  Visibility as ViewIcon, 
-  Edit as EditIcon, 
-  Delete as DeleteIcon 
+import {
+  Visibility as ViewIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon
 } from '@mui/icons-material';
 import { transactionTableConfig } from '../constants';
 import type { Transaction } from '../types';
@@ -17,6 +17,12 @@ interface TransactionDataGridProps {
   onSave?: (data: Record<string, unknown>, selectedRow?: Transaction) => Promise<void>;
   selectedRows: Transaction[];
   onSelectionChange: (transactions: Transaction[]) => void;
+  // Pagination props
+  page?: number;
+  rowsPerPage?: number;
+  total?: number;
+  onPageChange?: (page: number) => void;
+  onRowsPerPageChange?: (rowsPerPage: number) => void;
 }
 
 export const TransactionDataGrid: React.FC<TransactionDataGridProps> = ({
@@ -25,6 +31,11 @@ export const TransactionDataGrid: React.FC<TransactionDataGridProps> = ({
   onEdit,
   onDelete,
   onView,
+  page,
+  rowsPerPage,
+  total,
+  onPageChange,
+  onRowsPerPageChange,
 }) => {
   // Simple table actions
   const actions = [
@@ -57,8 +68,13 @@ export const TransactionDataGrid: React.FC<TransactionDataGridProps> = ({
       columns={transactionTableConfig.columns}
       actions={actions}
       loading={loading}
-      onRefresh={() => {}}
+      onRefresh={() => { }}
       emptyMessage="Không có giao dịch"
+      page={page}
+      rowsPerPage={rowsPerPage}
+      total={total}
+      onPageChange={onPageChange}
+      onRowsPerPageChange={onRowsPerPageChange}
     />
   );
 };

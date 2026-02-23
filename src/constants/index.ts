@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: 'https://lottery.esimvn.net',
+  BASE_URL: 'https://adl.loginestcyber.com',
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
 } as const;

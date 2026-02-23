@@ -1,42 +1,53 @@
-import React, { useState, useCallback } from 'react';
-import { Box } from '@mui/material';
-import { 
+import React, { useState, useCallback, useMemo } from 'react';
+import { theme as antdTheme, Alert } from 'antd';
+import {
+  CommonHeader,
+  CommonSnackbar,
+  CommonDeleteDialog,
   CommonFormDrawer,
   CommonViewEditDrawer
 } from '@/components/common';
 import {
-  StationHeader,
   StationDataGrid,
   StationSearchAndFilter,
-  StationDeleteDialog,
-  StationSnackbar,
 } from './components';
 import { useStations, useStationMutations } from './hooks';
-import { 
+import {
   stationCreateFields,
   stationFormFields,
-  stationDetailFields
+  stationDetailFields,
+  STATION_CONSTANTS
 } from './constants';
-import type { 
-  Station, 
-  CreateStationDto, 
-  UpdateStationDto, 
-  StationSearchParams 
+import type {
+  Station,
+  CreateStationDto,
+  UpdateStationDto,
+  StationSearchParams
 } from './types';
 
+/**
+ * StationManagement Component
+ * 
+ * Manages lottery stations with a unified UI pattern.
+ */
 export const StationManagement: React.FC = () => {
+  const { token } = antdTheme.useToken();
+
   // State management
   const [searchParams, setSearchParams] = useState<StationSearchParams>({
     page: 1,
     limit: 5,
   });
-  const [dialogState, setDialogState] = useState({
-    create: false,
-    edit: false,
-    view: false,
-    delete: false,
-  });
-  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+
+  /**
+   * Unified view state for dialogs and drawers.
+   */
+  const [activeView, setActiveView] = useState<{
+    type: 'create' | 'edit' | 'view' | 'delete' | null;
+    station: Station | null;
+  }>({ type: null, station: null });
+
+  // Snackbar state
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -44,11 +55,11 @@ export const StationManagement: React.FC = () => {
   });
 
   // API hooks
-  const { data: stationsData, isLoading, refetch } = useStations(searchParams);
+  const { data: stationsData, isLoading, error, refetch } = useStations(searchParams);
   const { createMutation, updateMutation, deleteMutation } = useStationMutations();
-  
-  // Extract data from response
-  const stations = stationsData?.stations || [];
+
+  // Data extraction
+  const stations = useMemo(() => stationsData?.stations || [], [stationsData]);
   const total = stationsData?.total || 0;
 
   // Event handlers
@@ -56,121 +67,109 @@ export const StationManagement: React.FC = () => {
     setSearchParams(prev => ({ ...prev, ...params, page: 1 }));
   }, []);
 
-  const handleCreate = useCallback(() => {
-    setSelectedStation(null);
-    setDialogState(prev => ({ ...prev, create: true }));
-  }, []);
-
-  const handleEdit = useCallback((station: Station) => {
-    setSelectedStation(station);
-    setDialogState(prev => ({ ...prev, edit: true }));
-  }, []);
-
-  const handleView = useCallback((station: Station) => {
-    setSelectedStation(station);
-    setDialogState(prev => ({ ...prev, view: true }));
-  }, []);
-
-  const handleDelete = useCallback((station: Station) => {
-    setSelectedStation(station);
-    setDialogState(prev => ({ ...prev, delete: true }));
-  }, []);
-
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
 
-  const handleCloseDialog = useCallback((dialogType: keyof typeof dialogState) => {
-    setDialogState(prev => ({ ...prev, [dialogType]: false }));
-    setSelectedStation(null);
+  // View control handlers
+  const openView = useCallback((type: typeof activeView['type'], station: Station | null = null) => {
+    setActiveView({ type, station });
   }, []);
+
+  const closeView = useCallback(() => {
+    setActiveView({ type: null, station: null });
+  }, []);
+
+  const showSnackbar = useCallback((message: string, severity: typeof snackbar['severity'] = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
+
+  /**
+   * Mutation Handlers
+   */
 
   const handleCreateSubmit = useCallback(async (data: Record<string, unknown>) => {
     try {
       await createMutation.mutateAsync(data as unknown as CreateStationDto);
-      setSnackbar({
-        open: true,
-        message: 'Tạo trạm thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('create');
+      showSnackbar('Tạo trạm thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi tạo trạm',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi tạo trạm', 'error');
     }
-  }, [createMutation, handleCloseDialog]);
+  }, [createMutation, closeView, showSnackbar]);
 
   const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Station) => {
-    const stationToUpdate = selectedRow || selectedStation;
-    if (!stationToUpdate) return;
-    
+    const target = selectedRow || activeView.station;
+    if (!target) return;
+
     try {
-      await updateMutation.mutateAsync({ id: stationToUpdate.id, data: data as unknown as UpdateStationDto });
-      setSnackbar({
-        open: true,
-        message: 'Cập nhật trạm thành công',
-        severity: 'success',
+      await updateMutation.mutateAsync({
+        id: target.id,
+        data: data as unknown as UpdateStationDto
       });
-      handleCloseDialog('edit');
+      showSnackbar('Cập nhật trạm thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi cập nhật trạm',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi cập nhật trạm', 'error');
     }
-  }, [selectedStation, updateMutation, handleCloseDialog]);
+  }, [activeView.station, updateMutation, closeView, showSnackbar]);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!selectedStation) return;
-    
-    try {
-      await deleteMutation.mutateAsync(selectedStation.id);
-      setSnackbar({
-        open: true,
-        message: 'Xóa trạm thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('delete');
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi xóa trạm',
-        severity: 'error',
-      });
-    }
-  }, [selectedStation, deleteMutation, handleCloseDialog]);
+    if (!activeView.station) return;
 
-  const handleSnackbarClose = useCallback(() => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  }, []);
+    try {
+      await deleteMutation.mutateAsync(activeView.station.id);
+      showSnackbar('Xóa trạm thành công');
+      closeView();
+    } catch {
+      showSnackbar('Có lỗi xảy ra khi xóa trạm', 'error');
+    }
+  }, [activeView.station, deleteMutation, closeView, showSnackbar]);
+
+  if (error) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Lỗi"
+          description={`Không thể tải danh sách trạm: ${(error as Error).message}`}
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
 
   return (
-    <Box sx={{ p: 2 }}>
-      <StationHeader
-        onCreate={handleCreate}
+    <div style={{ padding: '0 0 24px 0', minHeight: '100%' }}>
+      <CommonHeader
+        title={STATION_CONSTANTS.MODULE_TITLE}
+        subtitle="Quản lý các trạm phát hành vé số"
         onRefresh={handleRefresh}
+        onCreate={() => openView('create')}
+        loading={isLoading}
       />
 
-      <Box sx={{ mt: 2 }}>
+      <div style={{ marginTop: '16px' }}>
         <StationSearchAndFilter
           searchParams={searchParams}
           onSearchChange={handleSearchChange}
           onRefresh={handleRefresh}
           loading={isLoading}
         />
-      </Box>
+      </div>
 
-      <Box sx={{ mt: 2 }}>
+      <div style={{
+        marginTop: '16px',
+        background: token.colorBgContainer,
+        borderRadius: '12px',
+        overflow: 'hidden'
+      }}>
         <StationDataGrid
           data={stations}
           loading={isLoading}
-          onEdit={handleEdit as (station: Station) => void}
-          onDelete={handleDelete as (station: Station) => void}
-          onView={handleView}
+          onEdit={(s) => openView('edit', s)}
+          onDelete={(s) => openView('delete', s)}
+          onView={(s) => openView('view', s)}
           onSave={handleUpdateSubmit}
           page={(searchParams.page || 1) - 1}
           rowsPerPage={searchParams.limit || 10}
@@ -178,12 +177,12 @@ export const StationManagement: React.FC = () => {
           onPageChange={(page) => setSearchParams(prev => ({ ...prev, page: page + 1 }))}
           onRowsPerPageChange={(limit) => setSearchParams(prev => ({ ...prev, limit, page: 1 }))}
         />
-      </Box>
+      </div>
 
-      {/* Create Drawer */}
+      {/* Forms & Dialogs */}
       <CommonFormDrawer
-        open={dialogState.create}
-        onClose={() => handleCloseDialog('create')}
+        open={activeView.type === 'create'}
+        onClose={closeView}
         onSave={handleCreateSubmit}
         title="Tạo Trạm Mới"
         fields={stationCreateFields}
@@ -192,38 +191,37 @@ export const StationManagement: React.FC = () => {
         width={500}
       />
 
-      {/* View/Edit Drawer */}
-      {selectedStation && (
+      {activeView.station && (activeView.type === 'view' || activeView.type === 'edit') && (
         <CommonViewEditDrawer
-          open={dialogState.view || dialogState.edit}
-          onClose={() => handleCloseDialog(dialogState.view ? 'view' : 'edit')}
+          open={true}
+          onClose={closeView}
           onSave={handleUpdateSubmit}
-          title={dialogState.view ? 'Chi Tiết Trạm' : 'Chỉnh Sửa Trạm'}
+          title={activeView.type === 'view' ? 'Chi Tiết Trạm' : 'Chỉnh Sửa Trạm'}
           viewFields={stationDetailFields}
           editFields={stationFormFields}
-          data={selectedStation as unknown as Record<string, unknown>}
-          mode={dialogState.view ? 'view' : 'edit'}
+          data={activeView.station as unknown as Record<string, unknown>}
+          mode={activeView.type === 'view' ? 'view' : 'edit'}
           loading={updateMutation.isPending}
           width={500}
         />
       )}
 
-      {/* Delete Dialog */}
-      <StationDeleteDialog
-        open={dialogState.delete}
-        onClose={() => handleCloseDialog('delete')}
+      <CommonDeleteDialog
+        open={activeView.type === 'delete'}
+        onClose={closeView}
         onConfirm={handleDeleteConfirm}
-        station={selectedStation as unknown as Station}
-        loading={deleteMutation.isPending}
+        title="Xóa Trạm"
+        itemName={activeView.station?.name}
+        itemType="trạm"
+        isDeleting={deleteMutation.isPending}
       />
 
-      {/* Snackbar */}
-      <StationSnackbar
+      <CommonSnackbar
         open={snackbar.open}
-        onClose={handleSnackbarClose}
         message={snackbar.message}
         severity={snackbar.severity}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
       />
-    </Box>
+    </div>
   );
 };

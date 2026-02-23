@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTheme } from '@mui/material';
 
 interface LogoProps {
   size?: number;
@@ -7,62 +6,16 @@ interface LogoProps {
   showText?: boolean;
   variant?: 'full' | 'icon' | 'collapsed';
   className?: string;
+  style?: React.CSSProperties;
 }
 
 const Logo: React.FC<LogoProps> = ({
   size = 36,
-  animated = false,
   showText = true,
   variant = 'full',
-  className = ''
+  className = '',
+  style = {}
 }) => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
-
-  // CSS Animation for rotating logo
-  const logoKeyframes = `
-    @keyframes logoOrbitRotate {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
-    }
-    
-    @keyframes logoPulse {
-      0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(1.05);
-        opacity: 0.9;
-      }
-    }
-    
-    .logo-animated {
-      animation: logoPulse 2s ease-in-out infinite !important;
-    }
-    
-    .logo-orbit {
-      animation: logoOrbitRotate 4s linear infinite !important;
-    }
-  `;
-
-  // Inject CSS for animations
-  React.useEffect(() => {
-    if (typeof document !== 'undefined') {
-      const existingStyle = document.getElementById('logo-animation-styles');
-      if (!existingStyle) {
-        const style = document.createElement('style');
-        style.id = 'logo-animation-styles';
-        style.textContent = logoKeyframes;
-        document.head.appendChild(style);
-      }
-    }
-  }, [logoKeyframes]);
-
   const renderIcon = () => (
     <svg
       width={size * 0.6}
@@ -70,76 +23,29 @@ const Logo: React.FC<LogoProps> = ({
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`${className} ${animated ? 'logo-animated' : ''}`}
-      style={{
-        filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2))'
-      }}
+      className={className}
     >
-      <defs>
-        <linearGradient id={`lotteryOrbitGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="white" stopOpacity="1" />
-          <stop offset="100%" stopColor="rgba(255, 255, 255, 0.8)" stopOpacity="0.8" />
-        </linearGradient>
-      </defs>
-      
-      {/* Orbiting circles */}
-      <g 
-        className={animated ? 'logo-orbit' : ''}
-        style={{
-          transformOrigin: '12px 12px'
-        }}
-      >
-        <circle
-          cx="8"
-          cy="8"
-          r="2.5"
-          fill={`url(#lotteryOrbitGradient-${size})`}
-        />
-        <circle
-          cx="16"
-          cy="8"
-          r="2.5"
-          fill={`url(#lotteryOrbitGradient-${size})`}
-        />
-        <circle
-          cx="8"
-          cy="16"
-          r="2.5"
-          fill={`url(#lotteryOrbitGradient-${size})`}
-        />
-        <circle
-          cx="16"
-          cy="16"
-          r="2.5"
-          fill={`url(#lotteryOrbitGradient-${size})`}
-        />
-      </g>
-      
-      {/* Center circle */}
-      <circle
-        cx="12"
-        cy="12"
-        r="3.5"
-        fill="rgba(255, 255, 255, 0.2)"
-        stroke="rgba(255, 255, 255, 0.5)"
-        strokeWidth="1"
+      <path
+        d="M12 2L3 7V17L12 22L21 17V7L12 2Z"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      
-      {/* Dollar sign */}
-      <text
-        x="12"
-        y="15"
-        textAnchor="middle"
-        fontSize="8"
-        fill="white"
-        fontWeight="bold"
-        fontFamily="Arial, sans-serif"
-        style={{
-          filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))'
-        }}
-      >
-        $
-      </text>
+      <path
+        d="M12 22V12"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M21 7L12 12L3 7"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 
@@ -148,16 +54,14 @@ const Logo: React.FC<LogoProps> = ({
       return (
         <div
           style={{
-            color: 'white',
+            color: '#1e293b',
             fontWeight: '800',
             fontSize: `${Math.max(12, size * 0.33)}px`,
             lineHeight: 1,
-            textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
-            letterSpacing: '0.5px',
-            fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
           }}
         >
-          O
+          D
         </div>
       );
     }
@@ -166,30 +70,27 @@ const Logo: React.FC<LogoProps> = ({
       <div>
         <div
           style={{
-            color: 'white',
+            color: '#1e293b',
             fontWeight: '800',
-            fontSize: `${Math.max(18, size * 0.5)}px`,
-            lineHeight: 1,
-            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
-            letterSpacing: '1px',
-            fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+            fontSize: `${Math.max(16, size * 0.45)}px`,
+            lineHeight: 1.1,
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
           }}
         >
-          Hnoa
+          Daily
         </div>
         <div
           style={{
-            color: 'rgba(255, 255, 255, 0.95)',
+            color: '#64748b',
             fontWeight: '600',
-            fontSize: `${Math.max(10, size * 0.28)}px`,
+            fontSize: `${Math.max(10, size * 0.25)}px`,
             lineHeight: 1,
-            letterSpacing: '2px',
+            letterSpacing: '1px',
             textTransform: 'uppercase',
-            fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-            textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+            fontFamily: '"Plus Jakarta Sans", sans-serif',
           }}
         >
-          Lottery
+          Veso
         </div>
       </div>
     );
@@ -198,21 +99,16 @@ const Logo: React.FC<LogoProps> = ({
   if (variant === 'icon') {
     return (
       <div
-        className={animated ? 'logo-animated' : ''}
         style={{
           width: size,
           height: size,
-          borderRadius: '50%',
-          background: isDark 
-            ? 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '12px',
+          background: '#2563eb',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          border: '2px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: isDark 
-            ? '0 3px 10px rgba(79, 172, 254, 0.3)'
-            : '0 3px 10px rgba(102, 126, 234, 0.3)',
+          boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.2)',
+          ...style
         }}
       >
         {renderIcon()}
@@ -221,31 +117,23 @@ const Logo: React.FC<LogoProps> = ({
   }
 
   return (
-    <div 
-      className={`flex items-center gap-3 ${className} ${animated ? 'logo-animated' : ''}`}
+    <div
+      className={`flex items-center gap-2 ${className}`}
+      style={style}
     >
-      {/* Logo Icon Container */}
       <div
         style={{
           width: size,
           height: size,
-          borderRadius: '50%',
-          background: isDark 
-            ? 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
-            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: '10px',
+          background: '#2563eb',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          border: `${variant === 'collapsed' ? '1px' : '2px'} solid rgba(255, 255, 255, 0.3)`,
-          boxShadow: isDark 
-            ? '0 3px 10px rgba(79, 172, 254, 0.3)'
-            : '0 3px 10px rgba(102, 126, 234, 0.3)',
         }}
       >
         {renderIcon()}
       </div>
-      
-      {/* Logo Text */}
       {showText && renderText()}
     </div>
   );

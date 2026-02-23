@@ -1,5 +1,5 @@
-import React from 'react';
-import { Snackbar, Alert, AlertTitle } from '@mui/material';
+import React, { useEffect } from 'react';
+import { message as antdMessage, notification } from 'antd';
 
 interface CommonSnackbarProps {
   open: boolean;
@@ -19,29 +19,27 @@ const CommonSnackbar: React.FC<CommonSnackbarProps> = ({
   severity = 'success',
   title,
   duration = 6000,
-  variant = 'filled',
-  action,
 }) => {
-  return (
-    <Snackbar
-      open={open}
-      autoHideDuration={duration}
-      onClose={onClose}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      sx={{ mt: 8 }}
-    >
-      <Alert
-        onClose={onClose}
-        severity={severity}
-        variant={variant}
-        sx={{ width: '100%' }}
-        action={action}
-      >
-        {title && <AlertTitle>{title}</AlertTitle>}
-        {message}
-      </Alert>
-    </Snackbar>
-  );
+  useEffect(() => {
+    if (open) {
+      if (title) {
+        notification[severity]({
+          message: title,
+          description: message,
+          duration: duration / 1000,
+          onClose: onClose,
+        });
+      } else {
+        antdMessage[severity]({
+          content: message,
+          duration: duration / 1000,
+          onClose: onClose,
+        });
+      }
+    }
+  }, [open, severity, message, title, duration, onClose]);
+
+  return null;
 };
 
 export default CommonSnackbar;

@@ -1,10 +1,9 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
-import { 
-  Visibility as ViewIcon, 
-  Edit as EditIcon, 
-  Delete as DeleteIcon 
-} from '@mui/icons-material';
+import {
+  EyeOutlined,
+  DeleteOutlined
+} from '@ant-design/icons';
 import { stationTableConfig } from '../constants';
 import type { Station } from '../types';
 
@@ -25,10 +24,8 @@ interface StationDataGridProps {
 export const StationDataGrid: React.FC<StationDataGridProps> = ({
   data,
   loading,
-  onEdit,
   onDelete,
   onView,
-  onSave,
   page,
   rowsPerPage,
   total,
@@ -40,14 +37,14 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
     {
       key: 'view',
       label: 'Xem',
-      icon: <ViewIcon />,
+      icon: <EyeOutlined />,
       color: 'primary' as const,
       onClick: (station: unknown) => onView(station as Station),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon />,
+      icon: <DeleteOutlined />,
       color: 'error' as const,
       onClick: (station: unknown) => onDelete(station as Station),
     },
@@ -59,7 +56,7 @@ export const StationDataGrid: React.FC<StationDataGridProps> = ({
       columns={stationTableConfig.columns}
       actions={actions}
       loading={loading}
-      onRefresh={() => {}}
+      onRefresh={() => { }}
       emptyMessage="Không có trạm"
       page={page}
       rowsPerPage={rowsPerPage}

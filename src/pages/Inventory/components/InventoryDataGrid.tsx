@@ -1,10 +1,9 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
-import { inventoryFormFields, inventoryDetailFields } from '../constants/inventoryViewEditConfig';
-import { 
-  Delete as DeleteIcon,
-  Visibility as ViewIcon
-} from '@mui/icons-material';
+import {
+  DeleteOutlined,
+  EyeOutlined
+} from '@ant-design/icons';
 import { inventoryTableConfig } from '../constants';
 import type { Inventory } from '../types';
 
@@ -35,25 +34,9 @@ interface InventoryDataGridProps {
 export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
   data,
   loading,
-  onEdit,
   onDelete,
   onView,
-  onSave,
-  selectedRows,
-  onSelectionChange,
 }) => {
-  const handleRowClick = (inventory: Inventory) => {
-    onView(inventory);
-  };
-
-  const handleEdit = (inventory: Inventory) => {
-    onEdit(inventory);
-  };
-
-  const handleDelete = (inventory: Inventory) => {
-    onDelete(inventory);
-  };
-
   const tableColumns = convertColumnsToTableFormat(inventoryTableConfig.columns);
 
   // Simple table actions
@@ -61,14 +44,14 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
     {
       key: 'view',
       label: 'Xem',
-      icon: <ViewIcon />,
+      icon: <EyeOutlined />,
       color: 'primary' as const,
       onClick: (inventory: unknown) => onView(inventory as Inventory),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon />,
+      icon: <DeleteOutlined />,
       color: 'error' as const,
       onClick: (inventory: unknown) => onDelete(inventory as Inventory),
     },
@@ -80,7 +63,7 @@ export const InventoryDataGrid: React.FC<InventoryDataGridProps> = ({
       columns={tableColumns}
       actions={actions}
       loading={loading}
-      onRefresh={() => {}}
+      onRefresh={() => { }}
       emptyMessage="Không có dữ liệu kho hàng"
     />
   );

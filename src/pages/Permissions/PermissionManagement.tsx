@@ -1,48 +1,51 @@
-import React, { useState, useCallback } from 'react';
-import { Box } from '@mui/material';
+import React, { useState, useCallback, useMemo } from 'react';
+import { theme as antdTheme, Alert } from 'antd';
 import {
-  PermissionHeader,
+  CommonHeader,
+  CommonSnackbar,
+  CommonDeleteDialog,
+  type SearchAndFilterConfig,
+} from '@/components/common';
+import {
   PermissionDataGrid,
   PermissionSearchAndFilter,
-  PermissionDeleteDialog,
-  PermissionSnackbar,
-  PermissionFormDialog,
-  PermissionFormDrawer,
-  PermissionDetailView,
+  PermissionFormDrawerSimple,
 } from './components';
 import UserPermissionAssignment from './components/UserPermissionAssignment';
 import BulkPermissionAssignmentWrapper from './components/BulkPermissionAssignmentWrapper';
-import PermissionFormDrawerSimple from './components/PermissionFormDrawerSimple';
 import { usePermissions, usePermissionMutations } from './hooks';
-import type { 
-  Permission, 
-  CreatePermissionDto, 
+import type {
+  Permission,
+  CreatePermissionDto,
   UpdatePermissionDto,
-  PermissionSearchParams 
+  PermissionSearchParams
 } from './types';
-import { permissionSearchFields, permissionDetailFields } from './constants';
-import type { SearchAndFilterConfig, DetailField } from '@/components/common';
+import { permissionSearchFields, PERMISSION_CONSTANTS } from './constants';
 
+/**
+ * PermissionManagement Component
+ * 
+ * Manages system permissions, roles, and assignments with a unified UI pattern.
+ */
 export const PermissionManagement: React.FC = () => {
+  const { token } = antdTheme.useToken();
+
   // State management
   const [searchParams, setSearchParams] = useState<PermissionSearchParams>({
     page: 1,
     limit: 5,
   });
   const [selectedRows, setSelectedRows] = useState<Permission[]>([]);
-  const [dialogState, setDialogState] = useState({
-    create: false,
-    edit: false,
-    view: false,
-    delete: false,
-    userAssignment: false,
-    bulkAssignment: false,
-    matrix: false,
-    templates: false,
-  });
-  const [selectedPermission, setSelectedPermission] = useState<Permission | null>(null);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
+
+  /**
+   * Unified view state for dialogs and drawers.
+   */
+  const [activeView, setActiveView] = useState<{
+    type: 'create' | 'edit' | 'view' | 'delete' | 'userAssignment' | 'bulkAssignment' | null;
+    permission: Permission | null;
+  }>({ type: null, permission: null });
+
+  // Snackbar state
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -50,8 +53,33 @@ export const PermissionManagement: React.FC = () => {
   });
 
   // API hooks
-  const { data: permissionsData, isLoading, refetch } = usePermissions(searchParams);
+  const { data: permissionsData, isLoading, error, refetch } = usePermissions(searchParams);
   const { createMutation, updateMutation, deleteMutation } = usePermissionMutations();
+
+  // Data extraction
+  const permissions = useMemo(() => {
+    if (Array.isArray(permissionsData)) return permissionsData;
+    if (Array.isArray((permissionsData as any)?.data)) return (permissionsData as any).data;
+    return [];
+  }, [permissionsData]);
+
+  const total = useMemo(() => {
+    if (typeof (permissionsData as any)?.total === 'number') return (permissionsData as any).total;
+    return (permissionsData as any)?.data?.length || 0;
+  }, [permissionsData]);
+
+  // View control handlers
+  const openView = useCallback((type: typeof activeView['type'], permission: Permission | null = null) => {
+    setActiveView({ type, permission });
+  }, []);
+
+  const closeView = useCallback(() => {
+    setActiveView({ type: null, permission: null });
+  }, []);
+
+  const showSnackbar = useCallback((message: string, severity: typeof snackbar['severity'] = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
 
   // Event handlers
   const handleSearchChange = useCallback((query: string) => {
@@ -70,292 +98,171 @@ export const PermissionManagement: React.FC = () => {
     refetch();
   }, [refetch]);
 
-  const handleCreate = useCallback(() => {
-    setSelectedPermission(null);
-    setDialogState(prev => ({ ...prev, create: true }));
-  }, []);
-
-  const handleEdit = useCallback((permission: Permission) => {
-    setSelectedPermission(permission);
-    setDialogState(prev => ({ ...prev, edit: true }));
-  }, []);
-
-  const handleView = useCallback((permission: Permission) => {
-    setSelectedPermission(permission);
-    setViewMode('detail');
-  }, []);
-
-  const handleDelete = useCallback((permission: Permission) => {
-    setSelectedPermission(permission);
-    setDialogState(prev => ({ ...prev, delete: true }));
-  }, []);
-
-  const handleBackToList = useCallback(() => {
-    setViewMode('list');
-    setSelectedPermission(null);
-  }, []);
-
-  const handleBackToListKeepSelection = useCallback(() => {
-    setViewMode('list');
-    // Keep selectedPermission for edit
-  }, []);
-
-  const handleAssignToUser = useCallback((user: any) => {
-    setSelectedUser(user);
-    setDialogState(prev => ({ ...prev, userAssignment: true }));
-  }, []);
-
-  const handleBulkAssign = useCallback(() => {
-    setDialogState(prev => ({ ...prev, bulkAssignment: true }));
-  }, []);
-
-
-  const handleDeleteSelected = useCallback(() => {
-    if (selectedRows.length > 0) {
-      // Implement bulk delete logic here
-      setSnackbar({
-        open: true,
-        message: `Đã xóa ${selectedRows.length} quyền hạn`,
-        severity: 'success',
-      });
-      setSelectedRows([]);
-    }
-  }, [selectedRows]);
-
-  const handleCloseDialog = useCallback((dialogType: keyof typeof dialogState) => {
-    setDialogState(prev => ({ ...prev, [dialogType]: false }));
-    if (dialogType === 'edit') {
-      // Don't reset selectedPermission when closing edit dialog
-      // Keep it for potential re-editing
-    } else {
-      setSelectedPermission(null);
-    }
-    setViewMode('list');
-  }, []);
+  /**
+   * Mutation Handlers
+   */
 
   const handleCreateSubmit = useCallback(async (data: CreatePermissionDto) => {
     try {
       await createMutation.mutateAsync(data);
-      setSnackbar({
-        open: true,
-        message: 'Tạo quyền hạn thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('create');
+      showSnackbar('Tạo quyền hạn thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi tạo quyền hạn',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi tạo quyền hạn', 'error');
     }
-  }, [createMutation, handleCloseDialog]);
-
-  // Function to create the specific permission with provided data
-  const handleCreateSpecificPermission = useCallback(async () => {
-    const permissionData: CreatePermissionDto = {
-      name: "Permission 1",
-      code: "permission_1",
-      actions: {
-        user: ["read", "create", "update", "delete"]
-      }
-    };
-
-    try {
-      await createMutation.mutateAsync(permissionData);
-      setSnackbar({
-        open: true,
-        message: 'Tạo quyền hạn "Permission 1" thành công',
-        severity: 'success',
-      });
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi tạo quyền hạn "Permission 1"',
-        severity: 'error',
-      });
-    }
-  }, [createMutation]);
+  }, [createMutation, closeView, showSnackbar]);
 
   const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Permission) => {
-    const permissionToUpdate = selectedRow || selectedPermission;
-    if (!permissionToUpdate) {
-      console.error('No permission to update');
-      return;
-    }
+    const target = selectedRow || activeView.permission;
+    if (!target) return;
 
     try {
-      await updateMutation.mutateAsync({ id: permissionToUpdate.id, data: data as unknown as UpdatePermissionDto });
-      setSnackbar({
-        open: true,
-        message: 'Cập nhật quyền hạn thành công',
-        severity: 'success',
+      await updateMutation.mutateAsync({
+        id: target.id,
+        data: data as unknown as UpdatePermissionDto
       });
-      setDialogState(prev => ({ ...prev, edit: false }));
-      setSelectedPermission(null);
-      setViewMode('list');
-    } catch (error) {
-      console.error('Update error:', error);
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi cập nhật quyền hạn',
-        severity: 'error',
-      });
+      showSnackbar('Cập nhật quyền hạn thành công');
+      closeView();
+    } catch {
+      showSnackbar('Có lỗi xảy ra khi cập nhật quyền hạn', 'error');
     }
-  }, [selectedPermission, updateMutation]);
+  }, [activeView.permission, updateMutation, closeView, showSnackbar]);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!selectedPermission) return;
-    
+    if (!activeView.permission) return;
+
     try {
-      await deleteMutation.mutateAsync(selectedPermission.id);
-      setSnackbar({
-        open: true,
-        message: 'Xóa quyền hạn thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('delete');
+      await deleteMutation.mutateAsync(activeView.permission.id);
+      showSnackbar('Xóa quyền hạn thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi xóa quyền hạn',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi xóa quyền hạn', 'error');
     }
-  }, [selectedPermission, deleteMutation, handleCloseDialog]);
+  }, [activeView.permission, deleteMutation, closeView, showSnackbar]);
 
-  const handleSnackbarClose = useCallback(() => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  }, []);
-
-  const permissions = permissionsData?.data || [];
+  if (error) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Lỗi"
+          description={`Không thể tải danh sách quyền: ${(error as Error).message}`}
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
 
   return (
-    <Box sx={{ mt: 0 }}>
-      <PermissionHeader
-        onCreate={handleCreate}
+    <div style={{ padding: '0 0 24px 0', minHeight: '100%' }}>
+      <CommonHeader
+        title={PERMISSION_CONSTANTS.MODULE_TITLE}
+        subtitle="Quản lý các nhóm quyền và gán quyền cho người dùng trong hệ thống"
         onRefresh={handleRefresh}
-        selectedCount={selectedRows.length}
-        onDeleteSelected={handleDeleteSelected}
-        onCreateSpecific={handleCreateSpecificPermission}
-        onBulkAssign={handleBulkAssign}
+        onCreate={() => openView('create')}
+        loading={isLoading}
       />
 
-      {viewMode === 'list' ? (
-        <>
-          <Box>
-            <PermissionSearchAndFilter
-              searchParams={searchParams as Record<string, unknown>} 
-              onSearch={handleSearchChange as (query: string) => void}
-              onSort={handleSort}
-              onFilter={handleFilter}
-              onSearchChange={handleSearchChange as (query: string) => void}
-              loading={isLoading}
-              config={permissionSearchFields as SearchAndFilterConfig}
-            />
-          </Box>
+      <div style={{ marginTop: '16px' }}>
+        <PermissionSearchAndFilter
+          searchParams={searchParams as Record<string, unknown>}
+          onSearch={handleSearchChange}
+          onSort={handleSort}
+          onFilter={handleFilter}
+          onSearchChange={handleSearchChange}
+          loading={isLoading}
+          config={permissionSearchFields as SearchAndFilterConfig}
+        />
+      </div>
 
-          <Box>
-            <PermissionDataGrid
-              data={permissions}
-              loading={isLoading}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onView={handleView}
-              onSave={handleUpdateSubmit}
-              selectedRows={selectedRows}
-              onSelectionChange={setSelectedRows}
-            />
-          </Box>
-        </>
-      ) : (
-        <Box>
-          {selectedPermission && (
-            <PermissionFormDrawerSimple
-              open={true}
-              onClose={handleBackToList}
-              onSave={(data) => {
-                handleUpdateSubmit(data as unknown as Record<string, unknown>, selectedPermission);
-                handleBackToList();
-              }}
-              title="Chi tiết Quyền hạn"
-              permission={selectedPermission}
-              loading={updateMutation.isPending}
-              mode="view"
-              onEdit={() => {
-                setViewMode('list');
-                setDialogState(prev => ({ ...prev, edit: true }));
-              }}
-            />
-          )}
-        </Box>
-      )}
+      <div style={{
+        marginTop: '16px',
+        background: token.colorBgContainer,
+        borderRadius: '12px',
+        overflow: 'hidden'
+      }}>
+        <PermissionDataGrid
+          data={permissions}
+          loading={isLoading}
+          onEdit={(p) => openView('edit', p)}
+          onDelete={(p) => openView('delete', p)}
+          onView={(p) => openView('view', p)}
+          onSave={handleUpdateSubmit}
+          selectedRows={selectedRows}
+          onSelectionChange={setSelectedRows}
+        />
+      </div>
 
-      {/* Create Drawer */}
+      {/* Forms & Dialogs */}
       <PermissionFormDrawerSimple
-        open={dialogState.create}
-        onClose={() => handleCloseDialog('create')}
+        open={activeView.type === 'create'}
+        onClose={closeView}
         onSave={(data) => handleCreateSubmit(data as unknown as CreatePermissionDto)}
         title="Tạo Quyền hạn Mới"
         loading={createMutation.isPending}
         mode="edit"
       />
 
-      {/* Edit Drawer */}
-      <PermissionFormDrawerSimple
-        open={dialogState.edit}
-        onClose={() => handleCloseDialog('edit')}
-        onSave={(data) => handleUpdateSubmit(data as unknown as Record<string, unknown>, selectedPermission)}
-        title="Chỉnh sửa Quyền hạn"
-        permission={selectedPermission}
-        loading={updateMutation.isPending}
-        mode="edit"
-      />
+      {activeView.permission && (activeView.type === 'view' || activeView.type === 'edit') && (
+        <PermissionFormDrawerSimple
+          open={true}
+          onClose={closeView}
+          onSave={(data: any) => handleUpdateSubmit(data, activeView.permission || undefined)}
+          title={activeView.type === 'view' ? 'Chi tiết Quyền hạn' : 'Chỉnh sửa Quyền hạn'}
+          permission={activeView.permission}
+          loading={updateMutation.isPending}
+          mode={activeView.type === 'view' ? 'view' : 'edit'}
+          onEdit={() => openView('edit', activeView.permission)}
+        />
+      )}
 
-      {/* Delete Dialog */}
-      <PermissionDeleteDialog
-        open={dialogState.delete}
-        onClose={() => handleCloseDialog('delete')}
+      <CommonDeleteDialog
+        open={activeView.type === 'delete'}
+        onClose={closeView}
         onConfirm={handleDeleteConfirm}
-        permission={selectedPermission}
-        loading={deleteMutation.isPending}
+        title="Xóa Quyền Hạn"
+        itemName={activeView.permission?.name}
+        itemType="quyền hạn"
+        isDeleting={deleteMutation.isPending}
       />
 
-      {/* User Permission Assignment */}
       <UserPermissionAssignment
-        open={dialogState.userAssignment}
-        onClose={() => handleCloseDialog('userAssignment')}
-        user={selectedUser}
+        open={activeView.type === 'userAssignment'}
+        onClose={closeView}
+        user={null} // Pass user if needed
         onSuccess={() => {
-          setSnackbar({
-            open: true,
-            message: 'Gán quyền cho user thành công',
-            severity: 'success',
-          });
+          showSnackbar('Gán quyền cho user thành công');
+          closeView();
         }}
       />
 
-      {/* Bulk Permission Assignment */}
       <BulkPermissionAssignmentWrapper
-        open={dialogState.bulkAssignment}
-        onClose={() => handleCloseDialog('bulkAssignment')}
-        selectedUsers={selectedRows.map(p => ({ id: p.id, name: p.name, phone_number: '', role: '', is_active: true, created_at: '', updated_at: '' }))}
+        open={activeView.type === 'bulkAssignment'}
+        onClose={closeView}
+        selectedUsers={selectedRows.map(p => ({
+          id: p.id,
+          name: p.name,
+          phone_number: '',
+          role: '',
+          is_active: true,
+          created_at: '',
+          updated_at: ''
+        }))}
         onSuccess={() => {
-          setSnackbar({
-            open: true,
-            message: 'Gán quyền hàng loạt thành công',
-            severity: 'success',
-          });
+          showSnackbar('Gán quyền hàng loạt thành công');
+          closeView();
+          setSelectedRows([]);
         }}
       />
 
-      {/* Snackbar */}
-      <PermissionSnackbar
+      <CommonSnackbar
         open={snackbar.open}
-        onClose={handleSnackbarClose}
         message={snackbar.message}
         severity={snackbar.severity}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
       />
-    </Box>
+    </div>
   );
 };
+
+export default PermissionManagement;

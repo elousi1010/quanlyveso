@@ -2,7 +2,7 @@ import React from 'react';
 import { SimpleTable } from '@/components/common';
 import { PARTNER_TABLE_COLUMNS } from '../constants';
 import type { Partner, PartnerListResponse } from '../types';
-import { Delete as DeleteIcon, Visibility as ViewIcon } from '@mui/icons-material';
+import { DeleteOutlined, EyeOutlined } from '@ant-design/icons';
 
 interface PartnerDataGridProps {
   data: PartnerListResponse;
@@ -40,14 +40,14 @@ export const PartnerDataGrid: React.FC<PartnerDataGridProps> = ({
     {
       key: 'view',
       label: 'Xem chi tiết',
-      icon: <ViewIcon />,
+      icon: <EyeOutlined />,
       color: 'primary' as const,
       onClick: (partner: unknown) => onView(partner as Partner),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon />,
+      icon: <DeleteOutlined />,
       color: 'error' as const,
       onClick: (partner: unknown) => onDelete(partner as Partner),
     },
@@ -59,7 +59,7 @@ export const PartnerDataGrid: React.FC<PartnerDataGridProps> = ({
       columns={PARTNER_TABLE_COLUMNS}
       actions={tableActions}
       loading={loading}
-      onRefresh={() => window.location.reload()}
+      onRefresh={() => { }}
       emptyMessage="Không có đối tác"
       total={totalCount}
       page={page}

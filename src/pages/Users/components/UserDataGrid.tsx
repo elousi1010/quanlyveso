@@ -1,9 +1,10 @@
 import React from 'react';
 import { SimpleTable } from '@/components/common';
-import { 
-  Delete as DeleteIcon, 
-  Visibility as ViewIcon
-} from '@mui/icons-material';
+import {
+  DeleteOutlined,
+  EyeOutlined
+} from '@ant-design/icons';
+import { Tag } from 'antd';
 import type { User, UserListResponse } from '../types';
 import { USER_ROLES } from '../constants';
 
@@ -40,10 +41,6 @@ const UserDataGrid: React.FC<UserDataGridProps> = ({
     return roleOption ? roleOption.label : role;
   };
 
-  const getStatusLabel = (isActive: boolean): string => {
-    return isActive ? 'Hoạt động' : 'Không hoạt động';
-  };
-
   const users = data?.data?.data || [];
   const totalCount = data?.data?.total || 0;
 
@@ -54,11 +51,11 @@ const UserDataGrid: React.FC<UserDataGridProps> = ({
       minWidth: 200,
       render: (value: unknown, row: User) => (
         <div>
-          <div style={{ fontWeight: 'medium' }}>
+          <div style={{ fontWeight: 600 }}>
             {row.name}
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#666' }}>
-            {String((row as unknown as Record<string, unknown>).email || (row as unknown as Record<string, unknown>).username || '')}
+          <div style={{ fontSize: '11px', color: '#888' }}>
+            {String((row as any).email || (row as any).username || '')}
           </div>
         </div>
       ),
@@ -74,15 +71,9 @@ const UserDataGrid: React.FC<UserDataGridProps> = ({
       label: 'Vai trò',
       minWidth: 120,
       render: (value: unknown) => (
-        <span style={{
-          padding: '4px 8px',
-          borderRadius: '4px',
-          fontSize: '0.75rem',
-          backgroundColor: '#f5f5f5',
-          color: '#333',
-        }}>
+        <Tag color="blue">
           {getRoleLabel(value as string)}
-        </span>
+        </Tag>
       ),
     },
     {
@@ -96,15 +87,9 @@ const UserDataGrid: React.FC<UserDataGridProps> = ({
       label: 'Trạng thái',
       minWidth: 120,
       render: (value: unknown) => (
-        <span style={{
-          padding: '4px 8px',
-          borderRadius: '4px',
-          fontSize: '0.75rem',
-          backgroundColor: value ? '#e8f5e8' : '#ffeaea',
-          color: value ? '#2e7d32' : '#d32f2f',
-        }}>
-          {getStatusLabel(value as boolean)}
-        </span>
+        <Tag color={value ? 'success' : 'error'}>
+          {value ? 'Hoạt động' : 'Không hoạt động'}
+        </Tag>
       ),
     },
     {
@@ -122,14 +107,14 @@ const UserDataGrid: React.FC<UserDataGridProps> = ({
     {
       key: 'view',
       label: 'Xem chi tiết',
-      icon: <ViewIcon />,
+      icon: <EyeOutlined />,
       color: 'primary' as const,
       onClick: (user: unknown) => onViewDetail(user as User),
     },
     {
       key: 'delete',
       label: 'Xóa',
-      icon: <DeleteIcon />,
+      icon: <DeleteOutlined />,
       color: 'error' as const,
       onClick: (user: unknown) => onDelete(user as User),
     },

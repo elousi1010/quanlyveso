@@ -1,17 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
-  Box,
+  Form,
+  Input,
+  Select,
   Button,
-  TextField,
-  MenuItem,
-  Typography,
+  DatePicker,
+  Space,
   Divider,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import { LoadingButton } from '@mui/lab';
+  Flex,
+  theme as antdTheme,
+} from 'antd';
+import dayjs from 'dayjs';
 import CommonDrawer from './CommonDrawer';
 import type { FormField } from './types';
+
+const { TextArea } = Input;
 
 interface CommonFormDrawerProps {
   open: boolean;
@@ -40,155 +43,93 @@ const CommonFormDrawer: React.FC<CommonFormDrawerProps> = ({
   width = 400,
   anchor = 'right',
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
-  const [formData, setFormData] = React.useState<Record<string, unknown>>(initialData);
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
-  const prevInitialDataRef = React.useRef<Record<string, unknown>>(initialData);
+  const { token } = antdTheme.useToken();
+  const [form] = Form.useForm();
 
-  React.useEffect(() => {
-    // Only update if initialData actually changed or drawer opened
-    if (open && JSON.stringify(prevInitialDataRef.current) !== JSON.stringify(initialData)) {
-      setFormData(initialData);
-      setErrors({});
-      prevInitialDataRef.current = initialData;
-    } else if (open) {
-      // Reset form when drawer opens
-      setFormData(initialData);
-      setErrors({});
+  useEffect(() => {
+    if (open) {
+      // Process initial data for specific fields like dates
+      const processedData = { ...initialData };
+      fields.forEach(field => {
+        if (field.type === 'date' && processedData[field.key]) {
+          processedData[field.key] = dayjs(processedData[field.key] as string);
+        }
+      });
+      form.setFieldsValue(processedData);
+    } else {
+      form.resetFields();
     }
-  }, [open]);
+  }, [open, initialData, form, fields]);
 
-  const handleFieldChange = (key: string, value: unknown) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-    // Clear error when user starts typing
-    if (errors[key]) {
-      setErrors(prev => ({ ...prev, [key]: '' }));
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      // Process values back (e.g. converting dayjs objects to strings)
+      const processedValues = { ...values };
+      fields.forEach(field => {
+        if (field.type === 'date' && processedValues[field.key]) {
+          processedValues[field.key] = (processedValues[field.key] as dayjs.Dayjs).toISOString();
+        }
+      });
+      onSave(processedValues);
+    } catch (error) {
+      console.error('Validate Failed:', error);
     }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-    
-    fields.forEach(field => {
-      const value = formData[field.key];
-      const isEmpty = value === undefined || value === null || value === '' || 
-                     (typeof value === 'string' && value.trim() === '');
-      
-      if (field.required && isEmpty) {
-        newErrors[field.key] = `${field.label} là bắt buộc`;
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = () => {
-    if (validateForm()) {
-      onSave(formData);
-    }
-  };
-
-  const handleClose = () => {
-    setFormData(initialData);
-    setErrors({});
-    onClose();
   };
 
   const renderField = (field: FormField) => {
-    const fieldValue = formData[field.key] || '';
-    
     const commonProps = {
-      fullWidth: true,
-      value: fieldValue,
-      error: !!errors[field.key],
-      helperText: errors[field.key],
+      placeholder: field.placeholder || `Nhập ${field.label.toLowerCase()}`,
       disabled: field.disabled || loading,
     };
 
     switch (field.type) {
       case 'select':
         return (
-          <TextField
-            key={field.key}
+          <Select
             {...commonProps}
-            label={field.label}
-            select
-            size="small"
-            required={field.required}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
-            SelectProps={{
-              native: false,
-            }}
-          >
-            {field.options?.map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
+            options={field.options}
+            style={{ width: '100%' }}
+          />
         );
 
       case 'textarea':
         return (
-          <TextField
-            key={field.key}
+          <TextArea
             {...commonProps}
-            label={field.label}
-            multiline
             rows={field.rows || 3}
-            placeholder={field.placeholder}
-            size="small"
-            required={field.required}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
           />
         );
 
       case 'date':
         return (
-          <TextField
-            key={field.key}
+          <DatePicker
             {...commonProps}
-            label={field.label}
-            type="date"
-            placeholder={field.placeholder}
-            size="small"
-            required={field.required}
-            InputLabelProps={{ shrink: true }}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            style={{ width: '100%' }}
+            format="DD/MM/YYYY"
           />
         );
 
       case 'json':
         return (
-          <TextField
-            key={field.key}
+          <TextArea
             {...commonProps}
-            label={field.label}
-            multiline
             rows={field.rows || 4}
-            placeholder={field.placeholder}
-            size="small"
-            required={field.required}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+          />
+        );
+
+      case 'password':
+        return (
+          <Input.Password
+            {...commonProps}
           />
         );
 
       default:
         return (
-          <TextField
-            key={field.key}
+          <Input
             {...commonProps}
-            label={field.label}
-            type={field.type}
-            placeholder={field.placeholder}
-            multiline={field.multiline}
-            rows={field.rows}
-            size="small"
-            required={field.required}
-            onChange={(e) => handleFieldChange(field.key, e.target.value)}
+            type={field.type as any}
           />
         );
     }
@@ -197,45 +138,48 @@ const CommonFormDrawer: React.FC<CommonFormDrawerProps> = ({
   return (
     <CommonDrawer
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       title={title}
       width={width}
       anchor={anchor}
       loading={loading}
     >
-      <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Form Fields */}
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {fields.map((field) => (
-              <Box key={field.key}>
-                {renderField(field)}
-              </Box>
-            ))}
-          </Box>
-        </Box>
+      <Flex vertical style={{ height: '100%', padding: '24px' }}>
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={initialData}
+          requiredMark="optional"
+          style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}
+        >
+          {fields.map((field) => (
+            <Form.Item
+              key={field.key}
+              name={field.key}
+              label={<span style={{ fontWeight: 600, fontSize: '13px' }}>{field.label}</span>}
+              rules={[{ required: field.required, message: `${field.label} là bắt buộc` }]}
+            >
+              {renderField(field)}
+            </Form.Item>
+          ))}
+        </Form>
 
-        {/* Actions */}
-        <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-            <Button
-              onClick={handleClose}
-              disabled={loading}
-              sx={{ textTransform: 'none' }}
-            >
-              {cancelButtonText}
-            </Button>
-            <LoadingButton
-              onClick={handleSubmit}
-              loading={loading}
-              variant="contained"
-              sx={{ textTransform: 'none' }}
-            >
-              {submitText}
-            </LoadingButton>
-          </Box>
-        </Box>
-      </Box>
+        <Divider style={{ margin: '24px 0 16px' }} />
+
+        <Flex justify="end" gap={12}>
+          <Button onClick={onClose} disabled={loading}>
+            {cancelButtonText}
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            loading={loading}
+            style={{ minWidth: '100px' }}
+          >
+            {submitText}
+          </Button>
+        </Flex>
+      </Flex>
     </CommonDrawer>
   );
 };

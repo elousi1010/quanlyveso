@@ -1,9 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import {
-  Box,
-  Paper,
-  Alert,
-} from '@mui/material';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Alert, theme as antdTheme } from 'antd';
 import { useTablePagination } from '@/hooks';
 import {
   CommonHeader,
@@ -19,8 +15,15 @@ import { UserDataGrid, UserSearchAndFilter } from './components';
 import type { CreateUserRequest, UpdateUserRequest, User, UserSearchParams } from './types';
 import { USER_FORM_FIELDS } from './constants/userDialogConfig';
 
+/**
+ * UserManagement Component
+ * 
+ * Manages system users with a unified UI pattern and integrated state management.
+ */
 const UserManagement: React.FC = () => {
-  // Pagination state
+  const { token } = antdTheme.useToken();
+
+  // Pagination state using custom hook
   const {
     page,
     rowsPerPage,
@@ -35,238 +38,209 @@ const UserManagement: React.FC = () => {
   const [searchParams, setSearchParams] = useState<UserSearchParams>({});
   const [filters, setFilters] = useState<Record<string, unknown>>({});
 
-  // State
+  /**
+   * Unified view state for dialogs and drawers.
+   */
+  const [activeView, setActiveView] = useState<{
+    type: 'create' | 'edit' | 'view' | 'delete' | null;
+    user: User | null;
+  }>({ type: null, user: null });
+
+  // Snackbar state for user feedback
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
 
-  // API hooks - combine search params with pagination
-  const combinedParams = {
+  // API hooks
+  const combinedParams = useMemo(() => ({
     ...searchParams,
     ...apiParams,
-  };
+  }), [searchParams, apiParams]);
+
   const { data: usersResponse, isLoading, error, refetch } = useUsers(combinedParams);
-  const {
-    selectedUser,
-    isCreateDialogOpen,
-    isViewEditDialogOpen,
-    isDeleteDialogOpen,
-    createUserMutation,
-    updateUserMutation,
-    deleteUserMutation,
-    openCreateDialog,
-    openViewEditDialog,
-    openDeleteDialog,
-    closeAllDialogs,
-  } = useUserMutations();
+  const { createUserMutation, updateUserMutation, deleteUserMutation } = useUserMutations();
 
-  // Debug logging removed to prevent console spam
+  // View control handlers
+  const openView = useCallback((type: typeof activeView['type'], user: User | null = null) => {
+    setActiveView({ type, user });
+  }, []);
 
-  // Handlers
-  const handleSearch = (query: string) => {
-    setSearchParams(prev => ({ ...prev, searchKey: query }));
-  };
+  const closeView = useCallback(() => {
+    setActiveView({ type: null, user: null });
+  }, []);
 
-  const handleSort = (sortBy: string) => {
-    setSearchParams(prev => ({ ...prev, sortBy }));
-  };
-
-  const handleFilter = (filters: Record<string, string>) => {
-    setSearchParams(prev => ({ ...prev, ...filters }));
-  };
-
-  const handleFilterChange = (newFilters: Record<string, unknown>) => {
-    setFilters(newFilters);
-    const combinedParams = { ...searchParams, ...newFilters };
-    setSearchParams(combinedParams);
-  };
-
-  const handleRefresh = () => {
-    refetch();
-  };
-
-  // Form data
-  const createFormData: CreateUserRequest = useMemo(() => ({
-    name: '',
-    phone_number: '',
-    password: '',
-    role: 'user',
-  }), []);
-
-  // Success/Error handlers
-  const showSnackbar = (message: string, severity: 'success' | 'error' | 'warning' | 'info') => {
+  const showSnackbar = useCallback((message: string, severity: typeof snackbar['severity'] = 'success') => {
     setSnackbar({ open: true, message, severity });
-  };
+  }, []);
 
-  const handleSnackbarClose = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  };
+  // Event handlers
+  const handleSearch = useCallback((query: string) => {
+    setSearchParams(prev => ({ ...prev, searchKey: query }));
+  }, []);
 
-  // Enhanced handlers with snackbar
-  const handleCreateUserWithSnackbar = (data: Record<string, unknown>) => {
-    const createData = data as unknown as CreateUserRequest;
-    createUserMutation.mutate(createData, {
-      onSuccess: () => {
-        showSnackbar('Tạo người dùng thành công!', 'success');
-        closeAllDialogs();
-      },
-      onError: (error: Error) => {
-        showSnackbar(`Lỗi: ${error.message}`, 'error');
-      },
-    });
-  };
+  const handleSort = useCallback((sortBy: string) => {
+    setSearchParams(prev => ({ ...prev, sortBy }));
+  }, []);
 
-  const handleUpdateUserWithSnackbar = async (data: Record<string, unknown>, selectedRow?: User) => {
-    const userToUpdate = selectedRow || selectedUser;
-    if (!userToUpdate?.id) {
+  const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
+    setFilters(newFilters);
+    setSearchParams(prev => ({ ...prev, ...newFilters }));
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  /**
+   * Mutation Handlers
+   */
+
+  const handleCreateSubmit = useCallback(async (data: Record<string, unknown>) => {
+    try {
+      await createUserMutation.mutateAsync(data as unknown as CreateUserRequest);
+      showSnackbar('Tạo người dùng thành công!', 'success');
+      closeView();
+    } catch (err: any) {
+      showSnackbar(`Lỗi: ${err.message}`, 'error');
+    }
+  }, [createUserMutation, closeView, showSnackbar]);
+
+  const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: User) => {
+    const target = selectedRow || activeView.user;
+    if (!target?.id) {
       showSnackbar('Lỗi: Không tìm thấy ID người dùng', 'error');
       return;
     }
-    
-    const updateData = data as unknown as UpdateUserRequest;
-    updateUserMutation.mutate(
-      { id: userToUpdate.id, data: updateData },
-      {
-        onSuccess: () => {
-          showSnackbar('Cập nhật người dùng thành công!', 'success');
-          closeAllDialogs();
-        },
-        onError: (error: Error) => {
-          showSnackbar(`Lỗi: ${error.message}`, 'error');
-        },
-      }
-    );
-  };
 
-  const handleViewUser = (user: User) => {
-    openViewEditDialog(user);
-    // View functionality is now handled by CommonViewEditDrawer
-  };
+    try {
+      await updateUserMutation.mutateAsync({
+        id: target.id,
+        data: data as unknown as UpdateUserRequest
+      });
+      showSnackbar('Cập nhật người dùng thành công!', 'success');
+      closeView();
+    } catch (err: any) {
+      showSnackbar(`Lỗi: ${err.message}`, 'error');
+    }
+  }, [activeView.user, updateUserMutation, closeView, showSnackbar]);
 
-  const handleEditUser = (user: User) => {
-    openViewEditDialog(user);
-    // Edit functionality is now handled by CommonViewEditDrawer
-  };
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!activeView.user?.id) return;
 
-  const handleDeleteUser = (user: User) => {
-    openDeleteDialog(user);
-    // Delete functionality is now handled by CommonViewEditDrawer
-  };
-
-  const handleDeleteUserWithSnackbar = () => {
-    deleteUserMutation.mutate(selectedUser!.id, {
-      onSuccess: () => {
-        showSnackbar('Xóa người dùng thành công!', 'success');
-        closeAllDialogs();
-      },
-      onError: (error: Error) => {
-        showSnackbar(`Lỗi: ${error.message}`, 'error');
-      },
-    });
-  };
+    try {
+      await deleteUserMutation.mutateAsync(activeView.user.id);
+      showSnackbar('Xóa người dùng thành công!', 'success');
+      closeView();
+    } catch (err: any) {
+      showSnackbar(`Lỗi: ${err.message}`, 'error');
+    }
+  }, [activeView.user, deleteUserMutation, closeView, showSnackbar]);
 
   if (error) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">
-          Không thể tải danh sách người dùng: {(error as Error).message}
-        </Alert>
-      </Box>
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Lỗi"
+          description={`Không thể tải danh sách người dùng: ${(error as Error).message}`}
+          type="error"
+          showIcon
+        />
+      </div>
     );
   }
 
-  // Table actions with handlers
-
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ padding: '0 0 24px 0', minHeight: '100%' }}>
       <CommonHeader
         title="Quản lý người dùng"
         subtitle="Quản lý thông tin và quyền hạn của các người dùng trong hệ thống"
         onRefresh={handleRefresh}
-        onCreate={openCreateDialog}
+        onCreate={() => openView('create')}
         createButtonText="Thêm người dùng"
         loading={isLoading}
       />
 
-      <Box sx={{ mt: 2 }}>
+      <div style={{ marginTop: '16px' }}>
         <UserSearchAndFilter
           onSearch={handleSearch}
           onSort={handleSort}
-          onFilter={handleFilter}
+          onFilter={(f) => handleFilterChange(f)}
           onRefresh={handleRefresh}
           loading={isLoading}
           onFilterChange={handleFilterChange}
           filters={filters}
         />
-      </Box>
+      </div>
 
-      <Box sx={{ mt: 2, flex: 1, overflow: 'hidden' }}>
-        <Paper sx={{ height: '100%' }}>
-          <UserDataGrid
-            data={usersResponse}
-            isLoading={isLoading}
-            error={error}
-            onRefresh={handleRefresh}
-            onViewDetail={handleViewUser}
-            onEdit={handleEditUser}
-            onDelete={handleDeleteUser}
-            onSave={handleUpdateUserWithSnackbar}
-            page={page}
-            rowsPerPage={rowsPerPage}
-            onPageChange={(newPage: number) => handleChangePage(null, newPage)}
-            onRowsPerPageChange={(newRowsPerPage: number) => {
-              const event = { target: { value: newRowsPerPage.toString() } } as React.ChangeEvent<HTMLInputElement>;
-              handleChangeRowsPerPage(event);
-            }}
-          />
-        </Paper>
-      </Box>
+      <div style={{
+        marginTop: '16px',
+        background: token.colorBgContainer,
+        borderRadius: '12px',
+        overflow: 'hidden'
+      }}>
+        <UserDataGrid
+          data={usersResponse}
+          isLoading={isLoading}
+          error={error}
+          onRefresh={handleRefresh}
+          onViewDetail={(u) => openView('view', u)}
+          onEdit={(u) => openView('edit', u)}
+          onDelete={(u) => openView('delete', u)}
+          onSave={handleUpdateSubmit}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={(newPage: number) => handleChangePage(null, newPage)}
+          onRowsPerPageChange={(newRowsPerPage: number) => {
+            handleChangeRowsPerPage({ target: { value: newRowsPerPage.toString() } } as any);
+          }}
+        />
+      </div>
 
-      {/* Drawers */}
+      {/* Drawers & Dialogs */}
       <CommonFormDrawer
-        open={isCreateDialogOpen}
-        onClose={closeAllDialogs}
-        onSave={handleCreateUserWithSnackbar}
+        open={activeView.type === 'create'}
+        onClose={closeView}
+        onSave={handleCreateSubmit}
         title="Thêm người dùng mới"
         fields={USER_FORM_FIELDS}
-        initialData={createFormData as unknown as Record<string, unknown>}
         loading={createUserMutation.isPending}
         submitText="Tạo người dùng"
         width={500}
       />
 
-      <CommonViewEditDrawer
-        open={isViewEditDialogOpen}
-        onClose={closeAllDialogs}
-        onSave={handleUpdateUserWithSnackbar}
-        title="Chi tiết người dùng"
-        viewFields={USER_FORM_FIELDS as DetailField[]}
-        editFields={USER_FORM_FIELDS as FormField[]}
-        data={selectedUser as unknown as Record<string, unknown>}
-        loading={updateUserMutation.isPending}
-        mode={isViewEditDialogOpen ? 'view' : 'edit'}
-      />
+      {activeView.user && (activeView.type === 'view' || activeView.type === 'edit') && (
+        <CommonViewEditDrawer
+          open={true}
+          onClose={closeView}
+          onSave={handleUpdateSubmit}
+          title={activeView.type === 'view' ? 'Chi tiết người dùng' : 'Chỉnh sửa người dùng'}
+          viewFields={USER_FORM_FIELDS as DetailField[]}
+          editFields={USER_FORM_FIELDS as FormField[]}
+          data={activeView.user as unknown as Record<string, unknown>}
+          loading={updateUserMutation.isPending}
+          mode={activeView.type === 'view' ? 'view' : 'edit'}
+        />
+      )}
 
       <CommonDeleteDialog
-        open={isDeleteDialogOpen}
-        onClose={closeAllDialogs}
-        onConfirm={handleDeleteUserWithSnackbar}
+        open={activeView.type === 'delete'}
+        onClose={closeView}
+        onConfirm={handleDeleteConfirm}
         title="Xóa người dùng"
-        itemName={selectedUser?.name}
+        itemName={activeView.user?.name}
         itemType="người dùng"
         isDeleting={deleteUserMutation.isPending}
       />
 
-      {/* Snackbar */}
       <CommonSnackbar
         open={snackbar.open}
         message={snackbar.message}
         severity={snackbar.severity}
-        onClose={handleSnackbarClose}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
       />
-    </Box>
+    </div>
   );
 };
 

@@ -25,9 +25,12 @@ export interface PartnerDebt {
     debt: number;
     organization_id: string;
   };
-  payment_method: 'cash' | 'bank_transfer' | 'credit_card' | 'other';
-  payment_type: 'income' | 'expense';
+  payment_method: 'cash' | 'bank_transfer' | 'credit_card' | 'winning_ticket' | 'seasonal_bonus' | 'other';
+  payment_type: 'income' | 'expense' | 'adjustment' | 'tax_withholding';
+  transaction_sub_type?: 'return' | 'winning_settlement' | 'swap' | 'lost_ticket_loss' | 'commission_reward' | 'price_override';
   amount: string; // API trả về string
+  tax_amount?: string;
+  commission_amount?: string;
   description: string | null;
   inventory_transaction_id: string | null;
   organization_id: string;
@@ -63,9 +66,12 @@ export interface PartnerDebtListResponse {
 
 export interface CreatePartnerDebtRequest {
   partner_id: string;
-  payment_method: 'cash' | 'bank_transfer' | 'credit_card' | 'other';
-  payment_type: 'income' | 'expense';
+  payment_method: 'cash' | 'bank_transfer' | 'credit_card' | 'winning_ticket' | 'seasonal_bonus' | 'other';
+  payment_type: 'income' | 'expense' | 'adjustment' | 'tax_withholding';
+  transaction_sub_type?: 'return' | 'winning_settlement' | 'swap' | 'lost_ticket_loss' | 'commission_reward' | 'price_override';
   amount: number;
+  tax_amount?: number;
+  commission_amount?: number;
   description?: string;
 }
 
@@ -100,18 +106,23 @@ export interface PartnerDebtSearchParams {
 
 export interface PartnerDebtFormData {
   partner_id: string;
-  payment_method: 'cash' | 'bank_transfer' | 'credit_card' | 'other';
-  payment_type: 'income' | 'expense';
+  payment_method: 'cash' | 'bank_transfer' | 'credit_card' | 'winning_ticket' | 'seasonal_bonus' | 'other';
+  payment_type: 'income' | 'expense' | 'adjustment' | 'tax_withholding';
+  transaction_sub_type?: 'return' | 'winning_settlement' | 'swap' | 'lost_ticket_loss' | 'commission_reward' | 'price_override';
   amount: number;
+  tax_amount?: number;
+  commission_amount?: number;
   description?: string;
 }
 
 export interface PartnerDebtTableRow {
   id: string;
   partner_name: string;
-  payment_method: 'cash' | 'bank_transfer' | 'credit_card' | 'other';
-  payment_type: 'income' | 'expense';
+  payment_method: string;
+  payment_type: string;
+  transaction_sub_type?: string;
   amount: number;
+  tax_amount?: number;
   description?: string;
   created_at: string;
   is_active: boolean;
@@ -121,9 +132,12 @@ export interface PartnerDebtDetailData {
   id: string;
   partner_id: string;
   partner_name: string;
-  payment_method: 'cash' | 'bank_transfer' | 'credit_card' | 'other';
-  payment_type: 'income' | 'expense';
+  payment_method: string;
+  payment_type: string;
+  transaction_sub_type?: string;
   amount: number;
+  tax_amount?: number;
+  commission_amount?: number;
   description?: string;
   created_at: string;
   updated_at: string;

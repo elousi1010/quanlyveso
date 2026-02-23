@@ -1,92 +1,113 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
-  Box,
-  Typography,
   Card,
-  CardContent,
-  Grid,
+  Typography,
+  Row,
+  Col,
   Button,
-  ButtonGroup,
-  IconButton,
+  Space,
   Avatar,
-  Chip,
-  CircularProgress,
+  Tag,
+  Spin,
   Skeleton,
-  Stack,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Divider,
-  useTheme,
-  alpha,
-  styled
-} from '@mui/material';
-import { DatePicker } from 'antd';
+  DatePicker,
+  Flex,
+  theme as antdTheme
+} from 'antd';
+import {
+  ReloadOutlined,
+  RiseOutlined,
+  FallOutlined,
+  DollarOutlined,
+  DatabaseOutlined,
+  ShoppingCartOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
-import 'antd/dist/reset.css';
-
-// Icons
-import RefreshIcon from '@mui/icons-material/Refresh';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import WarningIcon from '@mui/icons-material/Warning';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import PeopleIcon from '@mui/icons-material/People';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import HomeIcon from '@mui/icons-material/Home';
-
-// Charts
 import {
   AreaChart,
   Area,
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer
 } from 'recharts';
+import styled from '@emotion/styled';
 
 // Hooks and Utils
 import { useDashboardOverview, useDashboardRevenue, useDashboardActivity } from '@/hooks/useDashboard';
-import { 
-  formatCurrency, 
-  formatNumber, 
-  formatDate, 
-  formatRelativeTime 
+import {
+  formatCurrency,
+  formatNumber,
+  formatRelativeTime
 } from '@/utils';
+import { useTheme } from '@/contexts/ThemeContext';
 
-// MUI Minimal Dashboard Styled Components
-const MinimalCard = styled(Card)(({ theme }) => ({
-  background: theme.palette.background.paper,
-  border: `1px solid ${theme.palette.divider}`,
-  borderRadius: 8,
-  boxShadow: 'none',
-  transition: 'all 0.2s ease-in-out',
-  '&:hover': {
-    boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.1)}`,
-  },
-}));
+const { Title, Text } = Typography;
+const { RangePicker } = DatePicker;
 
-const StatsCard = styled(Box)(({ theme }) => ({
-  background: theme.palette.background.paper,
-  border: `1px solid ${theme.palette.divider}`,
-  borderRadius: 8,
-  padding: 24,
-  position: 'relative',
-  transition: 'all 0.2s ease-in-out',
-  '&:hover': {
-    boxShadow: `0 2px 8px ${alpha(theme.palette.common.black, 0.08)}`,
-  },
-}));
+// Simplified card without animations
+const DashboardCard = styled(Card) <{ isDark: boolean }>`
+  border-radius: 12px;
+  border: 1px solid ${props => props.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'};
+  background: ${props => props.isDark ? '#1e293b' : '#ffffff'};
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  height: 100%;
+  
+  .ant-card-body {
+    padding: 20px;
+  }
+`;
+
+const IconWrapper = styled.div<{ gradient: string }>`
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${props => props.gradient};
+  color: #fff;
+  margin-bottom: 16px;
+  font-size: 20px;
+`;
+
+const ChartTooltip = ({ active, payload, label, isDark }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div
+        style={{
+          background: isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(4px)',
+          padding: '12px',
+          borderRadius: '8px',
+          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        }}
+      >
+        <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '13px' }}>{label}</Text>
+        {payload.map((entry: any, index: number) => (
+          <Flex key={index} align="center" gap={8} style={{ marginBottom: '4px' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: entry.color }} />
+            <Text type="secondary" style={{ fontSize: '12px' }}>
+              {entry.name === 'import' ? 'Nhập Kho' : entry.name === 'export' ? 'Xuất Kho' : 'Tổng Cộng'}:
+            </Text>
+            <Text strong style={{ fontSize: '12px' }}>
+              {formatCurrency(entry.value)}
+            </Text>
+          </Flex>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 const DashboardOverview: React.FC = () => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
+  const { mode } = useTheme();
+  const isDark = mode === 'dark';
+  const { token } = antdTheme.useToken();
   const now = new Date();
 
   // State
@@ -96,35 +117,34 @@ const DashboardOverview: React.FC = () => {
     dayjs()
   ]);
   const [revenueType, setRevenueType] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('daily');
-  const [isDatePickerChanging, setIsDatePickerChanging] = useState(false);
 
   // Refs for debouncing
   const debounceRef = useRef<number | null>(null);
 
   // Format today's date for API
-  const today = now.toISOString().split('T')[0];
+  const todayStr = now.toISOString().split('T')[0];
 
   // Initialize filters with today's date
   const [filters, setFilters] = useState({
-    startDate: today,
-    endDate: today
+    startDate: todayStr,
+    endDate: todayStr
   });
 
   // API calls
-  const { 
-    data: overviewData, 
-    isLoading, 
-    refetch 
+  const {
+    data: overviewData,
+    isLoading,
+    refetch
   } = useDashboardOverview(filters);
 
-  const { 
-    data: revenueData, 
-    isLoading: isRevenueLoading 
+  const {
+    data: revenueData,
+    isLoading: isRevenueLoading
   } = useDashboardRevenue(revenueType, filters);
 
-  const { 
-    data: activityData, 
-    isLoading: isActivityLoading 
+  const {
+    data: activityData,
+    isLoading: isActivityLoading
   } = useDashboardActivity();
 
   // Time range change handler
@@ -133,7 +153,7 @@ const DashboardOverview: React.FC = () => {
     const today = new Date();
     let startDate: Date;
     let endDate: Date = new Date(today);
-    
+
     switch (range) {
       case 'today':
         startDate = new Date(today);
@@ -153,7 +173,7 @@ const DashboardOverview: React.FC = () => {
       default:
         startDate = new Date(today);
     }
-    
+
     const startDateStr = startDate.toISOString().split('T')[0];
     const endDateStr = endDate.toISOString().split('T')[0];
 
@@ -166,113 +186,59 @@ const DashboardOverview: React.FC = () => {
     setDateRange([dayjs(startDateStr), dayjs(endDateStr)]);
   }, []);
 
-  // Date range change handler with debouncing
-  const handleDateRangeChange = useCallback((dates: [Dayjs, Dayjs] | null) => {
+  // Date range change handler
+  const handleDateRangeChange = useCallback((dates: any) => {
     if (!dates) return;
 
-    setDateRange(dates);
-    setIsDatePickerChanging(true);
+    setDateRange(dates as [Dayjs, Dayjs]);
 
-    // Clear existing timeout
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // Set new timeout
-    debounceRef.current = setTimeout(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = window.setTimeout(() => {
       const startDate = dates[0].format('YYYY-MM-DD');
       const endDate = dates[1].format('YYYY-MM-DD');
-
-      setFilters({
-        startDate,
-        endDate
-      });
-
-      setIsDatePickerChanging(false);
+      setFilters({ startDate, endDate });
     }, 500);
   }, []);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
-
-  // Debug logging
-  console.log('Dashboard Data:', {
-    overviewData,
-    revenueData,
-    activityData,
-    filters,
-    isLoading,
-    isRevenueLoading,
-    isActivityLoading
-  });
 
   // Process data
   const statsData = overviewData ? [
     {
-      title: 'Total Debt',
+      title: 'Tổng Công Nợ',
       value: formatCurrency(parseFloat(overviewData.debt?.this || '0')),
       unit: 'VND',
       change: '+0%',
-      changeType: 'neutral' as const,
-      icon: <AttachMoneyIcon />,
-      bgColor: '#e3f2fd',
-      color: '#1976d2',
+      icon: <DollarOutlined />,
+      gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)',
     },
     {
-      title: 'Tickets In',
+      title: 'Vé Nhập Vào',
       value: formatNumber(parseInt(overviewData.ticketImport?.this || '0')),
-      unit: 'tickets',
+      unit: 'vé',
       change: '+0%',
-      changeType: 'neutral' as const,
-      icon: <InventoryIcon />,
-      bgColor: '#f3e5f5',
-      color: '#7b1fa2',
+      icon: <DatabaseOutlined />,
+      gradient: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
     },
     {
-      title: 'Tickets Out',
+      title: 'Vé Xuất Ra',
       value: formatNumber(parseInt(overviewData.ticketExport?.this || '0')),
-      unit: 'tickets',
+      unit: 'vé',
       change: '+0%',
-      changeType: 'neutral' as const,
-      icon: <ShoppingCartIcon />,
-      bgColor: '#fff3e0',
-      color: '#f57c00',
+      icon: <ShoppingCartOutlined />,
+      gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
     },
     {
-      title: 'Transactions',
+      title: 'Giao Dịch',
       value: formatNumber(parseInt(overviewData.transaction?.this || '0')),
-      unit: 'transactions',
+      unit: 'giao dịch',
       change: '+0%',
-      changeType: 'neutral' as const,
-      icon: <PeopleIcon />,
-      bgColor: '#e8f5e8',
-      color: '#388e3c',
-    },
-    {
-      title: 'Previous Total Debt',
-      value: formatCurrency(parseFloat(overviewData.debt?.prev || '0')),
-      unit: 'VND',
-      change: '+0%',
-      changeType: 'neutral' as const,
-      icon: <AccountBalanceIcon />,
-      bgColor: '#fce4ec',
-      color: '#c2185b',
-    },
-    {
-      title: 'Previous Tickets In',
-      value: formatNumber(parseInt(overviewData.ticketImport?.prev || '0')),
-      unit: 'tickets',
-      change: '+0%',
-      changeType: 'neutral' as const,
-      icon: <HomeIcon />,
-      bgColor: '#f1f8e9',
-      color: '#689f38',
+      icon: <UserOutlined />,
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
     },
   ] : [];
 
@@ -287,472 +253,206 @@ const DashboardOverview: React.FC = () => {
   // Process recent activities
   const recentActivities = Array.isArray(activityData) ? activityData.map((item: any) => ({
     id: item.activity?.id || item.id,
-    title: `${item.transaction?.type || 'Transaction'} - ${item.transaction?.sub_type || 'Activity'}`,
-    description: `${item.partner?.name || 'Unknown Partner'} - ${item.inventory?.code || 'N/A'}: ${formatCurrency(parseFloat(item.activity?.total || '0'))} (${item.activity?.quantity || 0} tickets)`,
+    title: `${item.transaction?.type === 'import' ? 'Nhập' : 'Xuất'} - ${item.transaction?.sub_type || 'Giao dịch'}`,
+    description: `${item.partner?.name || 'Đối tác'} - ${item.inventory?.code || 'Kho'}: ${formatCurrency(parseFloat(item.activity?.total || '0'))}`,
     time: formatRelativeTime(item.activity?.created_at || new Date().toISOString()),
     type: item.transaction?.type === 'import' ? 'success' as const : 'warning' as const,
-    avatar: undefined,
-    color: item.transaction?.type === 'import' ? '#4caf50' : '#ff9800',
+    color: item.transaction?.type === 'import' ? '#10b981' : '#f59e0b',
   })) : [];
 
   return (
-    <Box sx={{ 
-      p: { xs: 2, sm: 3, md: 4 },
-      background: isDark ? '#0a0a0a' : '#f8f9fa',
-      minHeight: '100vh'
-    }}>
-      {/* Professional Header */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-          <Box>
-            <Typography 
-              variant="h3" 
-              component="h1" 
-              sx={{ 
-                fontWeight: 700, 
-                fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.75rem' },
-                color: isDark ? '#ffffff' : 'text.primary',
-                mb: 1
-              }}
-            >
-              Dashboard
-            </Typography>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
-                fontWeight: 400
-              }}
-            >
-              Welcome back! Here's what's happening with your business today.
-            </Typography>
-          </Box>
-          <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-            {/* Professional Time Range Buttons */}
-            <ButtonGroup 
-              size="medium" 
-              variant="outlined"
-              sx={{
-                '& .MuiButton-root': {
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  px: 3,
-                  py: 1,
-                  fontSize: '0.875rem',
-                  borderColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
-                  color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'text.primary',
-                  '&:hover': {
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                  },
-                  '&.Mui-selected': {
-                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                    borderColor: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-                  }
-                }
-              }}
-            >
-              <Button 
-                onClick={() => handleTimeRangeChange('today')}
-                variant={timeRange === 'today' ? 'contained' : 'outlined'}
-              >
-                Today
-              </Button>
-              <Button 
-                onClick={() => handleTimeRangeChange('week')}
-                variant={timeRange === 'week' ? 'contained' : 'outlined'}
-              >
-                Week
-              </Button>
-              <Button 
-                onClick={() => handleTimeRangeChange('month')}
-                variant={timeRange === 'month' ? 'contained' : 'outlined'}
-              >
-                Month
-              </Button>
-              <Button 
-                onClick={() => handleTimeRangeChange('year')}
-                variant={timeRange === 'year' ? 'contained' : 'outlined'}
-              >
-                Year
-              </Button>
-            </ButtonGroup>
-            
-            {/* Professional Date Range Picker */}
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
-              borderRadius: 2,
-              p: 1,
-              backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-            }}>
-              <DatePicker.RangePicker
-                value={dateRange}
-                onChange={handleDateRangeChange}
-                format="DD/MM/YYYY"
-                placeholder={['From', 'To']}
+    <div style={{ paddingBottom: '24px' }}>
+      {/* Header Section */}
+      <Flex justify="space-between" align="center" wrap="wrap" gap={16} style={{ marginBottom: '24px' }}>
+        <div>
+          <Title level={4} style={{ margin: 0, fontWeight: 700 }}>Tổng Quan Hệ Thống</Title>
+          <Text type="secondary" style={{ fontSize: '13px' }}>Theo dõi tình hình kinh doanh thời gian thực.</Text>
+        </div>
+
+        <Space size="middle" wrap>
+          <Space.Compact style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', padding: '4px', borderRadius: '8px' }}>
+            {(['today', 'week', 'month', 'year'] as const).map((range) => (
+              <Button
+                key={range}
+                type={timeRange === range ? 'primary' : 'text'}
+                onClick={() => handleTimeRangeChange(range)}
                 size="small"
-                style={{
-                  width: 240,
-                  height: 40,
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                }}
-                className="antd-date-range-picker"
-              />
-            </Box>
-            
-            {/* Professional Refresh Button */}
-            <IconButton 
-              onClick={() => refetch()} 
-              disabled={isLoading}
-              sx={{
-                width: 40,
-                height: 40,
-                color: isDark ? 'rgba(255, 255, 255, 0.8)' : 'text.primary',
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'}`,
-                '&:hover': {
-                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                }
-              }}
-            >
-              {isLoading ? <CircularProgress size={20} /> : <RefreshIcon />}
-            </IconButton>
-          </Stack>
-        </Box>
-      </Box>
-
-      {/* Professional Statistics Cards */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ 
-          display: 'grid', 
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
-          gap: 3 
-        }}>
-            {isLoading ? (
-            Array.from({ length: 6 }).map((_, index) => (
-              <MinimalCard key={index} sx={{ p: 3 }}>
-                <Skeleton variant="circular" width={56} height={56} sx={{ mb: 2 }} />
-                <Skeleton variant="text" height={40} width="60%" sx={{ mb: 1 }} />
-                <Skeleton variant="text" height={20} width="40%" sx={{ mb: 1 }} />
-                <Skeleton variant="text" height={24} width="80%" />
-              </MinimalCard>
-            ))
-          ) : (
-            statsData.map((stat, index) => (
-              <MinimalCard key={index} sx={{ height: '100%' }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-                <Avatar
-                  sx={{
-                    bgcolor: stat.bgColor,
-                    color: stat.color,
-                    width: 56,
-                    height: 56,
-                  }}
-                >
-                  {stat.icon}
-                </Avatar>
-                    <Chip
-                      label={stat.change}
-                      size="small"
-                      color="default"
-                      sx={{ 
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
-                        height: 28
-                      }}
-                    />
-              </Box>
-                  <Typography 
-                    variant="h4" 
-                    sx={{ 
-                      fontWeight: 700, 
-                      mb: 1, 
-                      color: isDark ? '#ffffff' : 'text.primary', 
-                      fontSize: '2rem'
-                    }}
-                  >
-                    {stat.value}
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      mb: 2, 
-                      color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary',
-                      fontWeight: 500
-                    }}
-                  >
-                    {stat.unit}
-                  </Typography>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontWeight: 600, 
-                      color: isDark ? 'rgba(255, 255, 255, 0.9)' : 'text.primary'
-                    }}
-                  >
-                    {stat.title}
-                  </Typography>
-                </CardContent>
-              </MinimalCard>
-            ))
-          )}
-        </Box>
-      </Box>
-
-      {/* Professional Charts and Data */}
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
-        gap: 3,
-        mb: 3
-      }}>
-        {/* Revenue Chart */}
-        <MinimalCard>
-          <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Typography variant="h6" sx={{ 
-                fontWeight: 600,
-                color: isDark ? '#ffffff' : 'text.primary',
-                fontSize: '1.25rem'
-              }}>
-                Revenue Chart
-              </Typography>
-              <ButtonGroup size="small" variant="outlined">
-                {['daily', 'weekly', 'monthly', 'yearly'].map((type) => (
-                  <Button 
-                    key={type}
-                    onClick={() => setRevenueType(type as any)}
-                    variant={revenueType === type ? 'contained' : 'outlined'}
-                    sx={{ 
-                      textTransform: 'capitalize',
-                      fontSize: '0.875rem',
-                      px: 2,
-                      py: 0.5
-                    }}
-                  >
-                    {type === 'daily' ? 'Day' : type === 'weekly' ? 'Week' : type === 'monthly' ? 'Month' : 'Year'}
-                  </Button>
-                ))}
-              </ButtonGroup>
-            </Box>
-            {(isLoading || isRevenueLoading) ? (
-              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CircularProgress size={32} />
-              </Box>
-            ) : revenueChartData.length > 0 ? (
-              <Box sx={{ height: 300 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={revenueChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'} />
-                    <XAxis dataKey="label" stroke={isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'} />
-                    <YAxis stroke={isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.6)'} />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-                        border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
-                        borderRadius: 8,
-                      }}
-                      formatter={(value: number, name: string) => [
-                        formatCurrency(value),
-                        name === 'import' ? 'Import' : name === 'export' ? 'Export' : 'Total Revenue'
-                      ]}
-                    />
-                    <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="import" 
-                      stackId="1"
-                      stroke="#2196f3" 
-                      fill="#2196f3" 
-                      fillOpacity={0.6}
-                      name="Import"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="export" 
-                      stackId="1"
-                      stroke="#ff9800" 
-                      fill="#ff9800" 
-                      fillOpacity={0.6}
-                      name="Export"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="total" 
-                      stroke="#4caf50" 
-                      fill="#4caf50" 
-                      fillOpacity={0.3}
-                      name="Total Revenue"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </Box>
-            ) : (
-              <Box sx={{ 
-                height: 300, 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'text.secondary'
-              }}>
-                <Typography variant="body1">No data available</Typography>
-              </Box>
-            )}
-          </CardContent>
-        </MinimalCard>
-
-        {/* Professional Activity Feed */}
-        <MinimalCard sx={{ height: '100%' }}>
-          <CardContent sx={{ p: 3 }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 600, 
-                mb: 3,
-                color: isDark ? '#ffffff' : 'text.primary',
-                fontSize: '1.25rem'
-              }}
-            >
-              Recent Activity
-            </Typography>
-            {(isLoading || isActivityLoading) ? (
-              <Stack spacing={2}>
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <Box key={index} sx={{ display: 'flex', gap: 2 }}>
-                    <Skeleton variant="circular" width={40} height={40} />
-                    <Box sx={{ flex: 1 }}>
-                      <Skeleton variant="text" height={20} width="80%" />
-                      <Skeleton variant="text" height={16} width="60%" />
-                      <Skeleton variant="text" height={14} width="40%" />
-                    </Box>
-                  </Box>
-                ))}
-              </Stack>
-            ) : recentActivities.length > 0 ? (
-              <List sx={{ p: 0 }}>
-                {recentActivities.map((activity, index) => (
-                  <React.Fragment key={activity.id}>
-                    <ListItem sx={{ px: 0, py: 1.5 }}>
-                      <ListItemAvatar>
-                        <Avatar
-                          sx={{
-                            bgcolor: activity.color,
-                            width: 40,
-                            height: 40,
-                          }}
-                        >
-                          {activity.type === 'success' ? <CheckCircleIcon sx={{ fontSize: 20 }} /> : <WarningIcon sx={{ fontSize: 20 }} />}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-                            {activity.title}
-                          </Typography>
-                        }
-                        secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem', mb: 0.5 }}>
-                              {activity.description}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                              {activity.time}
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                    </ListItem>
-                    {index < recentActivities.length - 1 && <Divider sx={{ my: 1 }} />}
-                  </React.Fragment>
-                ))}
-              </List>
-            ) : (
-              <Box sx={{ textAlign: 'center', py: 4 }}>
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary"
-                  sx={{
-                    color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary',
-                    fontSize: '0.875rem'
-                  }}
-                >
-                  No recent activity
-                </Typography>
-              </Box>
-            )}
-          </CardContent>
-        </MinimalCard>
-      </Box>
-
-      {/* Bottom Section */}
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' },
-        gap: 3
-      }}>
-        {/* Top Partners */}
-        <MinimalCard sx={{ height: '100%' }}>
-          <CardContent sx={{ p: 3 }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 600, 
-                mb: 3,
-                color: isDark ? '#ffffff' : 'text.primary',
-                fontSize: '1.25rem'
-              }}
-            >
-              Top Partners
-            </Typography>
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{
-                  color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary',
-                  fontSize: '0.875rem'
-                }}
+                style={{ borderRadius: '6px', fontWeight: 600 }}
               >
-                No partner data yet
-              </Typography>
-            </Box>
-          </CardContent>
-        </MinimalCard>
+                {range === 'today' ? 'Ngày' : range === 'week' ? 'Tuần' : range === 'month' ? 'Tháng' : 'Năm'}
+              </Button>
+            ))}
+          </Space.Compact>
 
-        {/* Top Stations */}
-        <MinimalCard sx={{ height: '100%' }}>
-          <CardContent sx={{ p: 3 }}>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontWeight: 600, 
-                mb: 3,
-                color: isDark ? '#ffffff' : 'text.primary',
-                fontSize: '1.25rem'
-              }}
-            >
-              Top Stations
-            </Typography>
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{
-                  color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary',
-                  fontSize: '0.875rem'
-                }}
-              >
-                No station data yet
-              </Typography>
-            </Box>
-          </CardContent>
-        </MinimalCard>
-      </Box>
-    </Box>
+          <RangePicker
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            format="DD/MM/YYYY"
+            size="middle"
+            style={{ borderRadius: '8px' }}
+          />
+
+          <Button
+            shape="circle"
+            icon={isLoading ? <Spin size="small" /> : <ReloadOutlined />}
+            onClick={() => refetch()}
+          />
+        </Space>
+      </Flex>
+
+      {/* Stats Grid */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <Col xs={24} sm={12} lg={6} key={index}>
+              <Card loading style={{ borderRadius: '12px' }} />
+            </Col>
+          ))
+        ) : (
+          statsData.map((stat, index) => (
+            <Col xs={24} sm={12} lg={6} key={index}>
+              <DashboardCard isDark={isDark}>
+                <Flex justify="space-between" align="flex-start">
+                  <IconWrapper gradient={stat.gradient}>
+                    {stat.icon}
+                  </IconWrapper>
+                  <Tag color="success" style={{ borderRadius: '4px', margin: 0, fontWeight: 600, fontSize: '11px' }}>
+                    {stat.change}
+                  </Tag>
+                </Flex>
+                <Text type="secondary" strong style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>
+                  {stat.title}
+                </Text>
+                <Title level={4} style={{ margin: 0, fontWeight: 700 }}>
+                  {stat.value}
+                </Title>
+                <Text type="secondary" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
+                  {stat.unit}
+                </Text>
+              </DashboardCard>
+            </Col>
+          ))
+        )}
+      </Row>
+
+      {/* Main Content Sections */}
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={16}>
+          <DashboardCard isDark={isDark} title={<Text strong>Biểu Đồ Doanh Thu</Text>} extra={
+            <Space.Compact style={{ background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', padding: '2px', borderRadius: '6px' }}>
+              {(['daily', 'weekly', 'monthly', 'yearly'] as const).map((type) => (
+                <Button
+                  key={type}
+                  type={revenueType === type ? 'primary' : 'text'}
+                  onClick={() => setRevenueType(type)}
+                  size="small"
+                  style={{ borderRadius: '4px', fontSize: '12px' }}
+                >
+                  {type === 'daily' ? 'Ngày' : type === 'weekly' ? 'Tuần' : type === 'monthly' ? 'Tháng' : 'Năm'}
+                </Button>
+              ))}
+            </Space.Compact>
+          }>
+            <div style={{ height: '320px', marginTop: '16px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={revenueChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorImport" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorExport" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: token.colorTextSecondary, fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: token.colorTextSecondary, fontSize: 11 }} tickFormatter={(val) => `${val / 1000000}M`} />
+                  <RechartsTooltip content={<ChartTooltip isDark={isDark} />} />
+                  <Area type="monotone" dataKey="import" stroke="#0ea5e9" strokeWidth={2} fillOpacity={1} fill="url(#colorImport)" />
+                  <Area type="monotone" dataKey="export" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#colorExport)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </DashboardCard>
+        </Col>
+
+        <Col xs={24} lg={8}>
+          <DashboardCard isDark={isDark} title={<Text strong>Hoạt Động Gần Đây</Text>}>
+            <Space direction="vertical" size={16} style={{ width: '100%', marginTop: '8px' }}>
+              {isActivityLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} avatar active paragraph={{ rows: 1 }} />
+                ))
+              ) : recentActivities.length > 0 ? (
+                recentActivities.slice(0, 6).map((activity) => (
+                  <Flex key={activity.id} gap={12} align="center">
+                    <Avatar
+                      size={36}
+                      icon={activity.type === 'success' ? <RiseOutlined /> : <FallOutlined />}
+                      style={{ background: `${activity.color}15`, color: activity.color, borderRadius: '8px' }}
+                    />
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
+                      <Text strong style={{ display: 'block', fontSize: '13px' }}>{activity.title}</Text>
+                      <Text type="secondary" ellipsis style={{ display: 'block', fontSize: '12px' }}>{activity.description}</Text>
+                    </div>
+                    <Text type="secondary" style={{ fontSize: '11px' }}>{activity.time}</Text>
+                  </Flex>
+                ))
+              ) : (
+                <div style={{ padding: '24px 0', textAlign: 'center' }}><Text type="secondary">Không có hoạt động nào</Text></div>
+              )}
+            </Space>
+          </DashboardCard>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
+        <Col xs={24} md={12}>
+          <DashboardCard isDark={isDark} title={<Text strong>Đối Tác Hàng Đầu</Text>} extra={<Button type="link" size="small">Tất cả</Button>}>
+            <Space direction="vertical" size={14} style={{ width: '100%' }}>
+              {[
+                { name: 'Đại lý Kim Anh', debt: 150000000, grow: '+12%', color: '#6366f1' },
+                { name: 'Đại lý Minh Ngọc', debt: 85000000, grow: '+8%', color: '#10b981' },
+                { name: 'Đại lý Thành Phát', debt: 42000000, grow: '-3%', color: '#f59e0b' },
+              ].map((partner, i) => (
+                <Flex key={i} align="center" gap={12}>
+                  <Avatar size={32} style={{ background: `${partner.color}15`, color: partner.color, fontWeight: 700, borderRadius: '6px' }}>{partner.name.charAt(0)}</Avatar>
+                  <div style={{ flex: 1 }}>
+                    <Text strong style={{ display: 'block', fontSize: '13px' }}>{partner.name}</Text>
+                    <Text type="secondary" style={{ fontSize: '12px' }}>{formatCurrency(partner.debt)}</Text>
+                  </div>
+                  <Tag color={partner.grow.startsWith('+') ? 'success' : 'error'} style={{ borderRadius: '4px', margin: 0, fontSize: '11px' }}>{partner.grow}</Tag>
+                </Flex>
+              ))}
+            </Space>
+          </DashboardCard>
+        </Col>
+
+        <Col xs={24} md={12}>
+          <DashboardCard isDark={isDark} title={<Text strong>Trạm Vé Hoạt Động</Text>} extra={<Button type="link" size="small">Chi tiết</Button>}>
+            <Space direction="vertical" size={14} style={{ width: '100%' }}>
+              {[
+                { name: 'Trạm Miền Nam', tickets: 45000, load: 85, color: '#3b82f6' },
+                { name: 'Trạm Miền Trung', tickets: 12000, load: 45, color: '#8b5cf6' },
+                { name: 'Trạm Miền Bắc', tickets: 28000, load: 65, color: '#ec4899' },
+              ].map((station, i) => (
+                <div key={i}>
+                  <Flex justify="space-between" align="center" style={{ marginBottom: '4px' }}>
+                    <Text strong style={{ fontSize: '13px' }}>{station.name}</Text>
+                    <Text strong style={{ color: token.colorPrimary, fontSize: '11px' }}>{formatNumber(station.tickets)} vé</Text>
+                  </Flex>
+                  <div style={{ width: '100%', height: '4px', background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', background: station.color, width: `${station.load}%` }} />
+                  </div>
+                </div>
+              ))}
+            </Space>
+          </DashboardCard>
+        </Col>
+      </Row>
+    </div>
   );
 };
 

@@ -133,12 +133,6 @@ export const ticketUpdateFields: DialogFieldConfig<UpdateTicketDto>[] = [
 
 export const ticketDetailFields: DialogFieldConfig[] = [
   {
-    key: 'id',
-    label: 'ID',
-    type: 'text',
-    readonly: true,
-  },
-  {
     key: 'ticket_code',
     label: 'Mã vé',
     type: 'text',
@@ -147,12 +141,6 @@ export const ticketDetailFields: DialogFieldConfig[] = [
   {
     key: 'ticket_type',
     label: 'Loại vé',
-    type: 'text',
-    readonly: true,
-  },
-  {
-    key: 'station_id',
-    label: 'ID Trạm',
     type: 'text',
     readonly: true,
   },

@@ -1,14 +1,8 @@
 import React from 'react';
-import {
-  Drawer,
-  Box,
-  IconButton,
-  Typography,
-  Divider,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Drawer, Typography, Button, Flex, theme as antdTheme } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
+
+const { Title } = Typography;
 
 interface CommonDrawerProps {
   open: boolean;
@@ -27,74 +21,34 @@ const CommonDrawer: React.FC<CommonDrawerProps> = ({
   children,
   width = 400,
   anchor = 'right',
-  loading = false,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  // Adjust width for mobile screens
-  const drawerWidth = isMobile ? '100%' : width;
+  const { token } = antdTheme.useToken();
 
   return (
     <Drawer
-      anchor={anchor}
-      open={open}
+      title={
+        <Flex justify="space-between" align="center">
+          <Title level={5} style={{ margin: 0, fontWeight: 700 }}>
+            {title}
+          </Title>
+        </Flex>
+      }
+      placement={anchor as any}
       onClose={onClose}
-      sx={{
-        '& .MuiDrawer-paper': {
-          width: drawerWidth,
-          maxWidth: '100vw',
-          height: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
+      open={open}
+      width={width}
+      closeIcon={<CloseOutlined style={{ fontSize: '16px' }} />}
+      styles={{
+        header: {
+          padding: '16px 24px',
+          borderBottom: `1px solid ${token.colorBorderSecondary}`,
         },
-      }}
-      PaperProps={{
-        sx: {
-          backgroundColor: theme.palette.background.paper,
-        },
+        body: {
+          padding: 0,
+        }
       }}
     >
-      {/* Header */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          p: 2,
-          minHeight: 64,
-          borderBottom: `1px solid ${theme.palette.divider}`,
-        }}
-      >
-        <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-          {title}
-        </Typography>
-        <IconButton
-          onClick={onClose}
-          size="small"
-          sx={{
-            color: theme.palette.text.secondary,
-            '&:hover': {
-              backgroundColor: theme.palette.action.hover,
-            },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <Divider />
-
-      {/* Content */}
-      <Box
-        sx={{
-          flex: 1,
-          overflow: 'auto',
-          p: 0,
-        }}
-      >
-        {children}
-      </Box>
+      {children}
     </Drawer>
   );
 };

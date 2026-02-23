@@ -1,33 +1,41 @@
-import React, { useState, useCallback } from 'react';
-import { Box } from '@mui/material';
-import { 
+import React, { useState, useCallback, useMemo } from 'react';
+import { Alert, theme as antdTheme } from 'antd';
+import {
+  CommonHeader,
+  CommonSnackbar,
+  CommonDeleteDialog,
+  CommonFormDrawer,
   CommonViewEditDrawer,
 } from '@/components/common';
 import { useTablePagination } from '@/hooks';
 import {
-  PartnerHeader,
   PartnerDataGrid,
   PartnerSearchAndFilter,
-  PartnerDeleteDialog,
-  PartnerSnackbar,
-  PartnerFormDialog,
 } from './components';
 import { usePartners, usePartnerMutations } from './hooks';
-import { 
-  PARTNER_FORM_FIELDS, 
-  PARTNER_DETAIL_FIELDS 
+import {
+  PARTNER_FORM_FIELDS,
+  PARTNER_DETAIL_FIELDS,
+  PARTNER_CONSTANTS
 } from './constants';
-import { 
-  formDataToUpdateDto, 
-  partnerToDisplayData, 
+import {
+  formDataToUpdateDto,
+  partnerToDisplayData,
 } from './utils/partnerHelpers';
-import type { 
-  Partner, 
-  CreatePartnerRequest, 
+import type {
+  Partner,
+  CreatePartnerRequest,
   PartnerSearchParams,
 } from './types';
 
+/**
+ * PartnerManagement Component
+ * 
+ * Manages partners and agents with a unified UI pattern.
+ */
 export const PartnerManagement: React.FC = () => {
+  const { token } = antdTheme.useToken();
+
   // Pagination state
   const {
     page,
@@ -43,40 +51,49 @@ export const PartnerManagement: React.FC = () => {
   // Search and filter state
   const [searchParams, setSearchParams] = useState<PartnerSearchParams>({});
   const [filters, setFilters] = useState<Record<string, unknown>>({});
-  // const [selectedRows, setSelectedRows] = useState<Partner[]>([]);
-  const [dialogState, setDialogState] = useState({
-    create: false,
-    edit: false,
-    view: false,
-    delete: false,
-  });
-  const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
+
+  /**
+   * Unified view state for dialogs and drawers.
+   */
+  const [activeView, setActiveView] = useState<{
+    type: 'create' | 'edit' | 'view' | 'delete' | null;
+    partner: Partner | null;
+  }>({ type: null, partner: null });
+
+  // Snackbar state
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
 
-  // API hooks - combine search params with pagination
-  const combinedParams = {
+  // API hooks
+  const combinedParams = useMemo(() => ({
     ...searchParams,
     ...apiParams,
-  };
+  }), [searchParams, apiParams]);
+
   const { data: partnersData, isLoading, refetch, error } = usePartners(combinedParams);
-
-  // Debug logging for pagination
-
   const { createMutation, updateMutation, deleteMutation } = usePartnerMutations();
 
-  // Debug logging
+  // View control handlers
+  const openView = useCallback((type: typeof activeView['type'], partner: Partner | null = null) => {
+    setActiveView({ type, partner });
+  }, []);
+
+  const closeView = useCallback(() => {
+    setActiveView({ type: null, partner: null });
+  }, []);
+
+  const showSnackbar = useCallback((message: string, severity: typeof snackbar['severity'] = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
 
   // Event handlers
   const handleSearchChange = useCallback((params: PartnerSearchParams) => {
-    // Remove page and limit from search params as they're handled by pagination
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { page, limit, ...searchOnlyParams } = params;
     setSearchParams(searchOnlyParams);
-    // Reset to first page when searching
     resetPagination();
   }, [resetPagination]);
 
@@ -88,226 +105,151 @@ export const PartnerManagement: React.FC = () => {
 
   const handleFilterChange = useCallback((newFilters: Record<string, unknown>) => {
     setFilters(newFilters);
-    const combinedParams = { ...searchParams, ...newFilters };
-    setSearchParams(combinedParams);
+    setSearchParams(prev => ({ ...prev, ...newFilters }));
     resetPagination();
-  }, [searchParams, resetPagination]);
-
-  // Pagination handlers for table
-  const handlePageChangeWrapper = useCallback((newPage: number) => {
-    handleChangePage(null, newPage);
-  }, [handleChangePage]);
-
-  const handleRowsPerPageChangeWrapper = useCallback((newRowsPerPage: number) => {
-    const event = { target: { value: newRowsPerPage.toString() } } as React.ChangeEvent<HTMLInputElement>;
-    handleChangeRowsPerPage(event);
-  }, [handleChangeRowsPerPage]);
-
-  const handleCreate = useCallback(() => {
-    setSelectedPartner(null);
-    setDialogState(prev => ({ ...prev, create: true }));
-  }, []);
-
-  const handleEdit = useCallback((partner: Partner) => {
-    setSelectedPartner(partner);
-    setDialogState(prev => ({ ...prev, edit: true }));
-  }, []);
-
-  const handleView = useCallback((partner: Partner) => {
-    setSelectedPartner(partner);
-    setDialogState(prev => ({ ...prev, view: true }));
-  }, []);
-
-  const handleDelete = useCallback((partner: Partner) => {
-    setSelectedPartner(partner);
-    setDialogState(prev => ({ ...prev, delete: true }));
-  }, []);
-
-  // const handleDeleteSelected = useCallback(() => {
-  //   if (selectedRows.length > 0) {
-  //     // Implement bulk delete logic here
-  //     setSnackbar({
-  //       open: true,
-  //       message: `Đã xóa ${selectedRows.length} đối tác`,
-  //       severity: 'success',
-  //     });
-  //     setSelectedRows([]);
-  //   }
-  // }, [selectedRows]);
+  }, [resetPagination]);
 
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
 
-  const handleCloseDialog = useCallback((dialogType: keyof typeof dialogState) => {
-    setDialogState(prev => ({ ...prev, [dialogType]: false }));
-    setSelectedPartner(null);
-  }, []);
+  /**
+   * Mutation Handlers
+   */
 
-  const handleCreateSubmit = useCallback(async (data: CreatePartnerRequest) => {
+  const handleCreateSubmit = useCallback(async (data: Record<string, unknown>) => {
     try {
-      await createMutation.mutateAsync(data);
-      setSnackbar({
-        open: true,
-        message: 'Tạo đối tác thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('create');
+      await createMutation.mutateAsync(data as unknown as CreatePartnerRequest);
+      showSnackbar('Tạo đối tác thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi tạo đối tác',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi tạo đối tác', 'error');
     }
-  }, [createMutation, handleCloseDialog]);
-
-  // Function to create the specific partner with provided data
-  const handleCreateSpecificPartner = useCallback(async () => {
-    const partnerData: CreatePartnerRequest = {
-      name: "Đối tác 1",
-      address: "123 Đường ABC, Quận 1, TP.HCM",
-      phone_number: "0123456789",
-      type: "agent",
-      level: 1
-    };
-
-    try {
-      await createMutation.mutateAsync(partnerData);
-      setSnackbar({
-        open: true,
-        message: 'Tạo đối tác "Đối tác 1" thành công',
-        severity: 'success',
-      });
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi tạo đối tác "Đối tác 1"',
-        severity: 'error',
-      });
-    }
-  }, [createMutation]);
+  }, [createMutation, closeView, showSnackbar]);
 
   const handleUpdateSubmit = useCallback(async (data: Record<string, unknown>, selectedRow?: Partner) => {
-    const partnerToUpdate = selectedRow || selectedPartner;
-    if (!partnerToUpdate) return;
-    
+    const target = selectedRow || activeView.partner;
+    if (!target) return;
+
     try {
       const updateData = formDataToUpdateDto(data);
-      await updateMutation.mutateAsync({ id: partnerToUpdate.id, data: updateData });
-      setSnackbar({
-        open: true,
-        message: 'Cập nhật đối tác thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('edit');
+      await updateMutation.mutateAsync({ id: target.id, data: updateData });
+      showSnackbar('Cập nhật đối tác thành công');
+      closeView();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi cập nhật đối tác',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi cập nhật đối tác', 'error');
     }
-  }, [selectedPartner, updateMutation, handleCloseDialog]);
+  }, [activeView.partner, updateMutation, closeView, showSnackbar]);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!selectedPartner) return;
-    
-    try {
-      await deleteMutation.mutateAsync(selectedPartner.id);
-      setSnackbar({
-        open: true,
-        message: 'Xóa đối tác thành công',
-        severity: 'success',
-      });
-      handleCloseDialog('delete');
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi xóa đối tác',
-        severity: 'error',
-      });
-    }
-  }, [selectedPartner, deleteMutation, handleCloseDialog]);
+    if (!activeView.partner) return;
 
-  const handleSnackbarClose = useCallback(() => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  }, []);
+    try {
+      await deleteMutation.mutateAsync(activeView.partner.id);
+      showSnackbar('Xóa đối tác thành công');
+      closeView();
+    } catch {
+      showSnackbar('Có lỗi xảy ra khi xóa đối tác', 'error');
+    }
+  }, [activeView.partner, deleteMutation, closeView, showSnackbar]);
+
+  if (error) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Lỗi"
+          description={`Không thể tải danh sách đối tác: ${(error as Error).message}`}
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <PartnerHeader
-        onCreate={handleCreate}
+    <div style={{ padding: '0 0 24px 0', minHeight: '100%' }}>
+      <CommonHeader
+        title={PARTNER_CONSTANTS.MODULE_TITLE}
+        subtitle="Quản lý và theo dõi thông tin các đối tác kinh doanh"
         onRefresh={handleRefresh}
-        selectedCount={0}
-        onDeleteSelected={() => {}}
-        onCreateSpecific={handleCreateSpecificPartner}
+        onCreate={() => openView('create')}
+        loading={isLoading}
       />
 
-      <Box sx={{ mt: 2 }}>
+      <div style={{ marginTop: '16px' }}>
         <PartnerSearchAndFilter
-          searchParams={combinedParams} 
+          searchParams={combinedParams}
           onSearchChange={handleSearchChange}
           onReset={handleReset}
           onFilterChange={handleFilterChange}
           filters={filters}
         />
-      </Box>
+      </div>
 
-      <Box sx={{ mt: 2, flex: 1, overflow: 'hidden' }}>
+      <div style={{
+        marginTop: '16px',
+        background: token.colorBgContainer,
+        borderRadius: '12px',
+        overflow: 'hidden'
+      }}>
         <PartnerDataGrid
-          data={partnersData}
+          data={partnersData!}
           loading={isLoading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onView={handleView}
+          onEdit={(p) => openView('edit', p)}
+          onDelete={(p) => openView('delete', p)}
+          onView={(p) => openView('view', p)}
           onSave={handleUpdateSubmit}
           page={page}
           rowsPerPage={rowsPerPage}
-          onPageChange={handlePageChangeWrapper}
-          onRowsPerPageChange={handleRowsPerPageChangeWrapper}
+          onPageChange={(p) => handleChangePage(null, p)}
+          onRowsPerPageChange={(l) => handleChangeRowsPerPage({ target: { value: l.toString() } } as any)}
         />
-      </Box>
+      </div>
 
-      {/* Create Drawer */}
-      <PartnerFormDialog
-        open={dialogState.create}
-        onClose={() => handleCloseDialog('create')}
+      {/* Forms & Dialogs */}
+      <CommonFormDrawer
+        open={activeView.type === 'create'}
+        onClose={closeView}
         onSave={handleCreateSubmit}
         title="Tạo Đối tác Mới"
+        fields={PARTNER_FORM_FIELDS}
+        submitText="Tạo"
         loading={createMutation.isPending}
-      />
-
-      {/* Edit Drawer */}
-      <CommonViewEditDrawer
-        open={dialogState.view}
-        onClose={() => handleCloseDialog('view')}
-        onSave={handleUpdateSubmit}
-        title="Chi tiết Đối tác"
-        editFields={PARTNER_FORM_FIELDS}
-        viewFields={PARTNER_DETAIL_FIELDS}
-        data={partnerToDisplayData(selectedPartner)}
-        loading={updateMutation.isPending}
         width={500}
       />
 
-      {/* Delete Dialog */}
-      <PartnerDeleteDialog
-        open={dialogState.delete}
-        onClose={() => handleCloseDialog('delete')}
+      {activeView.partner && (activeView.type === 'view' || activeView.type === 'edit') && (
+        <CommonViewEditDrawer
+          open={true}
+          onClose={closeView}
+          onSave={handleUpdateSubmit}
+          title={activeView.type === 'view' ? 'Chi Tiết Đối tác' : 'Chỉnh Sửa Đối tác'}
+          viewFields={PARTNER_DETAIL_FIELDS}
+          editFields={PARTNER_FORM_FIELDS}
+          data={partnerToDisplayData(activeView.partner)}
+          mode={activeView.type === 'view' ? 'view' : 'edit'}
+          loading={updateMutation.isPending}
+          width={500}
+        />
+      )}
+
+      <CommonDeleteDialog
+        open={activeView.type === 'delete'}
+        onClose={closeView}
         onConfirm={handleDeleteConfirm}
-        partner={selectedPartner}
-        loading={deleteMutation.isPending}
+        title="Xóa Đối Tác"
+        itemName={activeView.partner?.name}
+        itemType="đối tác"
+        isDeleting={deleteMutation.isPending}
       />
 
-      {/* Snackbar */}
-      <PartnerSnackbar
+      <CommonSnackbar
         open={snackbar.open}
-        onClose={handleSnackbarClose}
         message={snackbar.message}
         severity={snackbar.severity}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
       />
-    </Box>
+    </div>
   );
 };
 

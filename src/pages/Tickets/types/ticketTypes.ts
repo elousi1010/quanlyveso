@@ -4,6 +4,9 @@ export interface Ticket {
   ticket_type: string;
   station_id: string;
   draw_date: string;
+  status: 'available' | 'sold' | 'returned';
+  win_prize?: string;
+  win_amount?: number;
   note?: string;
   created_at?: string;
   updated_at?: string;

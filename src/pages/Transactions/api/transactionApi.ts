@@ -1,49 +1,50 @@
 import { api } from '@/utils/api';
-import type { 
-  Transaction, 
-  CreateTransactionDto, 
-  UpdateTransactionDto, 
-  TransactionResponse, 
-  TransactionSearchParams 
+import { TRANSACTION_CONSTANTS } from '../constants';
+import type {
+  Transaction,
+  CreateTransactionDto,
+  UpdateTransactionDto,
+  TransactionResponse,
+  TransactionSearchParams
 } from '../types';
 
-const API_BASE = 'https://lottery.esimvn.net/api/v1';
-
 export const transactionApi = {
-  // Get all transactions with pagination and search
+  /**
+   * Get all transactions with pagination and search
+   */
   getAll: async (params: TransactionSearchParams = {}): Promise<TransactionResponse> => {
-    const searchParams = new URLSearchParams();
-    
-    if (params.searchKey) searchParams.append('searchKey', params.searchKey);
-    if (params.page) searchParams.append('page', params.page.toString());
-    if (params.limit) searchParams.append('limit', params.limit.toString());
-    if (params.sortBy) searchParams.append('sortBy', params.sortBy);
-    if (params.sortOrder) searchParams.append('sortOrder', params.sortOrder);
-
-    const response = await api.get(`${API_BASE}/transactions?${searchParams.toString()}`);
-    return (response as any).data;
+    const response = await api.get(TRANSACTION_CONSTANTS.API_ENDPOINTS.BASE, { params });
+    return response as unknown as TransactionResponse;
   },
 
-  // Get transaction by ID
+  /**
+   * Get transaction by ID
+   */
   getById: async (id: string): Promise<Transaction> => {
-    const response = await api.get(`${API_BASE}/transactions/${id}`);
-    return (response as any).data;
+    const response = await api.get(`${TRANSACTION_CONSTANTS.API_ENDPOINTS.BASE}/${id}`);
+    return response as unknown as any;
   },
 
-  // Create new transaction
+  /**
+   * Create new transaction
+   */
   create: async (data: CreateTransactionDto): Promise<Transaction> => {
-    const response = await api.post(`${API_BASE}/transactions`, data);
-    return (response as any).data;
+    const response = await api.post(TRANSACTION_CONSTANTS.API_ENDPOINTS.CREATE, data);
+    return response as unknown as any;
   },
 
-  // Update transaction
+  /**
+   * Update transaction
+   */
   update: async (id: string, data: UpdateTransactionDto): Promise<Transaction> => {
-    const response = await api.patch(`${API_BASE}/transactions/${id}`, data);
-    return (response as any).data;
+    const response = await api.patch(`${TRANSACTION_CONSTANTS.API_ENDPOINTS.UPDATE}/${id}`, data);
+    return response as unknown as any;
   },
 
-  // Delete transaction
+  /**
+   * Delete transaction
+   */
   delete: async (id: string): Promise<void> => {
-    await api.delete(`${API_BASE}/transactions/${id}`);
+    await api.delete(`${TRANSACTION_CONSTANTS.API_ENDPOINTS.DELETE}/${id}`);
   },
 };

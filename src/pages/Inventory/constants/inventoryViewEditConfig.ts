@@ -129,16 +129,6 @@ export const inventoryDetailFields: DetailField[] = [
     },
   },
   {
-    key: 'partner_id',
-    label: 'Đối Tác',
-    type: 'text',
-  },
-  {
-    key: 'organization_id',
-    label: 'Tổ Chức',
-    type: 'text',
-  },
-  {
     key: 'is_active',
     label: 'Trạng Thái',
     type: 'custom',

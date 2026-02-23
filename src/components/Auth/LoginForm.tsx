@@ -1,37 +1,236 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  TextField,
+  Form,
+  Input,
   Button,
   Alert,
   Card,
-  CardContent,
   Tabs,
-  Tab,
-  Box,
-} from '@mui/material';
+  Typography,
+  Flex,
+  ConfigProvider,
+} from 'antd';
 import {
-  Person as PersonIcon,
-  Store as StoreIcon,
-  Login as LoginIcon,
-  PersonAdd as SignupIcon,
-} from '@mui/icons-material';
+  UserOutlined,
+  LockOutlined,
+  PhoneOutlined,
+  LoginOutlined,
+  UserAddOutlined,
+  SafetyCertificateOutlined,
+} from '@ant-design/icons';
+import styled from '@emotion/styled';
 import { useLogin, useSignup } from '../../hooks/useAuthApi';
 import { debugJWT, logJWTInfo } from '../../utils/debugJWT';
 import { Logo } from '../common/Logo';
 
-const LoginForm: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
-  const [formData, setFormData] = useState({
-    name: '',
-    phone_number: '',
-    password: '',
-  });
+const { Title, Text } = Typography;
+
+const LoginContainer = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #f8fafc;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   
-  // Sử dụng API hooks
+  /* Soft Background Gradient */
+  &::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.03) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.03) 0%, transparent 40%);
+    z-index: 0;
+  }
+`;
+
+const ContentWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  max-width: 1000px;
+  gap: 80px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+
+  @media (max-width: 1024px) {
+    flex-direction: column;
+    gap: 40px;
+    text-align: center;
+  }
+`;
+
+const BrandingSide = styled.div`
+  flex: 1;
+  max-width: 450px;
+  
+  @media (max-width: 1024px) {
+    max-width: 100%;
+  }
+
+  .badge {
+    background: #e0e7ff;
+    padding: 6px 14px;
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #4338ca;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  h1 {
+    color: #0f172a !important;
+    font-size: 48px !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    margin-bottom: 24px !important;
+    letter-spacing: -2px !important;
+    
+    span {
+      display: block;
+      color: #2563eb;
+    }
+  }
+
+  p {
+    color: #475569 !important;
+    font-size: 18px !important;
+    line-height: 1.6 !important;
+    margin-bottom: 0 !important;
+    font-weight: 500;
+  }
+`;
+
+const AuthCardWrapper = styled.div`
+  flex: 0 0 420px;
+  
+  @media (max-width: 1024px) {
+    flex: 1;
+    width: 100%;
+    max-width: 420px;
+  }
+`;
+
+const StyledCard = styled(Card)`
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 28px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+
+  .ant-card-body {
+    padding: 48px;
+  }
+`;
+
+const StyledTabs = styled(Tabs)`
+  margin-bottom: 32px;
+  
+  .ant-tabs-nav::before {
+    border-bottom: 1px solid #f1f5f9;
+  }
+  
+  .ant-tabs-tab {
+    padding: 10px 0;
+    margin: 0 16px 0 0 !important;
+    
+    .ant-tabs-tab-btn {
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+  }
+  
+  .ant-tabs-ink-bar {
+    background: #2563eb;
+    height: 3px !important;
+    border-radius: 3px;
+  }
+`;
+
+const StyledItemLabel = styled(Text)`
+  font-weight: 700;
+  font-size: 12px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+  display: block;
+`;
+
+const StyledInput = styled(Input)`
+  border: 1px solid #e2e8f0 !important;
+  height: 52px;
+  border-radius: 14px !important;
+  font-family: inherit;
+  
+  &:hover, &:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06) !important;
+  }
+
+  .ant-input-prefix {
+    margin-right: 12px;
+    color: #94a3b8;
+  }
+`;
+
+const StyledPassword = styled(Input.Password)`
+  border: 1px solid #e2e8f0 !important;
+  height: 52px;
+  border-radius: 14px !important;
+  font-family: inherit;
+  
+  &:hover, &:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06) !important;
+  }
+
+  .ant-input-prefix {
+    margin-right: 12px;
+    color: #94a3b8;
+  }
+`;
+
+const SubmitButton = styled(Button)`
+  height: 54px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 16px;
+  background: #2563eb !important;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.25) !important;
+  margin-top: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  &:hover {
+    background: #1d4ed8 !important;
+    box-shadow: 0 20px 25px -5px rgba(37, 99, 235, 0.3) !important;
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
+
+const LoginForm: React.FC = () => {
+  const [tabKey, setTabKey] = useState('login');
+  const [form] = Form.useForm();
+
   const loginMutation = useLogin();
   const signupMutation = useSignup();
 
-  // Debug JWT token khi login thành công
   useEffect(() => {
     if (loginMutation.isSuccess || signupMutation.isSuccess) {
       debugJWT();
@@ -39,228 +238,147 @@ const LoginForm: React.FC = () => {
     }
   }, [loginMutation.isSuccess, signupMutation.isSuccess]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (tabValue === 0) {
-      // Login
+  const onFinish = (values: any) => {
+    if (tabKey === 'login') {
       loginMutation.mutate({
-        phone_number: formData.phone_number,
-        password: formData.password,
+        phone_number: values.phone_number,
+        password: values.password,
       });
     } else {
-      // Signup
       signupMutation.mutate({
-        name: formData.name,
-        phone_number: formData.phone_number,
-        password: formData.password,
+        name: values.name,
+        phone_number: values.phone_number,
+        password: values.password,
       });
     }
   };
 
-  const handleInputChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: e.target.value,
-    }));
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
-        {/* Left Side - Branding */}
-        <div className="hidden lg:flex flex-col justify-center space-y-6 lg:space-y-8">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center mb-4 lg:mb-6">
-              <Logo 
-                size={80} 
-                animated={true} 
-                showText={true} 
-                variant="full"
-                className="justify-center"
-              />
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#2563eb',
+          borderRadius: 14,
+          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          colorText: '#1e293b',
+          colorTextDescription: '#64748b',
+          colorTextHeading: '#0f172a',
+        },
+      }}
+    >
+      <LoginContainer>
+        <ContentWrapper>
+          <BrandingSide>
+            <div className="badge">
+              <SafetyCertificateOutlined />
+              Hệ thống tin cậy
             </div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3 lg:mb-4">
-              System Management Lottery Ohna12
+            <h1>
+              Quản trị tối ưu
+              <span>Daily Veso</span>
             </h1>
-            <p className="text-lg lg:text-xl text-gray-600 max-w-md mx-auto">
-              Quản lý toàn diện hoạt động kinh doanh vé số với giao diện hiện đại và tính năng mạnh mẽ
+            <p>
+              Giải pháp quản lý hiện đại, giúp bạn vận hành doanh nghiệp một cách thông minh và bền vững.
             </p>
-          </div>
+          </BrandingSide>
 
-          <div className="space-y-4 lg:space-y-6">
-            <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="p-2 lg:p-3 bg-blue-100 rounded-xl">
-                  <Logo size={24} variant="icon" showText={false} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Quản lý tài chính</h3>
-                  <p className="text-gray-600 text-xs lg:text-sm">Theo dõi doanh thu, lợi nhuận và chi phí</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="p-2 lg:p-3 bg-green-100 rounded-xl">
-                  <StoreIcon className="text-green-600 text-xl lg:text-2xl" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Quản lý vé</h3>
-                  <p className="text-gray-600 text-xs lg:text-sm">Theo dõi tồn kho và bán hàng</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg border border-gray-100">
-              <div className="flex items-center space-x-3 lg:space-x-4">
-                <div className="p-2 lg:p-3 bg-purple-100 rounded-xl">
-                  <PersonIcon className="text-purple-600 text-xl lg:text-2xl" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 text-sm lg:text-base">Quản lý nhân viên</h3>
-                  <p className="text-gray-600 text-xs lg:text-sm">Theo dõi hiệu suất và ca làm việc</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Side - Login Form */}
-        <div className="flex items-center justify-center">
-          <Card className="w-full max-w-md shadow-2xl border-0">
-            <CardContent className="p-4 sm:p-6 lg:p-8">
-              <div className="text-center mb-6 sm:mb-8">
-                <div className="inline-flex items-center justify-center mb-3 sm:mb-4">
-                  <Logo 
-                    size={64} 
-                    animated={true} 
-                    showText={false} 
-                    variant="icon"
-                    className="justify-center"
-                  />
-                </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
-                  {tabValue === 0 ? 'Đăng nhập hệ thống' : 'Đăng ký tài khoản'}
-                </h2>
+          <AuthCardWrapper>
+            <StyledCard>
+              <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+                <Logo size={60} variant="icon" showText={false} style={{ margin: '0 auto 16px' }} />
+                <Title level={3} style={{ margin: 0, fontWeight: 800, letterSpacing: '-0.5px' }}>
+                  {tabKey === 'login' ? 'Chào mừng trở lại' : 'Tạo tài khoản mới'}
+                </Title>
               </div>
 
-              {/* Tabs */}
-              <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} centered>
-                  <Tab 
-                    icon={<LoginIcon />} 
-                    label="Đăng nhập" 
-                    iconPosition="start"
-                    sx={{ minHeight: 48 }}
-                  />
-                  <Tab 
-                    icon={<SignupIcon />} 
-                    label="Đăng ký" 
-                    iconPosition="start"
-                    sx={{ minHeight: 48 }}
-                  />
-                </Tabs>
-              </Box>
+              <StyledTabs
+                activeKey={tabKey}
+                onChange={setTabKey}
+                centered
+                items={[
+                  { key: 'login', label: 'ĐĂNG NHẬP', icon: <LoginOutlined /> },
+                  { key: 'signup', label: 'ĐĂNG KÝ', icon: <UserAddOutlined /> },
+                ]}
+              />
 
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-                {/* Role Selection - chỉ hiển thị khi login */}
-
-                {/* Name field - chỉ hiển thị khi signup */}
-                {tabValue === 1 && (
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Họ và tên
-                    </label>
-                    <TextField
-                      fullWidth
-                      value={formData.name}
-                      onChange={handleInputChange('name')}
-                      placeholder="Nhập họ và tên"
-                      className="rounded-lg"
-                      size="small"
-                      required
-                    />
-                  </div>
+              <Form
+                form={form}
+                layout="vertical"
+                onFinish={onFinish}
+                requiredMark={false}
+              >
+                {tabKey === 'signup' && (
+                  <Form.Item
+                    name="name"
+                    label={<StyledItemLabel>Họ và tên</StyledItemLabel>}
+                    rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+                    style={{ marginBottom: '24px' }}
+                  >
+                    <StyledInput prefix={<UserOutlined />} placeholder="Nguyễn Văn A" />
+                  </Form.Item>
                 )}
 
-                {/* Phone Number */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Số điện thoại
-                  </label>
-                  <TextField
-                    fullWidth
-                    value={formData.phone_number}
-                    onChange={handleInputChange('phone_number')}
-                    placeholder="Nhập số điện thoại"
-                    className="rounded-lg"
-                    size="small"
-                    required
-                  />
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    Mật khẩu
-                  </label>
-                  <TextField
-                    fullWidth
-                    type="password"
-                    value={formData.password}
-                    onChange={handleInputChange('password')}
-                    placeholder="Nhập mật khẩu"
-                    className="rounded-lg"
-                    size="small"
-                    required
-                  />
-                </div>
-
-                {/* Error Messages */}
-                {(loginMutation.error || signupMutation.error) && (
-                  <Alert severity="error" className="rounded-lg">
-                    {loginMutation.error?.message || signupMutation.error?.message || 'Đã xảy ra lỗi, vui lòng thử lại'}
-                  </Alert>
-                )}
-
-                {/* Success Message */}
-                {(loginMutation.isSuccess || signupMutation.isSuccess) && (
-                  <Alert severity="success" className="rounded-lg">
-                    {tabValue === 0 ? 'Đăng nhập thành công!' : 'Đăng ký thành công!'}
-                    <Button 
-                      onClick={() => {
-                        debugJWT();
-                        logJWTInfo();
-                      }}
-                      size="small"
-                      className="ml-2"
-                    >
-                      Debug JWT
-                    </Button>
-                  </Alert>
-                )}
-
-                {/* Submit Button */}
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  disabled={loginMutation.isPending || signupMutation.isPending}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base shadow-lg"
-                  startIcon={tabValue === 0 ? <LoginIcon /> : <SignupIcon />}
+                <Form.Item
+                  name="phone_number"
+                  label={<StyledItemLabel>Số điện thoại</StyledItemLabel>}
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập số điện thoại' },
+                    { pattern: /^[0-9+ ]+$/, message: 'Số điện thoại không hợp lệ' }
+                  ]}
+                  style={{ marginBottom: '24px' }}
                 >
-                  {loginMutation.isPending || signupMutation.isPending
-                    ? (tabValue === 0 ? 'Đang đăng nhập...' : 'Đang đăng ký...')
-                    : (tabValue === 0 ? 'Đăng nhập' : 'Đăng ký')}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+                  <StyledInput prefix={<PhoneOutlined />} placeholder="09xx xxx xxx" />
+                </Form.Item>
+
+                <Form.Item
+                  name="password"
+                  label={
+                    <Flex justify="space-between" align="center" style={{ width: '100%' }}>
+                      <StyledItemLabel style={{ marginBottom: 0 }}>Mật khẩu</StyledItemLabel>
+                      {tabKey === 'login' && (
+                        <Button type="link" size="small" style={{ padding: 0, fontWeight: 600, fontSize: '12px' }}>
+                          Quên mật khẩu?
+                        </Button>
+                      )}
+                    </Flex>
+                  }
+                  rules={[{ required: true, message: 'Vui lòng nhập mật khẩu' }]}
+                  style={{ marginBottom: '32px' }}
+                >
+                  <StyledPassword prefix={<LockOutlined />} placeholder="••••••••" />
+                </Form.Item>
+
+                {(loginMutation.error || signupMutation.error) && (
+                  <Alert
+                    type="error"
+                    showIcon
+                    message={loginMutation.error?.message || signupMutation.error?.message || 'Thông tin không hợp lệ'}
+                    style={{ marginBottom: '24px', borderRadius: '12px' }}
+                  />
+                )}
+
+                <Form.Item style={{ marginBottom: 0 }}>
+                  <SubmitButton
+                    type="primary"
+                    htmlType="submit"
+                    block
+                    loading={loginMutation.isPending || signupMutation.isPending}
+                  >
+                    {tabKey === 'login' ? 'Đăng nhập ngay' : 'Đăng ký ngay'}
+                  </SubmitButton>
+                </Form.Item>
+              </Form>
+
+              <div style={{ textAlign: 'center', marginTop: '40px' }}>
+                <Text type="secondary" style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600, letterSpacing: '1px' }}>
+                  © 2024 DAILY VESO SYSTEM
+                </Text>
+              </div>
+            </StyledCard>
+          </AuthCardWrapper>
+        </ContentWrapper>
+      </LoginContainer>
+    </ConfigProvider>
   );
 };
 

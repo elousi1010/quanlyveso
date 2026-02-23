@@ -97,16 +97,6 @@ export const inventoryTransactionTableConfig = {
       },
     },
     {
-      key: 'transaction',
-      label: 'Partner ID',
-      minWidth: 150,
-      render: (value: unknown, row: InventoryTransactionItem) => (
-        <Typography variant="body2">
-          {row.transaction.partner_id}
-        </Typography>
-      ),
-    },
-    {
       key: 'inventory',
       label: 'Ngày Quay',
       minWidth: 120,

@@ -5,12 +5,6 @@ export const partnerDebtViewEditConfig: PartnerDebtViewEditConfig = {
   title: 'Chi Tiết Công Nợ Đối Tác',
   fields: [
     {
-      key: 'id',
-      label: 'ID',
-      type: 'text',
-      required: false,
-    },
-    {
       key: 'partner_name',
       label: 'Đối tác',
       type: 'text',

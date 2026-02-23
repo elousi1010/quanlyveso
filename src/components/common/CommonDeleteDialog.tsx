@@ -1,17 +1,8 @@
 import React from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  Avatar,
-  Alert,
-} from '@mui/material';
-import { Delete as DeleteIcon, Warning as WarningIcon } from '@mui/icons-material';
-import { LoadingButton } from '@mui/lab';
+import { Modal, Button, Typography, Alert, Space, Flex, Avatar, theme as antdTheme } from 'antd';
+import { DeleteOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+
+const { Text, Title } = Typography;
 
 interface CommonDeleteDialogProps {
   open: boolean;
@@ -38,97 +29,86 @@ const CommonDeleteDialog: React.FC<CommonDeleteDialogProps> = ({
   itemName,
   itemType = 'mục',
   isDeleting = false,
-  maxWidth = 'sm',
-  fullWidth = true,
   confirmButtonText = 'Xóa',
   cancelButtonText = 'Hủy',
   severity = 'warning',
 }) => {
+  const { token } = antdTheme.useToken();
   const defaultMessage = message || `Bạn có chắc chắn muốn xóa ${itemType} "${itemName}" không? Hành động này không thể hoàn tác.`;
 
   return (
-    <Dialog
+    <Modal
+      title={
+        <Flex align="center" gap={12}>
+          <Avatar
+            icon={<ExclamationCircleFilled />}
+            style={{
+              backgroundColor: severity === 'error' ? token.colorError : token.colorWarning,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
+          <Title level={5} style={{ margin: 0 }}>
+            {title}
+          </Title>
+        </Flex>
+      }
       open={open}
-      onClose={onClose}
-      maxWidth={maxWidth}
-      fullWidth={fullWidth}
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-        }
+      onCancel={onClose}
+      footer={
+        <Space size="middle" style={{ padding: '12px 0 0 0' }}>
+          <Button onClick={onClose} disabled={isDeleting}>
+            {cancelButtonText}
+          </Button>
+          <Button
+            type="primary"
+            danger
+            icon={<DeleteOutlined />}
+            loading={isDeleting}
+            onClick={onConfirm}
+          >
+            {confirmButtonText}
+          </Button>
+        </Space>
+      }
+      width={severity === 'error' ? 500 : 450}
+      centered
+      styles={{
+        body: { paddingTop: '16px' }
       }}
     >
-      <DialogTitle sx={{ pb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Avatar
-            sx={{
-              bgcolor: severity === 'error' ? 'error.main' : 'warning.main',
-              width: 40,
-              height: 40,
-            }}
-          >
-            <WarningIcon />
-          </Avatar>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
-            {title}
-          </Typography>
-        </Box>
-      </DialogTitle>
+      <Alert
+        message={<Text strong>Cảnh báo</Text>}
+        description={`Hành động này sẽ xóa vĩnh viễn ${itemType} và không thể hoàn tác.`}
+        type={severity === 'error' ? 'error' : 'warning'}
+        showIcon
+        style={{ marginBottom: '20px' }}
+      />
 
-      <DialogContent sx={{ pt: 2 }}>
-        <Alert severity={severity} sx={{ mb: 2 }}>
-          <Typography variant="body2" sx={{ fontWeight: 500 }}>
-            Cảnh báo
-          </Typography>
-          <Typography variant="body2">
-            Hành động này sẽ xóa vĩnh viễn {itemType} và không thể hoàn tác.
-          </Typography>
-        </Alert>
+      <Text type="secondary" style={{ display: 'block', fontSize: '15px' }}>
+        {defaultMessage}
+      </Text>
 
-        <Typography variant="body1" color="text.primary">
-          {defaultMessage}
-        </Typography>
-
-        {itemName && (
-          <Box
-            sx={{
-              mt: 2,
-              p: 2,
-              bgcolor: 'grey.50',
-              borderRadius: 1,
-              border: '1px solid #e0e0e0',
-            }}
-          >
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {itemType} sẽ bị xóa:
-            </Typography>
-            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-              {itemName}
-            </Typography>
-          </Box>
-        )}
-      </DialogContent>
-
-      <DialogActions sx={{ p: 3, pt: 1 }}>
-        <Button
-          onClick={onClose}
-          disabled={isDeleting}
-          sx={{ textTransform: 'none' }}
+      {itemName && (
+        <div
+          style={{
+            marginTop: '20px',
+            padding: '16px',
+            background: token.colorFillAlter,
+            borderRadius: '12px',
+            border: `1px solid ${token.colorBorderSecondary}`,
+          }}
         >
-          {cancelButtonText}
-        </Button>
-        <LoadingButton
-          onClick={onConfirm}
-          loading={isDeleting}
-          variant="contained"
-          color="error"
-          startIcon={<DeleteIcon />}
-          sx={{ textTransform: 'none' }}
-        >
-          {confirmButtonText}
-        </LoadingButton>
-      </DialogActions>
-    </Dialog>
+          <Text type="secondary" style={{ display: 'block', marginBottom: '4px', fontSize: '12px' }}>
+            {itemType} sẽ bị xóa:
+          </Text>
+          <Text strong style={{ fontSize: '16px' }}>
+            {itemName}
+          </Text>
+        </div>
+      )}
+    </Modal>
   );
 };
 

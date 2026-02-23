@@ -32,7 +32,7 @@ export const inventoryTransactionSearchFields: SearchFieldConfig[] = [
     key: 'partner_id',
     label: 'Đối Tác',
     type: 'text',
-    placeholder: 'Nhập ID đối tác',
+    placeholder: 'Tìm kiếm theo đối tác',
   },
   {
     key: 'draw_date',

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button, FormControl, InputLabel, Select, MenuItem, InputAdornment, IconButton, Paper, useTheme } from '@mui/material';
-import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
+import { Input, Select, Button, Space, Flex, theme as antdTheme, Card, Grid } from 'antd';
+import { SearchOutlined, CloseOutlined } from '@ant-design/icons';
+
+const { Search } = Input;
 
 export interface FilterOption {
   value: string;
@@ -36,20 +38,16 @@ const CommonSearchAndFilter: React.FC<CommonSearchAndFilterProps> = ({
   filters: externalFilters = {},
   loading = false,
 }) => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === 'dark';
-  
+  const { token } = antdTheme.useToken();
+  const screens = Grid.useBreakpoint();
+  const isMobile = screens.xs || (screens.sm && !screens.md);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState(config?.sortOptions?.[0]?.value || '');
   const [filters, setFilters] = useState<Record<string, string>>(externalFilters as Record<string, string>);
 
-  const handleSearch = () => {
-    onSearch(searchQuery);
-  };
-
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    onSearch('');
+  const handleSearch = (value: string) => {
+    onSearch(value);
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -60,6 +58,8 @@ const CommonSearchAndFilter: React.FC<CommonSearchAndFilterProps> = ({
 
   const handleClearFilters = () => {
     setFilters({});
+    setSearchQuery('');
+    onSearch('');
     onFilter({});
     if (onClearFilters) {
       onClearFilters();
@@ -67,344 +67,94 @@ const CommonSearchAndFilter: React.FC<CommonSearchAndFilterProps> = ({
   };
 
   return (
-    <Paper 
-      elevation={0}
-      sx={{ 
-        p: 2.5, 
-        mb: 2, 
-        background: isDark 
-          ? 'linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%)'
-          : 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
-        border: isDark 
-          ? '1px solid rgba(255, 255, 255, 0.1)'
-          : '1px solid rgba(0, 0, 0, 0.08)',
-        borderRadius: 3,
-        boxShadow: isDark 
-          ? '0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-          : '0 4px 20px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-        backdropFilter: 'blur(10px)',
-        position: 'relative',
-        overflow: 'hidden',
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '1px',
-          background: isDark 
-            ? 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent)'
-            : 'linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.1), transparent)',
-        }
+    <Card
+      size="small"
+      style={{
+        marginBottom: '16px',
+        borderRadius: '12px',
+        border: `1px solid ${token.colorBorderSecondary}`,
+        background: token.colorBgContainer,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
       }}
+      styles={{ body: { padding: isMobile ? '12px' : '16px' } }}
     >
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+      <Flex
+        wrap="wrap"
+        gap={isMobile ? 12 : 16}
+        align={isMobile ? 'stretch' : 'center'}
+        vertical={isMobile}
+      >
         {/* Search Input */}
-        <TextField
+        <Search
           placeholder={config?.searchPlaceholder || 'Tìm kiếm...'}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          size="small"
-          sx={{ 
-            minWidth: 280,
-            '& .MuiOutlinedInput-root': {
-              background: isDark 
-                ? 'rgba(255, 255, 255, 0.05)'
-                : 'rgba(0, 0, 0, 0.02)',
-              border: isDark 
-                ? '1px solid rgba(255, 255, 255, 0.1)'
-                : '1px solid rgba(0, 0, 0, 0.08)',
-              borderRadius: 2,
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                border: isDark 
-                  ? '1px solid rgba(255, 255, 255, 0.2)'
-                  : '1px solid rgba(0, 0, 0, 0.15)',
-                background: isDark 
-                  ? 'rgba(255, 255, 255, 0.08)'
-                  : 'rgba(0, 0, 0, 0.04)',
-              },
-              '&.Mui-focused': {
-                border: isDark 
-                  ? '1px solid #667eea'
-                  : '1px solid #667eea',
-                boxShadow: isDark 
-                  ? '0 0 0 2px rgba(102, 126, 234, 0.2)'
-                  : '0 0 0 2px rgba(102, 126, 234, 0.1)',
-              }
-            },
-            '& .MuiInputBase-input': {
-              color: isDark ? '#ffffff' : '#1a1a1a',
-              '&::placeholder': {
-                color: isDark ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)',
-                opacity: 1,
-              }
-            }
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ 
-                  color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.5)',
-                  fontSize: '1.1rem'
-                }} />
-              </InputAdornment>
-            ),
-            endAdornment: searchQuery && (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  onClick={handleClearSearch}
-                  edge="end"
-                  sx={{
-                    color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.5)',
-                    '&:hover': {
-                      color: isDark ? '#ff6b6b' : '#e74c3c',
-                      background: isDark ? 'rgba(255, 107, 107, 0.1)' : 'rgba(231, 76, 60, 0.1)',
-                    }
-                  }}
-                >
-                  <ClearIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
+          onSearch={handleSearch}
+          loading={loading}
+          style={{ width: isMobile ? '100%' : 300 }}
+          allowClear
         />
 
         {/* Sort By */}
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel sx={{ 
-            color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-            '&.Mui-focused': {
-              color: '#667eea',
-            }
-          }}>
-            Sắp xếp theo
-          </InputLabel>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
+          <span style={{ fontSize: '13px', color: token.colorTextSecondary, whiteSpace: 'nowrap' }}>Sắp xếp:</span>
           <Select
             value={sortBy}
-            label="Sắp xếp theo"
-            onChange={(e) => {
-              setSortBy(e.target.value);
-              onSort(e.target.value);
+            onChange={(val) => {
+              setSortBy(val);
+              onSort(val);
             }}
-            sx={{
-              background: isDark 
-                ? 'rgba(255, 255, 255, 0.05)'
-                : 'rgba(0, 0, 0, 0.02)',
-              border: isDark 
-                ? '1px solid rgba(255, 255, 255, 0.1)'
-                : '1px solid rgba(0, 0, 0, 0.08)',
-              borderRadius: 2,
-              color: isDark ? '#ffffff' : '#1a1a1a',
-              '&:hover': {
-                border: isDark 
-                  ? '1px solid rgba(255, 255, 255, 0.2)'
-                  : '1px solid rgba(0, 0, 0, 0.15)',
-              },
-              '&.Mui-focused': {
-                border: '1px solid #667eea',
-                boxShadow: isDark 
-                  ? '0 0 0 2px rgba(102, 126, 234, 0.2)'
-                  : '0 0 0 2px rgba(102, 126, 234, 0.1)',
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                border: 'none',
-              }
-            }}
-          >
-            {config?.sortOptions?.map((option) => (
-              <MenuItem 
-                key={option.value} 
-                value={option.value}
-                sx={{
-                  color: isDark ? '#ffffff' : '#1a1a1a',
-                  '&:hover': {
-                    background: isDark 
-                      ? 'rgba(102, 126, 234, 0.1)'
-                      : 'rgba(102, 126, 234, 0.05)',
-                  },
-                  '&.Mui-selected': {
-                    background: isDark 
-                      ? 'rgba(102, 126, 234, 0.2)'
-                      : 'rgba(102, 126, 234, 0.1)',
-                    '&:hover': {
-                      background: isDark 
-                        ? 'rgba(102, 126, 234, 0.3)'
-                        : 'rgba(102, 126, 234, 0.15)',
-                    }
-                  }
-                }}
-              >
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            style={{ width: isMobile ? '100%' : 160 }}
+            options={config?.sortOptions}
+          />
+        </div>
 
         {/* Dynamic Filters */}
         {config?.filterOptions?.map((filter) => (
-          <FormControl key={filter.key} size="small" sx={{ minWidth: 140 }}>
-            <InputLabel sx={{ 
-              color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-              '&.Mui-focused': {
-                color: '#667eea',
-              }
-            }}>
-              {filter.label}
-            </InputLabel>
+          <div key={filter.key} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: isMobile ? '100%' : 'auto' }}>
+            <span style={{ fontSize: '13px', color: token.colorTextSecondary, whiteSpace: 'nowrap', minWidth: isMobile ? '60px' : 'auto' }}>{filter.label}:</span>
             <Select
               value={filters[filter.key] || ''}
-              label={filter.label}
-              onChange={(e) => handleFilterChange(filter.key, e.target.value)}
-              sx={{
-                background: isDark 
-                  ? 'rgba(255, 255, 255, 0.05)'
-                  : 'rgba(0, 0, 0, 0.02)',
-                border: isDark 
-                  ? '1px solid rgba(255, 255, 255, 0.1)'
-                  : '1px solid rgba(0, 0, 0, 0.08)',
-                borderRadius: 2,
-                color: isDark ? '#ffffff' : '#1a1a1a',
-                '&:hover': {
-                  border: isDark 
-                    ? '1px solid rgba(255, 255, 255, 0.2)'
-                    : '1px solid rgba(0, 0, 0, 0.15)',
-                },
-                '&.Mui-focused': {
-                  border: '1px solid #667eea',
-                  boxShadow: isDark 
-                    ? '0 0 0 2px rgba(102, 126, 234, 0.2)'
-                    : '0 0 0 2px rgba(102, 126, 234, 0.1)',
-                },
-                '& .MuiOutlinedInput-notchedOutline': {
-                  border: 'none',
-                }
-              }}
-            >
-              <MenuItem 
-                value=""
-                sx={{
-                  color: isDark ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-                  fontStyle: 'italic',
-                  '&:hover': {
-                    background: isDark 
-                      ? 'rgba(102, 126, 234, 0.1)'
-                      : 'rgba(102, 126, 234, 0.05)',
-                  }
-                }}
-              >
-                Tất cả
-              </MenuItem>
-              {filter.options.map((option) => (
-                <MenuItem 
-                  key={option.value} 
-                  value={option.value}
-                  sx={{
-                    color: isDark ? '#ffffff' : '#1a1a1a',
-                    '&:hover': {
-                      background: isDark 
-                        ? 'rgba(102, 126, 234, 0.1)'
-                        : 'rgba(102, 126, 234, 0.05)',
-                    },
-                    '&.Mui-selected': {
-                      background: isDark 
-                        ? 'rgba(102, 126, 234, 0.2)'
-                        : 'rgba(102, 126, 234, 0.1)',
-                      '&:hover': {
-                        background: isDark 
-                          ? 'rgba(102, 126, 234, 0.3)'
-                          : 'rgba(102, 126, 234, 0.15)',
-                      }
-                    }
-                  }}
-                >
-                  {option.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              onChange={(val) => handleFilterChange(filter.key, val)}
+              style={{ width: isMobile ? '100%' : 140, minWidth: isMobile ? 0 : 140 }}
+              placeholder={filter.label}
+              options={[
+                { value: '', label: 'Tất cả' },
+                ...filter.options
+              ]}
+            />
+          </div>
         ))}
 
         {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 1.5, ml: 'auto' }}>
+        <Flex
+          gap={12}
+          style={{
+            marginLeft: isMobile ? 0 : 'auto',
+            width: isMobile ? '100%' : 'auto'
+          }}
+        >
           <Button
-            variant="contained"
-            startIcon={<SearchIcon />}
-            onClick={handleSearch}
-            disabled={loading}
-            size="small"
-            sx={{ 
-              textTransform: 'none',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              border: 'none',
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              fontWeight: 600,
-              boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                boxShadow: '0 6px 20px rgba(102, 126, 234, 0.4)',
-                transform: 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: 'translateY(0)',
-              },
-              '&:disabled': {
-                background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
-                color: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(0, 0, 0, 0.5)',
-                boxShadow: 'none',
-              }
-            }}
+            type="primary"
+            icon={<SearchOutlined />}
+            onClick={() => handleSearch(searchQuery)}
+            loading={loading}
+            style={{ flexGrow: isMobile ? 1 : 0 }}
           >
             Tìm kiếm
           </Button>
-          
+
           <Button
-            variant="outlined"
-            startIcon={<ClearIcon />}
+            icon={<CloseOutlined />}
             onClick={handleClearFilters}
             disabled={loading}
-            size="small"
-            sx={{ 
-              textTransform: 'none',
-              border: isDark 
-                ? '1px solid rgba(255, 255, 255, 0.2)'
-                : '1px solid rgba(0, 0, 0, 0.2)',
-              color: isDark ? '#ffffff' : '#1a1a1a',
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              fontWeight: 500,
-              background: isDark 
-                ? 'rgba(255, 255, 255, 0.05)'
-                : 'rgba(0, 0, 0, 0.02)',
-              '&:hover': {
-                border: isDark 
-                  ? '1px solid rgba(255, 255, 255, 0.3)'
-                  : '1px solid rgba(0, 0, 0, 0.3)',
-                background: isDark 
-                  ? 'rgba(255, 255, 255, 0.1)'
-                  : 'rgba(0, 0, 0, 0.05)',
-                transform: 'translateY(-1px)',
-              },
-              '&:active': {
-                transform: 'translateY(0)',
-              },
-              '&:disabled': {
-                border: isDark 
-                  ? '1px solid rgba(255, 255, 255, 0.1)'
-                  : '1px solid rgba(0, 0, 0, 0.1)',
-                color: isDark ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.3)',
-              }
-            }}
+            style={{ flexGrow: isMobile ? 1 : 0 }}
           >
-            Xóa bộ lọc
+            {isMobile ? 'Xóa' : 'Xóa bộ lọc'}
           </Button>
-        </Box>
-      </Box>
-    </Paper>
+        </Flex>
+      </Flex>
+    </Card>
   );
 };
 

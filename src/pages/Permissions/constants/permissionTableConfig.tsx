@@ -5,11 +5,6 @@ import { formatDate } from '@/utils/format';
 export const permissionTableConfig = {
   columns: [
     {
-      key: 'id',
-      label: 'ID',
-      minWidth: 200,
-    },
-    {
       key: 'name',
       label: 'Tên quyền',
       minWidth: 200,

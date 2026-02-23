@@ -167,17 +167,6 @@ export const inventoryTransactionDetailFields: DetailField[] = [
   },
   {
     key: 'transaction',
-    label: 'Partner ID',
-    type: 'custom',
-    render: (transaction: unknown) => {
-      if (typeof transaction === 'object' && transaction !== null) {
-        return (transaction as { partner_id?: string }).partner_id || 'N/A';
-      }
-      return 'N/A';
-    },
-  },
-  {
-    key: 'transaction',
     label: 'Ghi Chú',
     type: 'custom',
     render: (transaction: unknown) => {

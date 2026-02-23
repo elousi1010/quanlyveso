@@ -6,6 +6,7 @@ import DashboardLayout from '../Layout/DashboardLayout';
 
 // Import Dashboard
 import DashboardOverview from '../../pages/Dashboard/DashboardOverview';
+import AgentLevel2Dashboard from '../../pages/Dashboard/AgentLevel2Dashboard';
 
 // Import pages with real APIs
 import PartnerManagement from '../../pages/Partners/PartnerManagement';
@@ -26,7 +27,7 @@ const AppRoutes: React.FC = () => {
     <Routes>
       {/* Public routes */}
       <Route path="/unauthorized" element={<Unauthorized />} />
-      
+
       {/* Protected routes */}
       <Route
         path="/*"
@@ -36,7 +37,7 @@ const AppRoutes: React.FC = () => {
               <Routes>
                 {/* Default route - Dashboard */}
                 <Route path="/" element={<DashboardOverview />} />
-                
+
                 {/* Dashboard */}
                 <Route
                   path="/dashboard"
@@ -46,7 +47,15 @@ const AppRoutes: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
-                
+                <Route
+                  path="/dashboard/agent-level-2"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'owner', 'user']}>
+                      <AgentLevel2Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+
                 {/* Pages with real APIs */}
                 <Route
                   path="/users"

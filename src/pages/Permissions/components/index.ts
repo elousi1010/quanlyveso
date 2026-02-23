@@ -1,13 +1,8 @@
-export * from './AssignPermissionDialog';
 export * from './PermissionDataGrid';
-export * from './PermissionDeleteDialog';
-export { PermissionFormDialog } from './PermissionFormDialog';
-export { PermissionFormDrawer } from './PermissionFormDrawer';
-export * from './PermissionHeader';
 export * from './PermissionSearchAndFilter';
-export * from './PermissionSnackbar';
-export * from './PermissionDetailView';
+export { default as PermissionFormDrawerSimple } from './PermissionFormDrawerSimple';
 export { default as UserPermissionAssignment } from './UserPermissionAssignment';
+export { default as BulkPermissionAssignmentWrapper } from './BulkPermissionAssignmentWrapper';
 export { default as BulkPermissionAssignment } from './BulkPermissionAssignment';
 export { default as PermissionMatrix } from './PermissionMatrix';
 export { default as PermissionTemplates } from './PermissionTemplates';

@@ -337,12 +337,6 @@ export const permissionUpdateFields: DialogFieldConfig[] = [
 
 export const permissionDialogDetailFields: DialogFieldConfig[] = [
   {
-    key: 'id',
-    label: 'ID',
-    type: 'text',
-    readonly: true,
-  },
-  {
     key: 'name',
     label: 'Tên quyền',
     type: 'text',
@@ -420,10 +414,5 @@ export const permissionDialogDetailFields: DialogFieldConfig[] = [
     type: 'text',
     readonly: true,
   },
-  {
-    key: 'organization_id',
-    label: 'ID Tổ chức',
-    type: 'text',
-    readonly: true,
-  },
+
 ];

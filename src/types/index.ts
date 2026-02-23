@@ -1,4 +1,4 @@
-// Types for the lottery ticket management system
+// Types for the vé số ticket management system
 
 export interface Province {
   id: string;

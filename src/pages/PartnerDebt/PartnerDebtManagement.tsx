@@ -1,12 +1,16 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Box, Paper } from '@mui/material';
-import { CommonFormDrawer, CommonViewEditDrawer, type DetailField, type FormField } from '@/components/common';
+import { theme as antdTheme, Alert } from 'antd';
+import {
+  CommonFormDrawer,
+  CommonViewEditDrawer,
+  CommonSnackbar,
+  CommonHeader,
+  type DetailField,
+  type FormField
+} from '@/components/common';
 import {
   PartnerDebtDataGrid,
-  PartnerDebtHeader,
   PartnerDebtSearchAndFilter,
-  PartnerDebtSnackbar,
-  PartnerDebtDeleteDialog,
 } from './components';
 import { usePartnerDebts, usePartnerDebtMutations } from './hooks';
 import { usePartners } from '../Partners/hooks/usePartners';
@@ -17,20 +21,28 @@ import type {
   PartnerDebtSearchParams,
   PartnerDebtFormData,
 } from './types';
-import { convertToTableRow, convertToFormData, convertToDetailData } from './utils';
+import { convertToTableRow, convertToDetailData } from './utils';
 
+/**
+ * PartnerDebtManagement Component
+ * 
+ * Manages partner debts and financial transactions with a unified UI pattern.
+ */
 const PartnerDebtManagement: React.FC = () => {
+  const { token } = antdTheme.useToken();
+
   // State management
-  const [searchParams, setSearchParams] = useState({});
+  const [searchParams, setSearchParams] = useState<PartnerDebtSearchParams>({});
   const [filters, setFilters] = useState<Record<string, unknown>>({});
-  
-  // Dialog states
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string>('');
-  
+
+  /**
+   * Unified view state for dialogs and drawers.
+   */
+  const [activeView, setActiveView] = useState<{
+    type: 'create' | 'view' | 'delete' | null;
+    id: string | null;
+  }>({ type: null, id: null });
+
   // Snackbar state
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -39,23 +51,28 @@ const PartnerDebtManagement: React.FC = () => {
   });
 
   // API hooks
-  const { data: partnerDebtsData, isLoading, refetch } = usePartnerDebts(searchParams);
-  const { data: partnersData } = usePartners({ page: 1, limit: 1000 }); // Fetch all partners
-  const {
-    createMutation,
-    updateMutation,
-    deleteMutation,
-  } = usePartnerDebtMutations();
+  const { data: partnerDebtsData, isLoading, error, refetch } = usePartnerDebts(searchParams);
+  const { data: partnersData } = usePartners({ page: 1, limit: 1000 });
+  const { createMutation } = usePartnerDebtMutations();
 
   // Data processing
   const partnerDebts = useMemo(() => {
     if (!partnerDebtsData?.data?.data) return [];
     return Array.isArray(partnerDebtsData.data.data) ? partnerDebtsData.data.data : [];
   }, [partnerDebtsData]);
-  
-//   const tableData: PartnerDebtListResponse[] = useMemo(() => {
-//     return partnerDebts.map(convertToTableRow);
-//   }, [partnerDebts]);
+
+  // View control handlers
+  const openView = useCallback((type: typeof activeView['type'], id: string | null = null) => {
+    setActiveView({ type, id });
+  }, []);
+
+  const closeView = useCallback(() => {
+    setActiveView({ type: null, id: null });
+  }, []);
+
+  const showSnackbar = useCallback((message: string, severity: typeof snackbar['severity'] = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  }, []);
 
   // Event handlers
   const handleSearchChange = useCallback((params: PartnerDebtSearchParams) => {
@@ -72,124 +89,68 @@ const PartnerDebtManagement: React.FC = () => {
     setSearchParams(prev => ({ ...prev, ...newFilters, page: 1 }));
   }, []);
 
-  const handleCreate = useCallback(() => {
-    setCreateDialogOpen(true);
-  }, []);
-
-  const handleEdit = useCallback((id: string) => {
-    setSelectedId(id);
-    setEditDialogOpen(true);
-  }, []);
-
-  const handleView = useCallback((id: string) => {
-    setSelectedId(id);
-    setViewDrawerOpen(true);
-  }, []);
-
-  const handleDelete = useCallback((id: string) => {
-    setSelectedId(id);
-    setDeleteDialogOpen(true);
-  }, []);
-
   const handleRefresh = useCallback(() => {
     refetch();
   }, [refetch]);
 
-//   const handleSort = useCallback((field: string, order: 'asc' | 'desc') => {
-//     setSearchParams(prev => ({ ...prev, sortBy: field, sortOrder: order }));
-//   }, []);
+  /**
+   * Mutation Handlers
+   */
 
-  // Dialog handlers
   const handleCreateSubmit = useCallback(async (data: Record<string, unknown>) => {
     try {
       const formData = {
         ...data,
-        amount: Number(data.amount), // Convert to number
+        amount: Number(data.amount),
       } as unknown as PartnerDebtFormData;
-      
+
       await createMutation.mutateAsync(formData);
-      setCreateDialogOpen(false);
-      refetch(); // Fetch lại danh sách
-      setSnackbar({
-        open: true,
-        message: 'Tạo công nợ đối tác thành công',
-        severity: 'success',
-      });
+      showSnackbar('Tạo công nợ đối tác thành công');
+      closeView();
+      refetch();
     } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi tạo công nợ đối tác',
-        severity: 'error',
-      });
+      showSnackbar('Có lỗi xảy ra khi tạo công nợ đối tác', 'error');
     }
-  }, [createMutation, refetch]);
+  }, [createMutation, refetch, closeView, showSnackbar]);
 
-  const handleEditSubmit = useCallback(async (data: Record<string, unknown>) => {
-    try {
-      const formData = {
-        ...data,
-        amount: Number(data.amount), // Convert to number
-      } as unknown as PartnerDebtFormData;
-      
-      await updateMutation.mutateAsync({
-        id: selectedId,
-        data: formData,
-      });
-      setEditDialogOpen(false);
-      refetch(); // Fetch lại danh sách
-      setSnackbar({
-        open: true,
-        message: 'Cập nhật công nợ đối tác thành công',
-        severity: 'success',
-      });
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi cập nhật công nợ đối tác',
-        severity: 'error',
-      });
-    }
-  }, [updateMutation, selectedId, refetch]);
+  // Get selected item for viewing
+  const selectedItem = useMemo(() =>
+    partnerDebts.find(item => item.id === activeView.id),
+    [partnerDebts, activeView.id]
+  );
 
-  const handleDeleteConfirm = useCallback(async () => {
-    try {
-      await deleteMutation.mutateAsync(selectedId);
-      setDeleteDialogOpen(false);
-      refetch(); // Fetch lại danh sách
-      setSnackbar({
-        open: true,
-        message: 'Xóa công nợ đối tác thành công',
-        severity: 'success',
-      });
-    } catch {
-      setSnackbar({
-        open: true,
-        message: 'Có lỗi xảy ra khi xóa công nợ đối tác',
-        severity: 'error',
-      });
-    }
-  }, [deleteMutation, selectedId, refetch]);
+  const selectedDetailData = useMemo(() =>
+    selectedItem ? convertToDetailData(selectedItem) as unknown as Record<string, unknown> : undefined,
+    [selectedItem]
+  );
 
-  const handleSnackbarClose = useCallback(() => {
-    setSnackbar(prev => ({ ...prev, open: false }));
-  }, []);
+  if (error) {
+    return (
+      <div style={{ padding: '24px' }}>
+        <Alert
+          message="Lỗi"
+          description={`Không thể tải danh sách công nợ: ${(error as Error).message}`}
+          type="error"
+          showIcon
+        />
+      </div>
+    );
+  }
 
-  // Get selected item for editing/viewing
-  const selectedItem = partnerDebts.find(item => item.id === selectedId);
-  const selectedFormData = selectedItem ? convertToFormData(selectedItem) : undefined;
-  const selectedDetailData = selectedItem ? convertToDetailData(selectedItem) as unknown as Record<string, unknown> : undefined;
+  const partners = partnersData?.data?.data?.data || [];
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <PartnerDebtHeader
-          onCreate={handleCreate}
-          onRefresh={handleRefresh}
-          selectedCount={0}
-        />
-      </Paper>
+    <div style={{ padding: '0 0 24px 0', minHeight: '100%' }}>
+      <CommonHeader
+        title="Quản lý công nợ đối tác"
+        subtitle="Theo dõi và quản lý các giao dịch công nợ với đối tác"
+        onRefresh={handleRefresh}
+        onCreate={() => openView('create')}
+        createButtonText="Thêm công nợ"
+        loading={isLoading}
+      />
 
-      <Paper sx={{ p: 2, mb: 2 }}>
+      <div style={{ marginTop: '16px' }}>
         <PartnerDebtSearchAndFilter
           searchParams={searchParams}
           onSearchChange={handleSearchChange}
@@ -197,21 +158,26 @@ const PartnerDebtManagement: React.FC = () => {
           filters={filters}
           onReset={handleReset}
         />
-      </Paper>
+      </div>
 
-      <Paper sx={{ p: 2 }}>
+      <div style={{
+        marginTop: '16px',
+        background: token.colorBgContainer,
+        borderRadius: '12px',
+        overflow: 'hidden'
+      }}>
         <PartnerDebtDataGrid
           data={partnerDebts.map(convertToTableRow)}
           loading={isLoading}
           error={null}
-          onView={(item) => handleView(item.id)}
+          onView={(item) => openView('view', item.id)}
         />
-      </Paper>
+      </div>
 
-      {/* Create Drawer */}
+      {/* Drawers */}
       <CommonFormDrawer
-        open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
+        open={activeView.type === 'create'}
+        onClose={closeView}
         onSave={handleCreateSubmit}
         fields={[
           {
@@ -219,10 +185,10 @@ const PartnerDebtManagement: React.FC = () => {
             label: 'Đối tác',
             type: 'select',
             required: true,
-            options: partnersData?.data?.data?.data?.map(partner => ({
+            options: partners.map(partner => ({
               value: partner.id,
               label: partner.name
-            })) || [],
+            })),
           },
           {
             key: 'payment_method',
@@ -266,93 +232,26 @@ const PartnerDebtManagement: React.FC = () => {
         width={500}
       />
 
-      {/* Edit Drawer */}
-      <CommonFormDrawer
-        open={editDialogOpen}
-        onClose={() => setEditDialogOpen(false)}
-        onSave={handleEditSubmit}
-        fields={[
-          {
-            key: 'partner_id',
-            label: 'Đối tác',
-            type: 'select',
-            required: true,
-            options: partnersData?.data?.data?.data?.map(partner => ({
-              value: partner.id,
-              label: partner.name
-            })) || [],
-          },
-          {
-            key: 'payment_method',
-            label: 'Phương thức thanh toán',
-            type: 'select',
-            required: true,
-            options: [
-              { value: 'cash', label: 'Tiền mặt' },
-              { value: 'bank_transfer', label: 'Chuyển khoản' },
-              { value: 'credit_card', label: 'Thẻ tín dụng' },
-              { value: 'other', label: 'Khác' },
-            ],
-          },
-          {
-            key: 'payment_type',
-            label: 'Loại giao dịch',
-            type: 'select',
-            required: true,
-            options: [
-              { value: 'income', label: 'Thu nhập' },
-              { value: 'expense', label: 'Chi phí' },
-            ],
-          },
-          {
-            key: 'amount',
-            label: 'Số tiền',
-            type: 'number',
-            required: true,
-            placeholder: 'Nhập số tiền',
-          },
-          {
-            key: 'description',
-            label: 'Mô tả',
-            type: 'textarea',
-            required: false,
-            placeholder: 'Nhập mô tả (tùy chọn)',
-          },
-        ]}
-        title="Chỉnh Sửa Công Nợ Đối Tác"
-        initialData={selectedFormData as unknown as Record<string, unknown>}
-        loading={updateMutation.isPending}
-        width={500}
-      />
-
-      {/* View/Edit Drawer */}
-      <CommonViewEditDrawer
-        open={viewDrawerOpen}
-        onClose={() => setViewDrawerOpen(false)}
-        // onSave={handleEditSubmit}
-        viewFields={partnerDebtViewEditConfig.fields as DetailField[]}
-        editFields={partnerDebtViewEditConfig.fields as FormField[]}
-        data={selectedDetailData || {}}
-        title="Chi Tiết Công Nợ Đối Tác"
-      />
-
-      {/* Delete Dialog */}
-      <PartnerDebtDeleteDialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        onConfirm={handleDeleteConfirm}
-        itemName={selectedItem?.partner?.name || 'công nợ đối tác'}
-        loading={deleteMutation.isPending}
-      />
+      {selectedDetailData && (
+        <CommonViewEditDrawer
+          open={activeView.type === 'view'}
+          onClose={closeView}
+          viewFields={partnerDebtViewEditConfig.fields as DetailField[]}
+          editFields={partnerDebtViewEditConfig.fields as FormField[]}
+          data={selectedDetailData}
+          title="Chi Tiết Công Nợ Đối Tác"
+          mode="view"
+        />
+      )}
 
       {/* Snackbar */}
-      <PartnerDebtSnackbar
+      <CommonSnackbar
         open={snackbar.open}
         message={snackbar.message}
         severity={snackbar.severity}
-        onClose={handleSnackbarClose}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
       />
-    </Box>
+    </div>
   );
 };
 
