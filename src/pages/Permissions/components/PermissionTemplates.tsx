@@ -12,6 +12,7 @@ import {
     Flex,
     Tooltip,
     Space,
+    Alert,
     theme as antdTheme,
 } from 'antd';
 import {
@@ -132,7 +133,7 @@ const PermissionTemplates: React.FC = () => {
 
                                 <Flex align="center" gap={8}>
                                     <CheckCircleOutlined style={{ color: token.colorSuccess }} />
-                                    <Text type="secondary" size="small">
+                                    <Text type="secondary" style={{ fontSize: '14px' }}>
                                         {template.permission_ids.length} quyền hạn được gán
                                     </Text>
                                 </Flex>
