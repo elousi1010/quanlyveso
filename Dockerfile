@@ -1,19 +1,20 @@
-# ===== Stage 1: Build với Yarn =====
+# ===== Stage 1: Build (npm hoặc yarn tùy lock file) =====
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
 # Copy file mô tả dependencies trước để tận dụng cache
-COPY package.json yarn.lock ./
+# Dùng package-lock.json (npm) hoặc yarn.lock (yarn) — đổi COPY và lệnh cài/build tương ứng
+COPY package.json package-lock.json ./
 
 # Cài dependencies
-RUN yarn install --frozen-lockfile
+RUN npm ci
 
 # Copy toàn bộ source vào
 COPY . .
 
-# Build static files (chỉnh lại lệnh nếu khác)
-RUN yarn build
+# Build static files
+RUN npm run build
 
 # ===== Stage 2: Runtime (nginx rất nhẹ) =====
 FROM nginx:stable-alpine
