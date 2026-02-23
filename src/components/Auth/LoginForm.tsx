@@ -9,6 +9,7 @@ import {
   Typography,
   Flex,
   ConfigProvider,
+  message,
 } from 'antd';
 import {
   UserOutlined,
@@ -27,16 +28,17 @@ const { Title, Text } = Typography;
 const LoginForm: React.FC = () => {
   const [tabKey, setTabKey] = useState('login');
   const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
 
   const loginMutation = useLogin();
   const signupMutation = useSignup();
 
   useEffect(() => {
-    if (loginMutation.isSuccess || signupMutation.isSuccess) {
+    if (loginMutation.isSuccess) {
       debugJWT();
       logJWTInfo();
     }
-  }, [loginMutation.isSuccess, signupMutation.isSuccess]);
+  }, [loginMutation.isSuccess]);
 
   const onFinish = (values: any) => {
     if (tabKey === 'login') {
@@ -49,6 +51,15 @@ const LoginForm: React.FC = () => {
         name: values.name,
         phone_number: values.phone_number,
         password: values.password,
+      }, {
+        onSuccess: () => {
+          messageApi.success('Đăng ký thành công, vui lòng đăng nhập!');
+          setTabKey('login');
+          // Preserve phone_number but clear password
+          form.setFieldsValue({
+            password: '',
+          });
+        }
       });
     }
   };
@@ -66,6 +77,7 @@ const LoginForm: React.FC = () => {
         },
       }}
     >
+      {contextHolder}
       <style>{`
         .login-container {
           min-height: 100vh;

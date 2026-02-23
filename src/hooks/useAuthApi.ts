@@ -19,7 +19,7 @@ export const useLogin = () => {
     onSuccess: (response) => {
       // Decode JWT token để lấy permission và timing info
       const jwtPayload = decodeJWT(response.data.access_token);
-      
+
       // Merge profile data với JWT payload
       const userData = {
         sub: response.data.profile.id,
@@ -31,13 +31,13 @@ export const useLogin = () => {
         iat: jwtPayload?.iat || 0,
         exp: jwtPayload?.exp || 0,
       };
-      
+
       // Lưu user data vào store
       setUser(userData);
-      
+
       // Lưu tokens vào store
       setTokens(response.data.access_token, response.data.refresh_token);
-      
+
       // Invalidate và refetch user data
       queryClient.invalidateQueries({ queryKey: authKeys.user() });
     },
@@ -50,35 +50,13 @@ export const useLogin = () => {
 
 // Hook cho signup
 export const useSignup = () => {
-  const queryClient = useQueryClient();
-  const { setTokens, setError, setUser } = useAuthStore();
+  const { setError } = useAuthStore();
 
   return useMutation({
     mutationFn: (data: SignupRequest) => authApi.signup(data),
     onSuccess: (response) => {
-      // Decode JWT token để lấy permission và timing info
-      const jwtPayload = decodeJWT(response.data.access_token);
-      
-      // Merge profile data với JWT payload
-      const userData = {
-        sub: response.data.profile.id,
-        name: response.data.profile.name,
-        phone_number: response.data.profile.phone_number,
-        role: response.data.profile.role,
-        organization_id: response.data.profile.organization_id,
-        permission: jwtPayload?.permission || null,
-        iat: jwtPayload?.iat || 0,
-        exp: jwtPayload?.exp || 0,
-      };
-      
-      // Lưu user data vào store
-      setUser(userData);
-      
-      // Lưu tokens vào store
-      setTokens(response.data.access_token, response.data.refresh_token);
-      
-      // Invalidate và refetch user data
-      queryClient.invalidateQueries({ queryKey: authKeys.user() });
+      // Đăng ký thành công, return response để component handle UI
+      return response;
     },
     onError: (error) => {
       console.error('Signup failed:', error);
@@ -106,7 +84,7 @@ export const useRefreshToken = () => {
         accessTokenPreview: response.data.access_token.substring(0, 20) + '...',
         refreshTokenPreview: response.data.refresh_token.substring(0, 20) + '...'
       });
-      
+
       // Cập nhật token mới trong Zustand store
       updateTokens(response.data.access_token, response.data.refresh_token);
 
@@ -130,7 +108,7 @@ export const useLogout = () => {
     onSuccess: () => {
       // Xóa auth state từ Zustand store
       clearAuth();
-      
+
       // Clear tất cả queries
       queryClient.clear();
     },
@@ -138,7 +116,7 @@ export const useLogout = () => {
       console.error('Logout failed:', error);
       // Vẫn clear auth state ngay cả khi API call thất bại
       clearAuth();
-      
+
       // Clear tất cả queries
       queryClient.clear();
     },
@@ -156,13 +134,13 @@ export const useCurrentUser = () => {
       if (!accessToken || !user || !isAuthenticated) {
         throw new Error('User not authenticated or token invalid');
       }
-      
+
       // Check if token is valid
       const payload = decodeJWT(accessToken);
       if (!payload || isTokenExpired(accessToken)) {
         throw new Error('Token invalid or expired');
       }
-      
+
       return user;
     },
     enabled: isAuthenticated && !!user,
@@ -174,7 +152,7 @@ export const useCurrentUser = () => {
 // Hook để check authentication status
 export const useIsAuthenticated = () => {
   const { isAuthenticated, user, isLoading, error } = useAuthStore();
-  
+
   return {
     isAuthenticated,
     user,

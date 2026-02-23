@@ -40,24 +40,7 @@ export interface SignupResponse {
   message: string;
   error: string;
   statusCode: number;
-  data: {
-    access_token: string;
-    refresh_token: string;
-    profile: {
-      id: string;
-      name: string;
-      phone_number: string;
-      role: string;
-      organization_id: string;
-      permissions: {
-        user: number;
-        ticket: number;
-        partner: number;
-        permission: number;
-        transaction: number;
-      };
-    };
-  };
+  data: boolean;
 }
 
 export interface RefreshTokenRequest {
