@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { CircularProgress, Box } from '@mui/material';
+import { Spin, Flex } from 'antd';
 
 const BulkPermissionAssignment = lazy(() => import('./BulkPermissionAssignment'));
 
@@ -14,9 +14,9 @@ const BulkPermissionAssignmentWrapper: React.FC<BulkPermissionAssignmentWrapperP
   return (
     <Suspense
       fallback={
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-          <CircularProgress />
-        </Box>
+        <Flex justify="center" align="center" style={{ padding: '48px' }}>
+          <Spin size="large" tip="Đang tải..." />
+        </Flex>
       }
     >
       <BulkPermissionAssignment {...props} />

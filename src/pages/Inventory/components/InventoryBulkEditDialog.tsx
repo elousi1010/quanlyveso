@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Modal,
   Button,
-  Box,
   Typography,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  TextField,
-  FormControl,
-  InputLabel,
+  InputNumber,
   Select,
-  MenuItem,
   Alert,
   Divider,
-} from '@mui/material';
-import { Edit as EditIcon, Save as SaveIcon, Close as CloseIcon } from '@mui/icons-material';
+  Flex,
+  theme as antdTheme,
+} from 'antd';
+import { EditOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { partnerApi } from '../../Partners/api';
-import type { Partner } from '../../Partners/types';
 import type { Inventory, UpdateInventoryDto } from '../types';
+
+const { Text, Title } = Typography;
 
 // Sub-type options
 const SUB_TYPES = [
@@ -57,6 +47,7 @@ export const InventoryBulkEditDialog: React.FC<InventoryBulkEditDialogProps> = (
   selectedInventories,
   loading = false,
 }) => {
+  const { token } = antdTheme.useToken();
   const [editableFields, setEditableFields] = useState<Record<string, Partial<UpdateInventoryDto>>>({});
   const [globalFields, setGlobalFields] = useState<{
     type: string;
@@ -113,7 +104,7 @@ export const InventoryBulkEditDialog: React.FC<InventoryBulkEditDialogProps> = (
     return '';
   };
 
-  const handleFieldChange = (inventoryId: string, field: keyof UpdateInventoryDto, value: unknown) => {
+  const handleFieldChange = (inventoryId: string, field: keyof UpdateInventoryDto, value: any) => {
     // Validate quantity field
     if (field === 'quantity') {
       const quantity = typeof value === 'number' ? value : parseInt(value as string) || 0;
@@ -172,8 +163,8 @@ export const InventoryBulkEditDialog: React.FC<InventoryBulkEditDialogProps> = (
         } as UpdateInventoryDto,
       };
     }).filter(Boolean);
-    
-    await onSave(updates);
+
+    await onSave(updates as any);
     setHasChanges(false);
   };
 
@@ -188,13 +179,6 @@ export const InventoryBulkEditDialog: React.FC<InventoryBulkEditDialogProps> = (
     }
   };
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(value);
-  };
-
   const formatDate = (date: string) => {
     const d = new Date(date);
     const day = d.getDate().toString().padStart(2, '0');
@@ -203,173 +187,167 @@ export const InventoryBulkEditDialog: React.FC<InventoryBulkEditDialogProps> = (
     return `${day}/${month}/${year}`;
   };
 
+  const columns = [
+    {
+      title: 'Mã Vé',
+      dataIndex: 'code',
+      key: 'code',
+      render: (text: string) => <Text strong>{text}</Text>
+    },
+    {
+      title: 'Số Lượng',
+      key: 'quantity',
+      render: (_: any, record: Inventory) => {
+        const editableData = editableFields[record.id] || {};
+        const error = validationErrors[`${record.id}_quantity`];
+        return (
+          <Flex vertical gap={4}>
+            <InputNumber
+              min={0}
+              max={1000000}
+              precision={0}
+              value={editableData.quantity}
+              onChange={(val) => handleFieldChange(record.id, 'quantity', val || 0)}
+              status={error ? 'error' : ''}
+              style={{ width: '100%' }}
+            />
+            {error && <Text type="danger" style={{ fontSize: '11px' }}>{error}</Text>}
+          </Flex>
+        );
+      }
+    },
+    {
+      title: 'Giá Trung Bình',
+      key: 'avg_cost',
+      render: (_: any, record: Inventory) => {
+        const editableData = editableFields[record.id] || {};
+        return (
+          <InputNumber
+            min={0}
+            step={100}
+            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+            parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+            value={editableData.avg_cost}
+            onChange={(val) => handleFieldChange(record.id, 'avg_cost', val || 0)}
+            style={{ width: '100%' }}
+          />
+        );
+      }
+    }
+  ];
+
   return (
-    <Dialog
+    <Modal
       open={open}
-      onClose={handleClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: { minHeight: '70vh' }
-      }}
-    >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <EditIcon color="warning" />
-        <Typography variant="h6" component="div">
-          Chỉnh sửa hàng loạt ({selectedInventories.length} kho)
-        </Typography>
-      </DialogTitle>
-
-      <DialogContent dividers>
-        <Alert severity="info" sx={{ mb: 2 }}>
-          Bạn đang chỉnh sửa {selectedInventories.length} kho được chọn. Các thay đổi sẽ được áp dụng cho tất cả các kho đã chọn.
-        </Alert>
-
-        {partnersLoading && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Đang tải danh sách đối tác...
-          </Alert>
-        )}
-
-        {/* Global Fields Section */}
-        <Box sx={{ mb: 3, p: 2, bgcolor: 'grey.50', borderRadius: 1, border: '1px solid', borderColor: 'grey.300' }}>
-          <Typography variant="h6" sx={{ mb: 2, color: 'primary.main' }}>
-            Cài đặt chung (áp dụng cho tất cả)
-          </Typography>
-          
-          {/* Read-only Draw Date Info */}
-          <Box sx={{ mb: 2, p: 1, bgcolor: 'info.light', borderRadius: 1 }}>
-            <Typography variant="body2" color="info.dark">
-              <strong>Ngày Quay:</strong> {selectedInventories[0]?.draw_date ? formatDate(selectedInventories[0].draw_date) : 'N/A'} 
-              <em> (Cố định - không thể chỉnh sửa)</em>
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Loại</InputLabel>
-              <Select
-                value={globalFields.type}
-                onChange={(e) => handleGlobalFieldChange('type', e.target.value)}
-                label="Loại"
-              >
-                {TYPES.map((type) => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Loại Phụ</InputLabel>
-              <Select
-                value={globalFields.sub_type}
-                onChange={(e) => handleGlobalFieldChange('sub_type', e.target.value)}
-                label="Loại Phụ"
-              >
-                {SUB_TYPES.map((subType) => (
-                  <MenuItem key={subType.value} value={subType.value}>
-                    {subType.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl sx={{ minWidth: 200 }}>
-              <InputLabel>Đối Tác</InputLabel>
-              <Select
-                value={globalFields.partner_id}
-                onChange={(e) => handleGlobalFieldChange('partner_id', e.target.value)}
-                label="Đối Tác"
-                displayEmpty
-              >
-                <MenuItem value="">
-                  <em>Chọn đối tác</em>
-                </MenuItem>
-                {partners.map((partner) => (
-                  <MenuItem key={partner.id} value={partner.id}>
-                    {partner.name} ({partner.type})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Box>
-        </Box>
-
-        <Divider sx={{ mb: 2 }} />
-
-        <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
-          <Table stickyHeader size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 'bold', minWidth: 120 }}>Mã Vé</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', minWidth: 100 }}>Số Lượng</TableCell>
-                <TableCell sx={{ fontWeight: 'bold', minWidth: 120 }}>Giá Trung Bình</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {selectedInventories.map((inventory) => {
-                const editableData = editableFields[inventory.id] || {};
-                return (
-                  <TableRow key={inventory.id} hover>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="medium">
-                        {inventory.code}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        type="number"
-                        size="small"
-                        value={editableData.quantity || ''}
-                        onChange={(e) => handleFieldChange(inventory.id, 'quantity', parseInt(e.target.value) || 0)}
-                        inputProps={{ min: 0, step: 1 }}
-                        error={!!validationErrors[`${inventory.id}_quantity`]}
-                        helperText={validationErrors[`${inventory.id}_quantity`]}
-                        sx={{ width: 100 }}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        type="number"
-                        size="small"
-                        value={editableData.avg_cost || ''}
-                        onChange={(e) => handleFieldChange(inventory.id, 'avg_cost', parseFloat(e.target.value) || 0)}
-                        inputProps={{ min: 0, step: 0.01 }}
-                        sx={{ width: 100 }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-        {hasChanges && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Bạn có thay đổi chưa được lưu. Nhấn "Lưu thay đổi" để áp dụng các thay đổi.
-          </Alert>
-        )}
-      </DialogContent>
-
-      <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button
-          onClick={handleClose}
-          startIcon={<CloseIcon />}
-          disabled={loading}
-        >
+      onCancel={handleClose}
+      width={1000}
+      title={
+        <Flex align="center" gap={8}>
+          <EditOutlined style={{ color: token.colorWarning }} />
+          <Text strong style={{ fontSize: '16px' }}>
+            Chỉnh sửa hàng loạt ({selectedInventories.length} kho)
+          </Text>
+        </Flex>
+      }
+      footer={[
+        <Button key="cancel" onClick={handleClose} disabled={loading} icon={<CloseOutlined />}>
           Hủy
-        </Button>
+        </Button>,
         <Button
+          key="save"
+          type="primary"
           onClick={handleSave}
-          variant="contained"
-          startIcon={<SaveIcon />}
-          disabled={loading || !hasChanges || Object.values(validationErrors).some(error => error !== '')}
-          color="warning"
+          loading={loading}
+          disabled={!hasChanges || Object.values(validationErrors).some(error => error !== '')}
+          icon={<SaveOutlined />}
+          style={{ backgroundColor: token.colorWarning }}
         >
           {loading ? 'Đang lưu...' : 'Lưu thay đổi'}
         </Button>
-      </DialogActions>
-    </Dialog>
+      ]}
+    >
+      <div style={{ padding: '8px 0' }}>
+        <Alert
+          message={`Bạn đang chỉnh sửa ${selectedInventories.length} kho được chọn. Các thay đổi sẽ được áp dụng cho tất cả các kho đã chọn.`}
+          type="info"
+          showIcon
+          style={{ marginBottom: '16px' }}
+        />
+
+        {/* Global Fields Section */}
+        <div style={{
+          padding: '16px',
+          backgroundColor: token.colorFillAlter,
+          borderRadius: '8px',
+          border: `1px solid ${token.colorBorderSecondary}`,
+          marginBottom: '24px'
+        }}>
+          <Title level={5} style={{ marginTop: 0, marginBottom: '16px', color: token.colorPrimary }}>
+            Cài đặt chung (áp dụng cho tất cả)
+          </Title>
+
+          <Flex vertical gap={16}>
+            <div style={{ padding: '8px 12px', backgroundColor: token.colorInfoBg, borderRadius: '4px' }}>
+              <Text type="secondary">
+                <Text strong>Ngày Quay:</Text> {selectedInventories[0]?.draw_date ? formatDate(selectedInventories[0].draw_date) : 'N/A'}
+                <Text italic style={{ marginLeft: '8px' }}>(Cố định - không thể chỉnh sửa)</Text>
+              </Text>
+            </div>
+
+            <Flex gap={16} wrap="wrap">
+              <Flex vertical gap={4} style={{ minWidth: '200px', flex: 1 }}>
+                <Text type="secondary" style={{ fontSize: '12px' }}>Loại</Text>
+                <Select
+                  value={globalFields.type}
+                  onChange={(val) => handleGlobalFieldChange('type', val)}
+                  options={TYPES}
+                  style={{ width: '100%' }}
+                />
+              </Flex>
+              <Flex vertical gap={4} style={{ minWidth: '200px', flex: 1 }}>
+                <Text type="secondary" style={{ fontSize: '12px' }}>Loại Phụ</Text>
+                <Select
+                  value={globalFields.sub_type}
+                  onChange={(val) => handleGlobalFieldChange('sub_type', val)}
+                  options={SUB_TYPES}
+                  style={{ width: '100%' }}
+                />
+              </Flex>
+              <Flex vertical gap={4} style={{ minWidth: '200px', flex: 1 }}>
+                <Text type="secondary" style={{ fontSize: '12px' }}>Đối Tác</Text>
+                <Select
+                  value={globalFields.partner_id}
+                  onChange={(val) => handleGlobalFieldChange('partner_id', val)}
+                  loading={partnersLoading}
+                  placeholder="Chọn đối tác"
+                  options={partners.map(p => ({ value: p.id, label: `${p.name} (${p.type})` }))}
+                  style={{ width: '100%' }}
+                />
+              </Flex>
+            </Flex>
+          </Flex>
+        </div>
+
+        <Divider style={{ margin: '16px 0' }} />
+
+        <Table
+          dataSource={selectedInventories}
+          columns={columns}
+          rowKey="id"
+          pagination={false}
+          scroll={{ y: 350 }}
+          size="small"
+        />
+
+        {hasChanges && (
+          <Alert
+            message="Bạn có thay đổi chưa được lưu. Nhấn 'Lưu thay đổi' để áp dụng các thay đổi."
+            type="warning"
+            showIcon
+            style={{ marginTop: '16px' }}
+          />
+        )}
+      </div>
+    </Modal>
   );
 };

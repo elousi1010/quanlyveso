@@ -1,9 +1,10 @@
+import React from 'react';
 import type { SimpleTableColumn, SimpleTableAction } from '../../../components/common/SimpleTable';
 import type { User } from '../types';
 import { USER_ROLES } from './userConstants';
 import { formatDate } from '../../../utils/format';
-import { Visibility as ViewIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { Chip } from '@mui/material';
+import { EyeOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Tag } from 'antd';
 
 export const USER_TABLE_COLUMNS: SimpleTableColumn[] = [
   {
@@ -22,24 +23,21 @@ export const USER_TABLE_COLUMNS: SimpleTableColumn[] = [
     minWidth: 120,
     render: (role: string) => {
       const roleOption = USER_ROLES.find(r => r.value === role);
-      const getRoleColor = (role: string): 'primary' | 'secondary' | 'success' | 'warning' | 'default' => {
+      const getRoleColor = (role: string) => {
         switch (role) {
-          case 'admin': return 'primary';
-          case 'user': return 'secondary';
-          case 'owner': return 'success';
-          case 'employee': return 'warning';
+          case 'admin': return 'blue';
+          case 'user': return 'cyan';
+          case 'owner': return 'green';
+          case 'employee': return 'orange';
           case 'seller': return 'default';
           default: return 'default';
         }
       };
-      
+
       return (
-        <Chip
-          label={roleOption?.label || role}
-          color={getRoleColor(role)}
-          size="small"
-          variant="outlined"
-        />
+        <Tag color={getRoleColor(role)} bordered={false}>
+          {roleOption?.label || role}
+        </Tag>
       );
     },
   },
@@ -47,24 +45,17 @@ export const USER_TABLE_COLUMNS: SimpleTableColumn[] = [
     key: 'organization',
     label: 'Tổ chức',
     minWidth: 200,
-    render: (organization: unknown) => (organization as { key: string })?.key || 'N/A',
+    render: (organization: any) => organization?.name || 'N/A',
   },
   {
     key: 'is_active',
     label: 'Trạng thái',
     minWidth: 120,
     render: (isActive: boolean) => {
-      const getStatusColor = (isActive: boolean): 'success' | 'error' => {
-        return isActive ? 'success' : 'error';
-      };
-      
       return (
-        <Chip
-          label={isActive ? 'Hoạt động' : 'Không hoạt động'}
-          color={getStatusColor(isActive)}
-          size="small"
-          variant="filled"
-        />
+        <Tag color={isActive ? 'success' : 'error'} bordered={false}>
+          {isActive ? 'Hoạt động' : 'Không hoạt động'}
+        </Tag>
       );
     },
   },
@@ -80,21 +71,19 @@ export const USER_TABLE_ACTIONS: SimpleTableAction[] = [
   {
     key: 'view',
     label: 'Xem/Chỉnh sửa',
-    icon: <ViewIcon fontSize="small" />,
-    color: 'primary.main',
+    icon: <EyeOutlined />,
+    color: 'primary',
     onClick: (user: User) => {
-      // This will be handled by the parent component
-
+      // Handled by parent
     },
   },
   {
     key: 'delete',
     label: 'Xóa',
-    icon: <DeleteIcon fontSize="small" />,
-    color: 'error.main',
+    icon: <DeleteOutlined />,
+    color: 'error',
     onClick: (user: User) => {
-      // This will be handled by the parent component
-
+      // Handled by parent
     },
   },
 ];

@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  Autocomplete,
-  Typography,
-  TextField,
-  InputAdornment,
-} from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import { Select, Space, Typography, theme as antdTheme } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import { partnerApi } from '@/pages/Partners/api';
 import type { Partner } from '@/pages/Partners/types';
+
+const { Text } = Typography;
 
 export interface PartnerSelectorProps {
   value: string | null;
   onChange: (value: string | null, item: Partner | null) => void;
   placeholder?: string;
   disabled?: boolean;
-  error?: boolean;
+  status?: '' | 'error' | 'warning';
   helperText?: string;
   width?: number | string;
 }
@@ -25,137 +21,97 @@ const PartnerSelector: React.FC<PartnerSelectorProps> = React.memo(({
   onChange,
   placeholder = 'Chọn đối tác',
   disabled = false,
-  error = false,
+  status = '',
   helperText,
   width = '100%',
 }) => {
+  const { token } = antdTheme.useToken();
   const [options, setOptions] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKey, setSearchKey] = useState('');
   const hasLoadedRef = useRef(false);
 
-  // Load partners data on mount
-  useEffect(() => {
-    if (hasLoadedRef.current) return; // Đã load rồi thì không load nữa
-    
-    const loadPartners = async () => {
-
-      hasLoadedRef.current = true;
-      setLoading(true);
-      try {
-        const response = await partnerApi.getPartners({ 
-          page: 1, 
-          limit: 5
-        });
-        setOptions(response.data?.data?.data || []);
-      } catch (error) {
-        console.error('Error loading partners:', error);
-        setOptions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPartners();
-  }, []); // Chỉ chạy 1 lần khi component mount
-
-  // Search partners when searchKey changes
-  useEffect(() => {
-    if (searchKey.trim() === '') return; // Không search khi empty
-
-    const searchPartners = async () => {
-      setLoading(true);
-      try {
-        const response = await partnerApi.getPartners({ 
-          page: 1, 
-          limit: 100,
-          searchKey: searchKey
-        });
-        setOptions(response.data?.data?.data || []);
-      } catch (error) {
-        console.error('Error searching partners:', error);
-        setOptions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const timeoutId = setTimeout(searchPartners, 300); // Debounce 300ms
-    return () => clearTimeout(timeoutId);
-  }, [searchKey]);
-
-  const getDisplayName = (item: Partner): string => {
-    if (!item) return '';
-    return item.name || item.id || '';
+  // Load partners data
+  const fetchPartners = async (key: string = '') => {
+    setLoading(true);
+    try {
+      const response = await partnerApi.getPartners({
+        page: 1,
+        limit: 100,
+        searchKey: key
+      });
+      setOptions(response.data?.data?.data || []);
+    } catch (error) {
+      console.error('Error loading partners:', error);
+      setOptions([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const selectedItem = Array.isArray(options) ? options.find((item: Partner) => item.id === value) || null : null;
+  useEffect(() => {
+    if (!hasLoadedRef.current) {
+      fetchPartners();
+      hasLoadedRef.current = true;
+    }
+  }, []);
+
+  const handleSearch = (val: string) => {
+    setSearchKey(val);
+  };
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchKey) {
+        fetchPartners(searchKey);
+      } else {
+        fetchPartners();
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchKey]);
+
+  const selectOptions = options.map(item => ({
+    value: item.id,
+    label: item.name || item.id || '',
+    item: item
+  }));
 
   return (
-    <Autocomplete
-      value={selectedItem}
-      onChange={(event, newValue) => {
-        if (newValue) {
-          onChange(newValue.id, newValue);
-        } else {
-          onChange(null, null);
-        }
-      }}
-      onInputChange={(event, newInputValue) => {
-        setSearchKey(newInputValue);
-      }}
-      options={Array.isArray(options) ? options : []}
-      getOptionLabel={getDisplayName}
-      loading={loading}
-      disabled={disabled}
-      sx={{ width }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={placeholder}
-          error={error}
-          helperText={helperText}
-          InputProps={{
-            ...params.InputProps,
-            startAdornment: (
-              <>
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-                {params.InputProps.startAdornment}
-              </>
-            ),
-          }}
-        />
+    <Space direction="vertical" style={{ width: width }}>
+      <Select
+        showSearch
+        value={value}
+        placeholder={placeholder}
+        disabled={disabled}
+        status={status}
+        loading={loading}
+        onSearch={handleSearch}
+        onChange={(val, option: any) => {
+          onChange(val, option?.item || null);
+        }}
+        filterOption={false}
+        options={selectOptions}
+        style={{ width: '100%' }}
+        suffixIcon={<SearchOutlined />}
+        optionRender={(option) => (
+          <Flex vertical gap={0}>
+            <Text strong>{option.label}</Text>
+            <Text type="secondary" style={{ fontSize: '11px' }}>{option.item.type}</Text>
+          </Flex>
+        )}
+      />
+      {helperText && (
+        <Text type={status === 'error' ? 'danger' : 'secondary'} style={{ fontSize: '12px' }}>
+          {helperText}
+        </Text>
       )}
-      renderOption={(props, option) => {
-        const { key, ...otherProps } = props;
-        return (
-          <Box component="li" key={key} {...otherProps}>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                fontWeight: 500, 
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                py: 0.5
-              }}
-            >
-              {getDisplayName(option)}
-            </Typography>
-          </Box>
-        );
-      }}
-      noOptionsText={
-        loading ? "Đang tải..." :
-        !Array.isArray(options) || options.length === 0 ? "Không có dữ liệu" : 
-        "Không tìm thấy kết quả"
-      }
-      loadingText="Đang tải..."
-    />
+    </Space>
   );
 });
+
+import { Flex } from 'antd';
 
 PartnerSelector.displayName = 'PartnerSelector';
 

@@ -1,14 +1,17 @@
 import React from 'react';
 import {
-  Box,
   Typography,
-  Chip,
-  Paper,
-  useTheme,
-  useMediaQuery,
-  Grid,
-} from '@mui/material';
+  Tag,
+  Card,
+  Flex,
+  Divider,
+  Button,
+  theme as antdTheme,
+} from 'antd';
+import { EditOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { CommonDrawer, type DetailField, type FormField } from './index';
+
+const { Text, Title, Paragraph } = Typography;
 
 export interface CommonDetailDrawerProps {
   open: boolean;
@@ -34,34 +37,28 @@ const CommonDetailDrawer: React.FC<CommonDetailDrawerProps> = ({
   fields,
   enableEdit = false,
   onEdit,
-  onSave,
-  loading = false,
-  error = null,
+  width = 720,
   isEditing = false,
-  editFields = [],
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { token } = antdTheme.useToken();
 
   const renderFieldValue = (field: DetailField, value: unknown) => {
     if (value === null || value === undefined || value === '') {
       return (
-        <Typography variant="body2" color="text.secondary" fontStyle="italic">
+        <Text type="secondary" italic>
           Không có dữ liệu
-        </Typography>
+        </Text>
       );
     }
 
-    // Priority: use custom render function if available
     if (field.render) {
       return field.render(value, data);
     }
 
-    // Default rendering
     return (
-      <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+      <Text style={{ wordBreak: 'break-word' }}>
         {String(value)}
-      </Typography>
+      </Text>
     );
   };
 
@@ -70,189 +67,126 @@ const CommonDetailDrawer: React.FC<CommonDetailDrawerProps> = ({
       open={open}
       onClose={onClose}
       title={title}
-      width={isMobile ? '100%' : 720}
+      width={width}
     >
-      <Box sx={{ 
-        p: 0,
+      <div style={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: 'grey.50'
+        backgroundColor: token.colorFillAlter
       }}>
         {/* Header Section */}
-        <Box sx={{ 
-          p: 3, 
-          pb: 2,
-          backgroundColor: 'white',
-          borderBottom: 1,
-          borderColor: 'divider'
+        <div style={{
+          padding: '24px',
+          backgroundColor: token.colorBgContainer,
+          borderBottom: `1px solid ${token.colorBorderSecondary}`
         }}>
-          <Typography variant="h6" sx={{ 
-            fontWeight: 600,
-            color: 'primary.main',
-            mb: 0.5
-          }}>
-            {(data.name as string) || 'Chi tiết'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {(data.name as string) || 'Chi tiết'}
-          </Typography>
-        </Box>
+          <Flex align="center" gap={12}>
+            <Title level={4} style={{ margin: 0 }}>
+              {(data.name as string) || (data.id as string) || 'Chi tiết'}
+            </Title>
+          </Flex>
+          <Text type="secondary" style={{ marginTop: '4px', display: 'block' }}>
+            Thông tin chi tiết của hệ thống
+          </Text>
+        </div>
 
         {/* Content Section */}
-        <Box sx={{ 
+        <div style={{
           flex: 1,
           overflow: 'auto',
-          p: 2,
-          '&::-webkit-scrollbar': {
-            width: '6px',
-          },
-          '&::-webkit-scrollbar-track': {
-            background: 'transparent',
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: 'grey.300',
-            borderRadius: '3px',
-          },
+          padding: '24px',
         }}>
-          <Box sx={{ 
+          <div style={{
             display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
-            gap: 1.5
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: '16px'
           }}>
             {fields
               .filter(field => field.key !== 'id' && field.key !== 'organization_id')
               .map((field) => {
-              const value = data[field.key];
-              
-              // Skip empty fields if hideIfEmpty is true
-              if (field.hideIfEmpty && (value === null || value === undefined || value === '')) {
-                return null;
-              }
-              
-              return (
-                <Paper
-                  key={field.key}
-                  elevation={0}
-                  sx={{
-                    p: 2,
-                    border: 1,
-                    borderColor: 'grey.200',
-                    borderRadius: 2,
-                    backgroundColor: 'white',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      borderColor: 'primary.light',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    },
-                  }}
-                >
-                  <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    gap: 1
-                  }}>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        color: 'text.secondary',
-                        fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                        fontSize: '0.75rem'
-                      }}
-                    >
-                      {field.label}
-                    </Typography>
-                    
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center',
-                      minHeight: 24
-                    }}>
-                      {field.chip && typeof renderFieldValue(field, value) === 'string' ? (
-                        <Chip
-                          label={renderFieldValue(field, value) as string}
-                          color={field.chip.color}
-                          variant={field.chip.variant || 'filled'}
-                          size="small"
-                          sx={{ 
-                            fontWeight: 500,
-                            '& .MuiChip-label': {
-                              px: 1.5
-                            }
-                          }}
-                        />
-                      ) : (
-                        <Box sx={{ 
-                          '& .MuiTypography-root': {
-                            fontWeight: 500,
-                            color: 'text.primary',
-                            fontSize: '0.95rem'
-                          }
-                        }}>
-                          {renderFieldValue(field, value)}
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                </Paper>
-              );
-            })}
-          </Box>
+                const value = data[field.key];
+
+                if (field.hideIfEmpty && (value === null || value === undefined || value === '')) {
+                  return null;
+                }
+
+                return (
+                  <Card
+                    key={field.key}
+                    size="small"
+                    hoverable
+                    styles={{ body: { padding: '16px' } }}
+                    style={{
+                      borderRadius: '8px',
+                      border: `1px solid ${token.colorBorderSecondary}`
+                    }}
+                  >
+                    <Flex vertical gap={8}>
+                      <Text
+                        type="secondary"
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}
+                      >
+                        {field.label}
+                      </Text>
+
+                      <div style={{ minHeight: '24px', display: 'flex', alignItems: 'center' }}>
+                        {field.chip && (typeof value === 'string' || typeof value === 'number') ? (
+                          <Tag
+                            color={field.chip.color === 'primary' ? 'blue' : field.chip.color as any}
+                            bordered={false}
+                          >
+                            {String(renderFieldValue(field, value))}
+                          </Tag>
+                        ) : (
+                          <div style={{ fontWeight: 500, fontSize: '15px' }}>
+                            {renderFieldValue(field, value)}
+                          </div>
+                        )}
+                      </div>
+                    </Flex>
+                  </Card>
+                );
+              })}
+          </div>
 
           {fields.length === 0 && (
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                py: 8,
-                textAlign: 'center',
-              }}
-            >
-              <Typography variant="body2" color="text.secondary">
-                Không có thông tin chi tiết
-              </Typography>
-            </Box>
+            <Flex vertical align="center" justify="center" style={{ padding: '48px 0' }}>
+              <InfoCircleOutlined style={{ fontSize: '48px', color: token.colorTextDisabled, marginBottom: '16px' }} />
+              <Text type="secondary">Không có thông tin chi tiết</Text>
+            </Flex>
           )}
-        </Box>
+        </div>
 
         {/* Footer Actions */}
-        <Box sx={{ 
-          p: 2,
-          backgroundColor: 'white',
-          borderTop: 1,
-          borderColor: 'divider',
+        <div style={{
+          padding: '16px 24px',
+          backgroundColor: token.colorBgContainer,
+          borderTop: `1px solid ${token.colorBorderSecondary}`,
           display: 'flex',
-          gap: 1,
           justifyContent: 'space-between',
           alignItems: 'center'
         }}>
-          <Typography variant="caption" color="text.secondary">
+          <Text type="secondary" style={{ fontSize: '12px' }}>
             Cập nhật lần cuối: {data.updated_at ? new Date(data.updated_at as string).toLocaleDateString('vi-VN') : 'N/A'}
-          </Typography>
-          
+          </Text>
+
           {enableEdit && onEdit && !isEditing && (
-            <button
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
               onClick={onEdit}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#1976d2',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: 500
-              }}
             >
-              Chỉnh sửa
-            </button>
+              Chỉnh sửa ngay
+            </Button>
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
     </CommonDrawer>
   );
 };

@@ -1,34 +1,31 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Box,
   Button,
   Typography,
   Checkbox,
-  FormControlLabel,
-  TextField,
-  InputAdornment,
-  Chip,
-  Paper,
+  Input,
+  Tag,
   Divider,
   Alert,
-  CircularProgress,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
+  Flex,
+  Spin,
+  theme as antdTheme,
+} from 'antd';
 import {
-  Search,
-  Security,
-  Person,
-  CheckCircle,
-  Cancel,
-  Save,
-} from '@mui/icons-material';
-import { LoadingButton } from '@mui/lab';
+  SearchOutlined,
+  SecurityScanOutlined,
+  UserOutlined,
+  CheckCircleOutlined,
+  CloseOutlined,
+  SaveOutlined,
+} from '@ant-design/icons';
 import CommonDrawer from '@/components/common/CommonDrawer';
 import { usePermissions } from '../hooks/usePermissions';
 import { useUserPermissions } from '../hooks/useUserPermissions';
 import { usePermissionMutations } from '../hooks/usePermissionMutations';
 import type { Permission, User } from '../types';
+
+const { Text, Title } = Typography;
 
 interface UserPermissionAssignmentProps {
   open: boolean;
@@ -43,9 +40,8 @@ export const UserPermissionAssignment: React.FC<UserPermissionAssignmentProps> =
   user,
   onSuccess,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+  const { token } = antdTheme.useToken();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +61,7 @@ export const UserPermissionAssignment: React.FC<UserPermissionAssignmentProps> =
   // Filter permissions based on search query
   const filteredPermissions = useMemo(() => {
     if (!allPermissions?.data) return [];
-    
+
     return allPermissions.data.filter(permission =>
       permission.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       permission.code.toLowerCase().includes(searchQuery.toLowerCase())
@@ -75,7 +71,7 @@ export const UserPermissionAssignment: React.FC<UserPermissionAssignmentProps> =
   // Group permissions by category
   const groupedPermissions = useMemo(() => {
     const groups: Record<string, Permission[]> = {};
-    
+
     filteredPermissions.forEach(permission => {
       const category = permission.code.split('_')[0] || 'other';
       if (!groups[category]) {
@@ -83,7 +79,7 @@ export const UserPermissionAssignment: React.FC<UserPermissionAssignmentProps> =
       }
       groups[category].push(permission);
     });
-    
+
     return groups;
   }, [filteredPermissions]);
 
@@ -97,10 +93,10 @@ export const UserPermissionAssignment: React.FC<UserPermissionAssignmentProps> =
 
   const handleSelectAll = (permissions: Permission[]) => {
     const allSelected = permissions.every(p => selectedPermissions.includes(p.id));
-    
+
     if (allSelected) {
       // Deselect all in this group
-      setSelectedPermissions(prev => 
+      setSelectedPermissions(prev =>
         prev.filter(id => !permissions.some(p => p.id === id))
       );
     } else {
@@ -114,7 +110,7 @@ export const UserPermissionAssignment: React.FC<UserPermissionAssignmentProps> =
 
   const handleSave = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       // Gán từng quyền cho user
@@ -124,9 +120,9 @@ export const UserPermissionAssignment: React.FC<UserPermissionAssignmentProps> =
           data: { user_id: user.id }
         })
       );
-      
+
       await Promise.all(promises);
-      
+
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -157,160 +153,177 @@ export const UserPermissionAssignment: React.FC<UserPermissionAssignmentProps> =
       open={open}
       onClose={handleCancel}
       title={`Gán quyền cho ${user.name}`}
-      width={isMobile ? '100%' : 600}
+      width={600}
     >
-      <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
         {/* User Info */}
-        <Paper sx={{ p: 2, mb: 2, bgcolor: 'primary.50' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Person color="primary" />
-            <Box>
-              <Typography variant="h6">{user.name}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {user.phone_number} • {user.role}
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
+        <div style={{
+          padding: '16px',
+          marginBottom: '16px',
+          backgroundColor: token.colorPrimaryBg,
+          borderRadius: '8px',
+          border: `1px solid ${token.colorPrimaryBorder}`
+        }}>
+          <Flex align="center" gap={12}>
+            <UserOutlined style={{ color: token.colorPrimary, fontSize: '24px' }} />
+            <Flex vertical>
+              <Title level={5} style={{ margin: 0 }}>{user.name}</Title>
+              <Text type="secondary">
+                {user.phone_number} • <Tag color="blue">{user.role}</Tag>
+              </Text>
+            </Flex>
+          </Flex>
+        </div>
 
         {/* Mock Data Notice */}
-        <Alert severity="info" sx={{ mb: 2 }}>
-          <Typography variant="body2">
-            <strong>Lưu ý:</strong> Tính năng gán quyền cho user hiện đang sử dụng mock implementation. 
-            API thực tế chưa được implement. Bạn có thể thực hiện thao tác nhưng dữ liệu sẽ không được lưu trữ.
-          </Typography>
-        </Alert>
+        <Alert
+          message="Thông báo hệ thống"
+          description="Tính năng gán quyền cho user hiện đang sử dụng mock implementation. API thực tế chưa được implement."
+          type="info"
+          showIcon
+          style={{ marginBottom: '16px' }}
+        />
 
         {/* Search */}
-        <TextField
-          fullWidth
+        <Input
           placeholder="Tìm kiếm quyền hạn..."
+          prefix={<SearchOutlined style={{ color: token.colorTextSecondary }} />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Search />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ mb: 2 }}
+          allowClear
+          style={{ marginBottom: '16px' }}
         />
 
         {/* Current Selection Summary */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            Đã chọn {selectedPermissions.length} quyền hạn
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+        <div style={{ marginBottom: '16px' }}>
+          <Text type="secondary" style={{ display: 'block', marginBottom: '8px' }}>
+            Đã chọn <Text strong>{selectedPermissions.length}</Text> quyền hạn
+          </Text>
+          <Flex wrap="wrap" gap={4}>
             {selectedPermissions.slice(0, 5).map(permissionId => {
               const permission = allPermissions?.data.find(p => p.id === permissionId);
               return permission ? (
-                <Chip
-                  key={permissionId}
-                  label={permission.name}
-                  size="small"
-                  color="primary"
-                  variant="outlined"
-                />
+                <Tag key={permissionId} color="blue" closable onClose={() => handlePermissionToggle(permissionId)}>
+                  {permission.name}
+                </Tag>
               ) : null;
             })}
             {selectedPermissions.length > 5 && (
-              <Chip
-                label={`+${selectedPermissions.length - 5} khác`}
-                size="small"
-                color="primary"
-                variant="outlined"
-              />
+              <Tag color="blue">+{selectedPermissions.length - 5} khác</Tag>
             )}
-          </Box>
-        </Box>
+          </Flex>
+        </div>
 
-        <Divider sx={{ mb: 2 }} />
+        <Divider style={{ margin: '16px 0' }} />
 
         {/* Permissions List */}
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
+        <div style={{ flex: 1, overflow: 'auto' }}>
           {permissionsLoading || userPermissionsLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-              <CircularProgress />
-            </Box>
+            <Flex justify="center" align="center" style={{ height: '200px' }}>
+              <Spin tip="Đang tải..." />
+            </Flex>
           ) : (
-            <Box>
+            <div>
               {Object.entries(groupedPermissions).map(([category, permissions]) => (
-                <Box key={category} sx={{ mb: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={permissions.every(p => selectedPermissions.includes(p.id))}
-                          indeterminate={
-                            permissions.some(p => selectedPermissions.includes(p.id)) &&
-                            !permissions.every(p => selectedPermissions.includes(p.id))
-                          }
-                          onChange={() => handleSelectAll(permissions)}
-                        />
+                <div key={category} style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    padding: '8px 12px',
+                    backgroundColor: token.colorFillAlter,
+                    borderRadius: '6px',
+                    marginBottom: '10px'
+                  }}>
+                    <Checkbox
+                      checked={permissions.every(p => selectedPermissions.includes(p.id))}
+                      indeterminate={
+                        permissions.some(p => selectedPermissions.includes(p.id)) &&
+                        !permissions.every(p => selectedPermissions.includes(p.id))
                       }
-                      label={
-                        <Typography variant="subtitle2" sx={{ textTransform: 'capitalize' }}>
-                          {category} ({permissions.length})
-                        </Typography>
-                      }
-                    />
-                  </Box>
-                  
-                  <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                      onChange={() => handleSelectAll(permissions)}
+                    >
+                      <Text strong style={{ textTransform: 'capitalize' }}>
+                        {category} ({permissions.length})
+                      </Text>
+                    </Checkbox>
+                  </div>
+
+                  <div style={{
+                    marginLeft: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
                     {permissions.map(permission => (
-                      <FormControlLabel
+                      <div
                         key={permission.id}
-                        control={
-                          <Checkbox
-                            checked={selectedPermissions.includes(permission.id)}
-                            onChange={() => handlePermissionToggle(permission.id)}
-                          />
-                        }
-                        label={
-                          <Box>
-                            <Typography variant="body2">{permission.name}</Typography>
-                            <Typography variant="caption" color="text.secondary">
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          border: selectedPermissions.includes(permission.id)
+                            ? `1px solid ${token.colorPrimaryBorder}`
+                            : '1px solid transparent',
+                          backgroundColor: selectedPermissions.includes(permission.id)
+                            ? token.colorPrimaryBg
+                            : 'transparent'
+                        }}
+                      >
+                        <Checkbox
+                          checked={selectedPermissions.includes(permission.id)}
+                          onChange={() => handlePermissionToggle(permission.id)}
+                        >
+                          <Flex vertical gap={0}>
+                            <Text style={{ fontSize: '13px' }}>{permission.name}</Text>
+                            <Text type="secondary" style={{ fontSize: '11px' }}>
                               {permission.code}
-                            </Typography>
-                          </Box>
-                        }
-                      />
+                            </Text>
+                          </Flex>
+                        </Checkbox>
+                      </div>
                     ))}
-                  </Box>
-                </Box>
+                  </div>
+                </div>
               ))}
-            </Box>
+            </div>
           )}
-        </Box>
+        </div>
+
+        {/* Warnings */}
+        {hasChanges && (
+          <Alert
+            message="Bạn có các thay đổi chưa được lưu"
+            type="info"
+            showIcon
+            style={{ marginBottom: '12px' }}
+          />
+        )}
 
         {/* Actions */}
-        <Box sx={{ display: 'flex', gap: 1, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          paddingTop: '16px',
+          borderTop: `1px solid ${token.colorBorderSecondary}`,
+          marginTop: '16px'
+        }}>
           <Button
-            startIcon={<Cancel />}
             onClick={handleCancel}
             disabled={isLoading}
+            icon={<CloseOutlined />}
+            style={{ minWidth: '100px' }}
           >
             Hủy
           </Button>
-          <LoadingButton
-            startIcon={<Save />}
+          <Button
+            type="primary"
             onClick={handleSave}
             loading={isLoading}
             disabled={!hasChanges}
-            variant="contained"
+            icon={<SaveOutlined />}
+            style={{ flex: 1 }}
           >
             Lưu thay đổi
-          </LoadingButton>
-        </Box>
-
-        {hasChanges && (
-          <Alert severity="info" sx={{ mt: 1 }}>
-            Bạn có thay đổi chưa được lưu
-          </Alert>
-        )}
-      </Box>
+          </Button>
+        </div>
+      </div>
     </CommonDrawer>
   );
 };

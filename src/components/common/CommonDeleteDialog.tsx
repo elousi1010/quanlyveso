@@ -13,10 +13,12 @@ interface CommonDeleteDialogProps {
   itemName?: string;
   itemType?: string;
   isDeleting?: boolean;
+  loading?: boolean; // Alias for isDeleting
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   fullWidth?: boolean;
   confirmButtonText?: string;
   cancelButtonText?: string;
+  content?: string; // Alias for message
   severity?: 'warning' | 'error';
 }
 
@@ -32,9 +34,12 @@ const CommonDeleteDialog: React.FC<CommonDeleteDialogProps> = ({
   confirmButtonText = 'Xóa',
   cancelButtonText = 'Hủy',
   severity = 'warning',
+  content,
+  loading,
 }) => {
   const { token } = antdTheme.useToken();
-  const defaultMessage = message || `Bạn có chắc chắn muốn xóa ${itemType} "${itemName}" không? Hành động này không thể hoàn tác.`;
+  const actualIsDeleting = isDeleting || loading;
+  const actualMessage = message || content || `Bạn có chắc chắn muốn xóa ${itemType} "${itemName}" không? Hành động này không thể hoàn tác.`;
 
   return (
     <Modal
@@ -58,14 +63,14 @@ const CommonDeleteDialog: React.FC<CommonDeleteDialogProps> = ({
       onCancel={onClose}
       footer={
         <Space size="middle" style={{ padding: '12px 0 0 0' }}>
-          <Button onClick={onClose} disabled={isDeleting}>
+          <Button onClick={onClose} disabled={actualIsDeleting}>
             {cancelButtonText}
           </Button>
           <Button
             type="primary"
             danger
             icon={<DeleteOutlined />}
-            loading={isDeleting}
+            loading={actualIsDeleting}
             onClick={onConfirm}
           >
             {confirmButtonText}
@@ -87,7 +92,7 @@ const CommonDeleteDialog: React.FC<CommonDeleteDialogProps> = ({
       />
 
       <Text type="secondary" style={{ display: 'block', fontSize: '15px' }}>
-        {defaultMessage}
+        {actualMessage}
       </Text>
 
       {itemName && (

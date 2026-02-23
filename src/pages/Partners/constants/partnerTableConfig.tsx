@@ -1,27 +1,19 @@
+import React from 'react';
 import type { SimpleTableColumn, SimpleTableAction } from '../../../components/common/SimpleTable';
 import type { Partner } from '../types/partnerTypes';
 import { formatCurrency, formatDate } from '../../../utils/format';
-import { Delete as DeleteIcon } from '@mui/icons-material';
-import { Chip } from '@mui/material';
-import { Tag, Switch, Space, Tooltip, Avatar } from 'antd';
+import { Tag, Typography } from 'antd';
+import {
+  DeleteOutlined,
+  EyeOutlined,
+  EditOutlined
+} from '@ant-design/icons';
 import {
   getRiskStatusInfo,
   getDebtAgingStatus
 } from '../../PartnerDebt/utils/partnerDebtHelpers';
-import {
-  UserOutlined,
-  ShopOutlined,
-  TeamOutlined,
-  PhoneOutlined,
-  EnvironmentOutlined,
-  IdcardOutlined,
-  CalendarOutlined,
-  DollarOutlined,
-  HistoryOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined
-} from '@ant-design/icons';
+
+const { Text } = Typography;
 
 export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
   {
@@ -50,12 +42,12 @@ export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
     label: 'Loại',
     minWidth: 120,
     render: (type: string) => {
-      const getTypeColor = (type: string): 'primary' | 'secondary' | 'success' | 'warning' | 'default' => {
+      const getTypeColor = (type: string) => {
         switch (type) {
-          case 'agent': return 'primary';
-          case 'seller': return 'secondary';
-          case 'distributor': return 'success';
-          case 'retailer': return 'warning';
+          case 'agent': return 'blue';
+          case 'seller': return 'magenta';
+          case 'distributor': return 'green';
+          case 'retailer': return 'orange';
           default: return 'default';
         }
       };
@@ -71,12 +63,9 @@ export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
       };
 
       return (
-        <Chip
-          label={getTypeLabel(type)}
-          color={getTypeColor(type)}
-          size="small"
-          variant="outlined"
-        />
+        <Tag color={getTypeColor(type)} bordered={false}>
+          {getTypeLabel(type)}
+        </Tag>
       );
     },
   },
@@ -85,12 +74,7 @@ export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
     label: 'Cấp độ',
     minWidth: 120,
     render: (level: number) => (
-      <Chip
-        label={`Cấp ${level}`}
-        color="primary"
-        size="small"
-        variant="outlined"
-      />
+      <Tag color="geekblue">Cấp {level}</Tag>
     ),
   },
   {
@@ -106,9 +90,9 @@ export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
     minWidth: 150,
     align: 'right',
     render: (debt: number) => (
-      <span style={{ fontWeight: 'bold', color: debt > 0 ? '#f44336' : 'inherit' }}>
+      <Text strong type={debt > 0 ? 'danger' : undefined}>
         {formatCurrency(debt)}
-      </span>
+      </Text>
     ),
   },
   {
@@ -119,14 +103,16 @@ export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
       const risk = getRiskStatusInfo(status || 'normal');
       const aging = getDebtAgingStatus(row.debt_overdue_days || 0);
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <Tag color={risk.color}>{risk.label}</Tag>
+        <Flex vertical gap={4}>
+          <Tag color={risk.color === 'error' ? 'red' : risk.color === 'warning' ? 'orange' : risk.color as any}>
+            {risk.label}
+          </Tag>
           {row.debt_overdue_days > 0 && (
-            <span style={{ fontSize: '11px', color: aging.color }}>
+            <Text type="danger" style={{ fontSize: '11px' }}>
               Chễ hạn: {row.debt_overdue_days} ngày
-            </span>
+            </Text>
           )}
-        </div>
+        </Flex>
       );
     },
   },
@@ -135,17 +121,10 @@ export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
     label: 'Trạng thái',
     minWidth: 120,
     render: (isActive: boolean) => {
-      const getStatusColor = (isActive: boolean): 'success' | 'error' => {
-        return isActive ? 'success' : 'error';
-      };
-
       return (
-        <Chip
-          label={isActive ? 'Hoạt động' : 'Không hoạt động'}
-          color={getStatusColor(isActive)}
-          size="small"
-          variant="filled"
-        />
+        <Tag color={isActive ? 'success' : 'error'} bordered={false}>
+          {isActive ? 'Hoạt động' : 'Không hoạt động'}
+        </Tag>
       );
     },
   },
@@ -157,11 +136,27 @@ export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
   },
 ];
 
+import { Flex } from 'antd';
+
 export const PARTNER_TABLE_ACTIONS: SimpleTableAction[] = [
+  {
+    key: 'view',
+    label: 'Xem chi tiết',
+    icon: <EyeOutlined />,
+    color: 'primary',
+    onClick: () => { }
+  },
+  {
+    key: 'edit',
+    label: 'Chỉnh sửa',
+    icon: <EditOutlined />,
+    color: 'warning',
+    onClick: () => { }
+  },
   {
     key: 'delete',
     label: 'Xóa',
-    icon: <DeleteIcon fontSize="small" />,
+    icon: <DeleteOutlined />,
     color: 'error',
     onClick: (partner: Partner) => {
 

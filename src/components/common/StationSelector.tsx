@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  Autocomplete,
-  Typography,
-  TextField,
-  InputAdornment,
-} from '@mui/material';
-import { Search as SearchIcon } from '@mui/icons-material';
+import { Select, Space, Typography, theme as antdTheme } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import { stationApi } from '@/pages/Stations/api';
 import type { Station } from '@/pages/Stations/types';
+
+const { Text } = Typography;
 
 export interface StationSelectorProps {
   value: string | null;
   onChange: (value: string | null, item: Station | null) => void;
   placeholder?: string;
   disabled?: boolean;
-  error?: boolean;
+  status?: '' | 'error' | 'warning';
   helperText?: string;
   width?: number | string;
 }
@@ -25,135 +21,93 @@ const StationSelector: React.FC<StationSelectorProps> = React.memo(({
   onChange,
   placeholder = 'Chọn trạm',
   disabled = false,
-  error = false,
+  status = '',
   helperText,
   width = '100%',
 }) => {
+  const { token } = antdTheme.useToken();
   const [options, setOptions] = useState<Station[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKey, setSearchKey] = useState('');
   const hasLoadedRef = useRef(false);
 
-  // Load stations data on mount
-  useEffect(() => {
-    if (hasLoadedRef.current) return; // Đã load rồi thì không load nữa
-    
-    const loadStations = async () => {
-
-      hasLoadedRef.current = true;
-      setLoading(true);
-      try {
-        const response = await stationApi.getAll({ 
-          page: 1, 
-          limit: 5
-        });
-        setOptions(response.data?.data || []);
-      } catch (error) {
-        console.error('Error loading stations:', error);
-        setOptions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadStations();
-  }, []); // Chỉ chạy 1 lần khi component mount
-
-  // Search stations when searchKey changes
-  useEffect(() => {
-    if (searchKey.trim() === '') return; // Không search khi empty
-
-    const searchStations = async () => {
-      setLoading(true);
-      try {
-        const response = await stationApi.getAll({ 
-          page: 1, 
-          limit: 5,
-          searchKey: searchKey
-        });
-        setOptions(response.data?.data || []);
-      } catch (error) {
-        console.error('Error searching stations:', error);
-        setOptions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const timeoutId = setTimeout(searchStations, 300); // Debounce 300ms
-    return () => clearTimeout(timeoutId);
-  }, [searchKey]);
-
-  const getDisplayName = (item: Station): string => {
-    if (!item) return '';
-    return item.name || item.id || '';
+  // Load stations data on mount or when searchKey changes
+  const fetchStations = async (key: string = '') => {
+    setLoading(true);
+    try {
+      const response = await stationApi.getAll({
+        page: 1,
+        limit: 20, // Increased limit for better selection
+        searchKey: key
+      });
+      setOptions(response.data?.data || []);
+    } catch (error) {
+      console.error('Error loading stations:', error);
+      setOptions([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const selectedItem = Array.isArray(options) ? options.find((item: Station) => item.id === value) || null : null;
+  useEffect(() => {
+    if (!hasLoadedRef.current) {
+      fetchStations();
+      hasLoadedRef.current = true;
+    }
+  }, []);
+
+  const handleSearch = (val: string) => {
+    setSearchKey(val);
+    // Use timeout for debounce if needed, but antd Select has its own optimization
+  };
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchKey) {
+        fetchStations(searchKey);
+      } else {
+        fetchStations();
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchKey]);
+
+  const selectOptions = options.map(item => ({
+    value: item.id,
+    label: item.name || item.id || '',
+    item: item
+  }));
 
   return (
-    <Autocomplete
-      value={selectedItem}
-      onChange={(event, newValue) => {
-        if (newValue) {
-          onChange(newValue.id, newValue);
-        } else {
-          onChange(null, null);
-        }
-      }}
-      onInputChange={(event, newInputValue) => {
-        setSearchKey(newInputValue);
-      }}
-      options={Array.isArray(options) ? options : []}
-      getOptionLabel={getDisplayName}
-      loading={loading}
-      disabled={disabled}
-      sx={{ width }}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={placeholder}
-          error={error}
-          helperText={helperText}
-          InputProps={{
-            ...params.InputProps,
-            startAdornment: (
-              <>
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-                {params.InputProps.startAdornment}
-              </>
-            ),
-          }}
-        />
+    <Space direction="vertical" style={{ width: width }}>
+      <Select
+        showSearch
+        value={value}
+        placeholder={placeholder}
+        disabled={disabled}
+        status={status}
+        loading={loading}
+        onSearch={handleSearch}
+        onChange={(val, option: any) => {
+          onChange(val, option?.item || null);
+        }}
+        filterOption={false} // Since we do server-side search
+        options={selectOptions}
+        style={{ width: '100%' }}
+        suffixIcon={<SearchOutlined />}
+        optionRender={(option) => (
+          <Space>
+            <Text>{option.label}</Text>
+          </Space>
+        )}
+      />
+      {helperText && (
+        <Text type={status === 'error' ? 'danger' : 'secondary'} style={{ fontSize: '12px' }}>
+          {helperText}
+        </Text>
       )}
-      renderOption={(props, option) => {
-        const { key, ...otherProps } = props;
-        return (
-          <Box component="li" key={key} {...otherProps}>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                fontWeight: 500, 
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                py: 0.5
-              }}
-            >
-              {getDisplayName(option)}
-            </Typography>
-          </Box>
-        );
-      }}
-      noOptionsText={
-        loading ? "Đang tải..." :
-        !Array.isArray(options) || options.length === 0 ? "Không có dữ liệu" : 
-        "Không tìm thấy kết quả"
-      }
-      loadingText="Đang tải..."
-    />
+    </Space>
   );
 });
 

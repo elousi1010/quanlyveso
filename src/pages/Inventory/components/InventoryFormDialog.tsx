@@ -1,29 +1,26 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   Button,
-  Box,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
   Typography,
   Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import { Add as AddIcon, Delete as DeleteIcon } from '@mui/icons-material';
+  Input,
+  InputNumber,
+  Select,
+  DatePicker,
+  Form,
+  Space,
+  Flex,
+  theme as antdTheme,
+  Divider,
+} from 'antd';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import CommonDrawer from '@/components/common/CommonDrawer';
 import type { CreateInventoryDto, Ticket } from '../types';
 import type { Station } from '@/pages/Stations/types';
 import { PartnerSelector, StationSelector } from '@/components/common';
+import dayjs from 'dayjs';
+
+const { Text, Title } = Typography;
 
 interface InventoryFormDialogProps {
   open: boolean;
@@ -59,11 +56,11 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
   onSave,
   loading = false,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+  const { token } = antdTheme.useToken();
+  const [form] = Form.useForm();
+
   const [formData, setFormData] = useState<CreateInventoryDto>({
-    draw_date: new Date().toISOString().split('T')[0],
+    draw_date: dayjs().format('YYYY-MM-DD'),
     ticket_type: 'T',
     station_id: '',
     type: 'import',
@@ -73,17 +70,14 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
     tickets: [],
     is_update: false,
   });
-  const [selectedStation, setSelectedStation] = useState('');
-  const [selectedPartner, setSelectedPartner] = useState('');
-  const [selectedStationData, setSelectedStationData] = useState<Station | null>(null);
 
-  // Partners and stations will be handled by MasterDataSelector components
+  const [selectedStationData, setSelectedStationData] = useState<Station | null>(null);
 
   // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setFormData({
-        draw_date: new Date().toISOString().split('T')[0],
+        draw_date: dayjs().format('YYYY-MM-DD'),
         ticket_type: 'T',
         station_id: '',
         type: 'import',
@@ -93,21 +87,19 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
         tickets: [],
         is_update: false,
       });
-      setSelectedStation('');
-      setSelectedPartner('');
       setSelectedStationData(null);
+      form.resetFields();
     }
-  }, [open]);
+  }, [open, form]);
 
   const generateTicketCode = useCallback((stationCode: string, drawDate: string) => {
-    const date = new Date(drawDate);
-    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '').substring(2); // YYMMDD
-    
-    // Find existing tickets for this station and date to determine next number
-    const existingTickets = formData.tickets.filter(ticket => 
+    const date = dayjs(drawDate);
+    const dateStr = date.format('YYMMDD');
+
+    const existingTickets = formData.tickets.filter(ticket =>
       ticket.code.startsWith(`${stationCode}-${dateStr}`)
     );
-    
+
     const nextNumber = String(existingTickets.length + 1).padStart(2, '0');
     return `${stationCode}-${dateStr}-${nextNumber}`;
   }, [formData.tickets]);
@@ -118,7 +110,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
     const newTicketCode = generateTicketCode(selectedStationData.code, formData.draw_date);
     const newTicket: Ticket = {
       code: newTicketCode,
-      price: 0,
+      price: 10000,
       quantity: 1,
       note: '',
     };
@@ -136,10 +128,10 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
     }));
   }, []);
 
-  const handleTicketChange = useCallback((index: number, field: keyof Ticket, value: string | number) => {
+  const handleTicketChange = useCallback((index: number, field: keyof Ticket, value: any) => {
     setFormData(prev => ({
       ...prev,
-      tickets: prev.tickets.map((ticket, i) => 
+      tickets: prev.tickets.map((ticket, i) =>
         i === index ? { ...ticket, [field]: value } : ticket
       ),
     }));
@@ -147,220 +139,185 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
 
   const handleSubmit = useCallback(() => {
     if (formData.tickets.length === 0) {
-      alert('Vui lòng thêm ít nhất một vé');
       return;
     }
-    
+
     if (!formData.station_id) {
-      alert('Vui lòng chọn đài');
       return;
     }
-    
+
     if (!formData.partner_id) {
-      alert('Vui lòng chọn đối tác');
       return;
     }
-    
+
     onSave(formData);
   }, [formData, onSave]);
 
-  const handleClose = useCallback(() => {
-    onClose();
-  }, [onClose]);
+  const columns = [
+    {
+      title: 'Mã Vé',
+      dataIndex: 'code',
+      key: 'code',
+    },
+    {
+      title: 'Giá',
+      key: 'price',
+      width: 120,
+      render: (_: any, record: any, index: number) => (
+        <InputNumber
+          min={0}
+          step={1000}
+          formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+          parser={value => value!.replace(/\$\s?|(,*)/g, '')}
+          value={record.price}
+          onChange={(val) => handleTicketChange(index, 'price', val || 0)}
+          style={{ width: '100%' }}
+        />
+      )
+    },
+    {
+      title: 'SL',
+      key: 'quantity',
+      width: 80,
+      render: (_: any, record: any, index: number) => (
+        <InputNumber
+          min={1}
+          value={record.quantity}
+          onChange={(val) => handleTicketChange(index, 'quantity', val || 1)}
+          style={{ width: '100%' }}
+        />
+      )
+    },
+    {
+      title: 'Thao tác',
+      key: 'action',
+      width: 60,
+      render: (_: any, __: any, index: number) => (
+        <Button
+          type="text"
+          danger
+          icon={<DeleteOutlined />}
+          onClick={() => handleRemoveTicket(index)}
+        />
+      )
+    }
+  ];
 
   return (
     <CommonDrawer
       open={open}
-      onClose={handleClose}
+      onClose={onClose}
       title="Quản lý Kho"
-      width={isMobile ? '100%' : 600}
-      anchor="right"
+      width={700}
       loading={loading}
     >
-      <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        {/* Form Content */}
-        <Box sx={{ flex: 1, overflow: 'auto' }}>
-        <Box sx={{ mb: 3 }}>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-              gap: 2
-            }}
-          >
-            <FormControl fullWidth>
-              <InputLabel>Loại Giao Dịch</InputLabel>
-              <Select
-                value={formData.type}
-                disabled
-                label="Loại Giao Dịch"
-              >
-                <MenuItem value="import">Nhập Kho</MenuItem>
-              </Select>
-            </FormControl>
+      <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, overflow: 'auto', paddingRight: '4px' }}>
+          <Form layout="vertical">
+            <Flex gap={16} wrap="wrap">
+              <Form.Item label="Loại Giao Dịch" style={{ flex: 1, minWidth: '200px' }}>
+                <Select value={formData.type} disabled options={[{ value: 'import', label: 'Nhập Kho' }]} />
+              </Form.Item>
 
-            <FormControl fullWidth>
-              <InputLabel>Loại Vé</InputLabel>
-              <Select
-                value={formData.ticket_type}
-                onChange={(e) => setFormData(prev => ({ ...prev, ticket_type: e.target.value }))}
-                label="Loại Vé"
+              <Form.Item label="Loại Vé" style={{ flex: 1, minWidth: '200px' }}>
+                <Select
+                  value={formData.ticket_type}
+                  onChange={(val) => setFormData(prev => ({ ...prev, ticket_type: val }))}
+                  options={TICKET_TYPES}
+                />
+              </Form.Item>
+
+              <Form.Item label="Địa điểm (Đài)" style={{ flex: 1, minWidth: '240px' }}>
+                <StationSelector
+                  value={formData.station_id}
+                  onChange={(id, item) => {
+                    setSelectedStationData(item);
+                    setFormData(prev => ({ ...prev, station_id: id || '' }));
+                  }}
+                />
+              </Form.Item>
+
+              <Form.Item label="Ngày Mở Thưởng" style={{ flex: 1, minWidth: '200px' }}>
+                <DatePicker
+                  style={{ width: '100%' }}
+                  value={dayjs(formData.draw_date)}
+                  onChange={(date) => setFormData(prev => ({ ...prev, draw_date: date ? date.format('YYYY-MM-DD') : '' }))}
+                />
+              </Form.Item>
+
+              <Form.Item label="Loại Phụ" style={{ flex: 1, minWidth: '200px' }}>
+                <Select
+                  value={formData.sub_type}
+                  onChange={(val) => setFormData(prev => ({ ...prev, sub_type: val }))}
+                  options={SUB_TYPES[formData.type as keyof typeof SUB_TYPES]}
+                />
+              </Form.Item>
+
+              <Form.Item label="Đối Tác" style={{ flex: 1, minWidth: '240px' }}>
+                <PartnerSelector
+                  value={formData.partner_id}
+                  onChange={(id) => setFormData(prev => ({ ...prev, partner_id: id || '' }))}
+                />
+              </Form.Item>
+            </Flex>
+
+            <Divider style={{ margin: '16px 0' }} />
+
+            <Flex justify="space-between" align="center" style={{ marginBottom: '16px' }}>
+              <Title level={5} style={{ margin: 0 }}>Danh sách Vé</Title>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleAddTicket}
+                disabled={!formData.station_id || !formData.draw_date}
               >
-                {TICKET_TYPES.map((type) => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <StationSelector
-              value={selectedStation}
-              onChange={(id, item) => {
-                setSelectedStation(id || '');
-                setSelectedStationData(item);
-                setFormData(prev => ({ ...prev, station_id: id || '' }));
-              }}
-              placeholder="Chọn đài..."
+                Thêm Vé
+              </Button>
+            </Flex>
+
+            <Table
+              dataSource={formData.tickets}
+              columns={columns}
+              rowKey={(record, index) => `${record.code}-${index}`}
+              pagination={false}
+              size="small"
+              bordered
+              locale={{ emptyText: <Text type="secondary">Chưa có vé nào được thêm</Text> }}
             />
 
-            <TextField
-              fullWidth
-              label="Ngày Mở Thưởng"
-              type="date"
-              value={formData.draw_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, draw_date: e.target.value }))}
-              InputLabelProps={{ shrink: true }}
-            />
+            <Form.Item label="Ghi chú chung" style={{ marginTop: '24px' }}>
+              <Input.TextArea
+                rows={3}
+                value={formData.note}
+                onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
+                placeholder="Nhập ghi chú chung cho giao dịch này..."
+              />
+            </Form.Item>
+          </Form>
+        </div>
 
-            <FormControl fullWidth>
-              <InputLabel>Loại Phụ</InputLabel>
-              <Select
-                value={formData.sub_type}
-                onChange={(e) => setFormData(prev => ({ ...prev, sub_type: e.target.value as 'buy_from_agent' | 'sell_to_customer' | 'transfer' | 'return' }))}
-                label="Loại Phụ"
-              >
-                {SUB_TYPES[formData.type].map((subType) => (
-                  <MenuItem key={subType.value} value={subType.value}>
-                    {subType.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <PartnerSelector
-              value={selectedPartner}
-              onChange={(id) => {
-                setSelectedPartner(id || '');
-                setFormData(prev => ({ ...prev, partner_id: id || '' }));
-              }}
-              placeholder="Chọn đối tác..."
-            />
-          </Box>
-        </Box>
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Danh sách Vé</Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAddTicket}
-            disabled={!formData.station_id || !formData.draw_date}
-          >
-            Thêm Vé
+        <div style={{
+          marginTop: '24px',
+          paddingTop: '16px',
+          borderTop: `1px solid ${token.colorBorderSecondary}`,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: '12px'
+        }}>
+          <Button onClick={onClose} disabled={loading}>
+            Hủy
           </Button>
-        </Box>
-
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Mã Vé</TableCell>
-                <TableCell>Giá</TableCell>
-                <TableCell>Số Lượng</TableCell>
-                <TableCell>Ghi Chú</TableCell>
-                <TableCell>Thao tác</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {formData.tickets.map((ticket, index) => (
-                <TableRow key={index}>
-                  <TableCell>{ticket.code}</TableCell>
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      value={ticket.price}
-                      onChange={(e) => handleTicketChange(index, 'price', Number(e.target.value))}
-                      size="small"
-                      inputProps={{ min: 0, step: 1000 }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      type="number"
-                      value={ticket.quantity}
-                      onChange={(e) => handleTicketChange(index, 'quantity', Number(e.target.value))}
-                      size="small"
-                      inputProps={{ min: 1 }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <TextField
-                      value={ticket.note || ''}
-                      onChange={(e) => handleTicketChange(index, 'note', e.target.value)}
-                      size="small"
-                      placeholder="Ghi chú vé"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <IconButton
-                      color="error"
-                      onClick={() => handleRemoveTicket(index)}
-                      size="small"
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {formData.tickets.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={5} align="center">
-                    Chưa có vé nào được thêm
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-
-          <TextField
-            fullWidth
-            label="Ghi chú chung"
-            multiline
-            rows={3}
-            value={formData.note}
-            onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
-            sx={{ mt: 2 }}
-          />
-        </Box>
-
-        {/* Actions */}
-        <Box sx={{ mt: 3, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-            <Button onClick={handleClose} disabled={loading}>
-              Hủy
-            </Button>
-            <Button 
-              onClick={handleSubmit} 
-              variant="contained" 
-              disabled={loading || formData.tickets.length === 0}
-            >
-              {loading ? 'Đang xử lý...' : (formData.type === 'import' ? 'Nhập Kho' : 'Xuất Kho')}
-            </Button>
-          </Box>
-        </Box>
-      </Box>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            loading={loading}
+            disabled={formData.tickets.length === 0}
+            style={{ minWidth: '120px' }}
+          >
+            {formData.type === 'import' ? 'Nhập Kho' : 'Xuất Kho'}
+          </Button>
+        </div>
+      </div>
     </CommonDrawer>
   );
 };
