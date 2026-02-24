@@ -10,6 +10,7 @@ import {
   Flex,
   ConfigProvider,
   message,
+  Radio,
 } from 'antd';
 import {
   UserOutlined,
@@ -51,6 +52,7 @@ const LoginForm: React.FC = () => {
         name: values.name,
         phone_number: values.phone_number,
         password: values.password,
+        plan_id: values.plan_id,
       }, {
         onSuccess: () => {
           messageApi.success('Đăng ký thành công, vui lòng đăng nhập!');
@@ -240,6 +242,21 @@ const LoginForm: React.FC = () => {
         .submit-button:active {
           transform: translateY(0);
         }
+        .plan-radio-wrapper {
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 12px;
+          margin-bottom: 8px;
+          transition: all 0.2s;
+        }
+        .plan-radio-wrapper:hover {
+          border-color: #2563eb;
+          background: rgba(37, 99, 235, 0.02);
+        }
+        .ant-radio-wrapper-checked.plan-radio-wrapper {
+          border-color: #2563eb;
+          background: rgba(37, 99, 235, 0.04);
+        }
       `}</style>
       <div className="login-container">
         <div className="content-wrapper">
@@ -291,6 +308,37 @@ const LoginForm: React.FC = () => {
                     style={{ marginBottom: '24px' }}
                   >
                     <Input className="styled-input" prefix={<UserOutlined />} placeholder="Nguyễn Văn A" />
+                  </Form.Item>
+                )}
+
+                {tabKey === 'signup' && (
+                  <Form.Item
+                    name="plan_id"
+                    label={<div className="styled-item-label">Gói Đăng Ký</div>}
+                    rules={[{ required: true, message: 'Vui lòng chọn gói đăng ký' }]}
+                    style={{ marginBottom: '24px' }}
+                    initialValue="basic"
+                  >
+                    <Radio.Group style={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <Radio value="basic" className="plan-radio-wrapper">
+                        <div style={{ paddingLeft: '8px', display: 'inline-block' }}>
+                          <Text strong style={{ fontSize: '14px', color: '#1e293b' }}>Basic (Miễn phí)</Text><br />
+                          <Text type="secondary" style={{ fontSize: '11px', color: '#64748b' }}>Quản lý vé cơ bản, đối tác, báo cáo chuẩn</Text>
+                        </div>
+                      </Radio>
+                      <Radio value="pro" className="plan-radio-wrapper">
+                        <div style={{ paddingLeft: '8px', display: 'inline-block' }}>
+                          <Text strong style={{ fontSize: '14px', color: '#10b981' }}>Pro (Bán chạy)</Text><br />
+                          <Text type="secondary" style={{ fontSize: '11px', color: '#64748b' }}>Sổ quỹ tiền mặt, Cảnh báo nợ bốc hơi</Text>
+                        </div>
+                      </Radio>
+                      <Radio value="premium" className="plan-radio-wrapper">
+                        <div style={{ paddingLeft: '8px', display: 'inline-block' }}>
+                          <Text strong style={{ fontSize: '14px', color: '#faad14' }}>Premium (Hệ sinh thái VIP)</Text><br />
+                          <Text type="secondary" style={{ fontSize: '11px', color: '#64748b' }}>In nhiệt, Bàn giao ca, Module nâng cao</Text>
+                        </div>
+                      </Radio>
+                    </Radio.Group>
                   </Form.Item>
                 )}
 

@@ -14,6 +14,7 @@ import {
   Flex,
   Tooltip,
   Grid,
+  Modal,
   type MenuProps,
 } from 'antd';
 import {
@@ -39,11 +40,13 @@ import {
   GiftOutlined,
   BookOutlined,
   FieldTimeOutlined,
+  LockOutlined,
+  CrownFilled,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthState } from '../../hooks/useAuthState';
 import { useTheme } from '../../contexts/ThemeContext';
-import { PERMISSIONS, ROLE_PERMISSIONS } from '../../types/auth';
+import { PERMISSIONS, ROLE_PERMISSIONS, PLAN_FEATURES } from '../../types/auth';
 import { getRoleDisplayName } from '../../utils/roleMapping';
 
 const { Header, Sider, Content } = Layout;
@@ -58,6 +61,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const screens = useBreakpoint();
   const isMobile = screens.xs || (screens.sm && !screens.md);
   const [collapsed, setCollapsed] = useState(false);
+  const [upsellModal, setUpsellModal] = useState({ open: false, featureName: '' });
   const { user, logout } = useAuthState();
   const { mode, toggleMode } = useTheme();
   const navigate = useNavigate();
@@ -74,13 +78,24 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     }
   }, [isMobile]);
 
-  // Helper function to check permissions
-  const hasPermission = (permission: string): boolean => {
+  // Helper function to check role permissions
+  const hasRolePermission = (permission: string): boolean => {
     if (!user) return false;
     if (user.role === 'admin' || user.role === 'user' || user.role === 'owner') return true;
 
     const userPermissions = ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || [];
     return userPermissions.includes(permission);
+  };
+
+  // Helper function to check plan permissions
+  const hasPlanPermission = (permission: string): boolean => {
+    if (!user) return false;
+    // Default to basic if no plan
+    const currentPlan = user.plan || 'basic';
+    if (currentPlan === 'premium') return true;
+
+    const planPermissions = PLAN_FEATURES[currentPlan as keyof typeof PLAN_FEATURES] || PLAN_FEATURES.basic;
+    return planPermissions.includes(permission);
   };
 
   const menuItems = useMemo(() => {
@@ -191,7 +206,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
     return groups.map(group => ({
       ...group,
-      children: group.children.filter(item => hasPermission(item.permission || ''))
+      children: group.children.map(item => {
+        const checkPermission = item.permission || '';
+        const canAccessRole = hasRolePermission(checkPermission);
+        const canAccessPlan = hasPlanPermission(checkPermission);
+
+        if (!canAccessRole) return null; // Role hides completely
+
+        return {
+          ...item,
+          isLocked: !canAccessPlan,
+          originalLabel: item.label,
+          label: (
+            <Flex justify="space-between" align="center" style={{ width: '100%' }}>
+              <span>{item.label}</span>
+              {!canAccessPlan && <LockOutlined style={{ color: '#faad14', fontSize: '12px' }} />}
+            </Flex>
+          )
+        };
+      }).filter(Boolean)
     })).filter(group => group.children.length > 0);
   }, [user]);
 
@@ -311,8 +344,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           selectedKeys={[location.pathname]}
           defaultOpenKeys={[menuItems.find(g => g.children.some((i: any) => i.key === location.pathname))?.key || '']}
           items={menuItems}
-          onClick={({ key }) => {
-            navigate(key);
+          onClick={(e) => {
+            const findItem = (items: any[]): any => {
+              for (const item of items) {
+                if (item.key === e.key) return item;
+                if (item.children) {
+                  const found = findItem(item.children);
+                  if (found) return found;
+                }
+              }
+              return null;
+            };
+            const clickedItem = findItem(menuItems);
+
+            if (clickedItem && clickedItem.isLocked) {
+              setUpsellModal({ open: true, featureName: clickedItem.originalLabel || 'Tính năng này' });
+              return;
+            }
+
+            navigate(e.key);
             if (isMobile) setCollapsed(true);
           }}
           style={{ borderRight: 0, padding: '0 8px', background: 'transparent' }}
@@ -435,19 +485,54 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         .sidebar-menu .ant-menu-item-group-title {
           font-size: 10px !important;
           font-weight: 700 !important;
-          color: ${isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.4)'} !important;
-          margin-top: 20px !important;
-          padding-left: 24px !important;
-          letter-spacing: 0.5px !important;
-        }
-        /* Mobile table scrollbar fix */
-        .ant-table-wrapper {
-          max-width: 100%;
-        }
         .ant-table {
           font-size: ${isMobile ? '13px' : '14px'} !important;
         }
       `}</style>
+
+      {/* Upsell Modal */}
+      <Modal
+        title={
+          <Flex gap={8} align="center">
+            <CrownFilled style={{ color: '#faad14', fontSize: '20px' }} />
+            <Text strong>Nâng cấp gói tài khoản</Text>
+          </Flex>
+        }
+        open={upsellModal.open}
+        onCancel={() => setUpsellModal({ open: false, featureName: '' })}
+        footer={null}
+        centered
+        width={400}
+      >
+        <div style={{ textAlign: 'center', padding: '16px 0' }}>
+          <div style={{
+            fontSize: '48px',
+            color: '#faad14',
+            marginBottom: '16px',
+            background: 'var(--ant-color-warning-bg)',
+            width: '80px',
+            height: '80px',
+            lineHeight: '80px',
+            borderRadius: '50%',
+            display: 'inline-block'
+          }}>
+            <LockOutlined />
+          </div>
+          <Title level={4}>Tính năng bị khóa</Title>
+          <Text type="secondary" style={{ display: 'block', marginBottom: '24px' }}>
+            Tính năng <b>{upsellModal.featureName}</b> chỉ khả dụng cho gói Pro hoặc Premium.
+            Nâng cấp ngay để mở khóa toàn bộ sức mạnh quản lý tài chính!
+          </Text>
+          <Flex gap={12} justify="center" vertical>
+            <Button type="primary" size="large" onClick={() => setUpsellModal({ open: false, featureName: '' })} style={{ width: '100%', background: '#faad14', borderColor: '#faad14' }}>
+              Xem bảng giá nâng cấp
+            </Button>
+            <Button size="large" onClick={() => setUpsellModal({ open: false, featureName: '' })} style={{ width: '100%' }}>
+              Để sau
+            </Button>
+          </Flex>
+        </div>
+      </Modal>
     </Layout>
   );
 };

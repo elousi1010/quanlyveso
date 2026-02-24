@@ -34,6 +34,7 @@ export interface SignupRequest {
   name: string;
   phone_number: string;
   password: string;
+  plan_id?: string;
 }
 
 export interface SignupResponse {
@@ -87,6 +88,7 @@ export interface UserFromToken {
   phone_number: string;
   role: string;
   organization_id: string;
+  plan?: string;
   iat: number; // issued at
   exp: number; // expires at
 }

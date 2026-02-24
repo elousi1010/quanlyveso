@@ -1,6 +1,7 @@
 // Authentication and authorization types
 
 export type UserRole = 'admin' | 'owner' | 'employee' | 'seller' | 'user';
+export type SubscriptionPlan = 'basic' | 'pro' | 'premium';
 
 export interface User {
   id: string;
@@ -11,6 +12,8 @@ export interface User {
   isActive: boolean;
   createdAt: Date;
   lastLogin?: Date;
+  organizationId?: string;
+  plan?: SubscriptionPlan;
 }
 
 export interface AuthContextType {
@@ -84,6 +87,34 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ],
   user: [
     // User có tất cả quyền như admin
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.VIEW_PROFIT,
+    PERMISSIONS.MANAGE_TICKETS,
+    PERMISSIONS.MANAGE_DEBTS,
+    PERMISSIONS.MANAGE_PROVINCES,
+    PERMISSIONS.MANAGE_SELLERS,
+    PERMISSIONS.MANAGE_EXCHANGES,
+    PERMISSIONS.MANAGE_TRANSACTIONS,
+    PERMISSIONS.MANAGE_EMPLOYEES,
+    PERMISSIONS.MANAGE_PARTNERS,
+    PERMISSIONS.VIEW_REPORTS,
+    PERMISSIONS.MANAGE_SHIFTS,
+  ],
+};
+
+export const PLAN_FEATURES: Record<SubscriptionPlan, string[]> = {
+  basic: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.MANAGE_TICKETS,
+    PERMISSIONS.MANAGE_PARTNERS,
+  ],
+  pro: [
+    PERMISSIONS.VIEW_DASHBOARD,
+    PERMISSIONS.MANAGE_TICKETS,
+    PERMISSIONS.MANAGE_PARTNERS,
+    PERMISSIONS.MANAGE_DEBTS,
+  ],
+  premium: [
     PERMISSIONS.VIEW_DASHBOARD,
     PERMISSIONS.VIEW_PROFIT,
     PERMISSIONS.MANAGE_TICKETS,
