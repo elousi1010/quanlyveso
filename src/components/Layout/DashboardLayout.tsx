@@ -244,9 +244,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
     const matched = findItem(menuItems);
     if (matched) {
+      const displayLabel = matched.originalLabel || matched.label;
       return {
-        title: matched.label,
-        subtitle: currentPath.includes('/dashboard') ? 'Hệ thống quản lý xổ số' : 'Quản lý ' + matched.label.toLowerCase()
+        title: displayLabel,
+        subtitle: currentPath.includes('/dashboard') ? 'Hệ thống quản lý xổ số' : 'Quản lý ' + (typeof displayLabel === 'string' ? displayLabel.toLowerCase() : '')
       };
     }
     return { title: 'QUẢN LÝ', subtitle: 'Hệ thống quản lý xổ số' };
