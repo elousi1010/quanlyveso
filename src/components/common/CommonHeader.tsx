@@ -73,7 +73,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
         vertical={isMobile}
         gap={isMobile ? 12 : 16}
       >
-        <div style={{ width: '100%' }}>
+        <div style={{ flex: 1, minWidth: 0, paddingRight: isMobile ? 0 : 16 }}>
           <Title
             level={2}
             style={{
@@ -103,14 +103,13 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
           )}
         </div>
 
-        <div style={{ width: isMobile ? '100%' : 'auto' }}>
-          <Space
-            size={isMobile ? 8 : 'middle'}
-            wrap
-            style={{
-              width: '100%',
-              justifyContent: isMobile ? 'flex-start' : 'flex-end'
-            }}
+        <div style={{ flexShrink: 0 }}>
+          <Flex
+            gap={isMobile ? 8 : 16}
+            wrap="wrap"
+            align="center"
+            justify={isMobile ? 'flex-start' : 'flex-end'}
+            style={{ width: '100%' }}
           >
             {customActions}
 
@@ -179,7 +178,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
                 {createButtonText}
               </Button>
             )}
-          </Space>
+          </Flex>
         </div>
       </Flex>
     </div>

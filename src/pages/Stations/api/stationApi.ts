@@ -10,7 +10,7 @@ import type {
   StationSearchParams
 } from '../types';
 
-const API_BASE = '/stations';
+const API_BASE = '/api/v1/stations';
 
 /**
  * Station API

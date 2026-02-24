@@ -105,12 +105,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             label: 'Tổng Quan',
             permission: PERMISSIONS.VIEW_DASHBOARD,
           },
-          {
-            key: '/dashboard/agent-level-2',
-            icon: <TeamOutlined />,
-            label: 'Đại Lý Cấp 2',
-            permission: PERMISSIONS.VIEW_DASHBOARD,
-          },
         ]
       },
       {
@@ -136,8 +130,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             label: 'Quyền Hạn',
             children: [
               { key: '/permissions', label: 'Danh Sách Quyền' },
-              { key: '/permissions/matrix', label: 'Ma Trận Quyền' },
-              { key: '/permissions/templates', label: 'Template Quyền' },
             ],
             permission: PERMISSIONS.MANAGE_EMPLOYEES,
           },

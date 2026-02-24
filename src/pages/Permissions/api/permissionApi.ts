@@ -13,7 +13,7 @@ import type {
   BasePermissionsResponse,
 } from '../types';
 
-const API_BASE = '/permissions';
+const API_BASE = '/api/v1/permissions';
 
 /**
  * Permission API

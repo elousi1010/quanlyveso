@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { reportsApi, type ReportsOverviewParams, type ReportsRevenueParams } from '@/api/reportsApi';
 import { type DashboardFilters } from '@/types/dashboard';
-import { MOCK_DASHBOARD_DATA } from '../data/dashboardMockData';
+
 
 /**
  * Convert date string to API format (YYYY-MM-DD HH:MM:SS)
@@ -38,28 +38,8 @@ export const useDashboardOverview = (filters?: DashboardFilters) => {
   return useQuery({
     queryKey: ['dashboard', 'overview', params],
     queryFn: async () => {
-      try {
-        const response = await reportsApi.getOverview(params);
-        const data = response?.data;
-
-        // Kiểm tra sâu xem có bất kỳ dữ liệu thực tế nào không
-        const hasData = data && (
-          (data.debt && (parseFloat(data.debt.this || '0') > 0 || parseFloat(data.debt.prev || '0') > 0)) ||
-          (data.ticketImport && (parseInt(data.ticketImport.this || '0') > 0 || parseInt(data.ticketImport.prev || '0') > 0)) ||
-          (data.ticketExport && (parseInt(data.ticketExport.this || '0') > 0 || parseInt(data.ticketExport.prev || '0') > 0)) ||
-          (data.transaction && (parseInt(data.transaction.this || '0') > 0 || parseInt(data.transaction.prev || '0') > 0))
-        );
-
-        if (!hasData) {
-          console.log('Dashboard overview has no meaningful data, using mock data');
-          return MOCK_DASHBOARD_DATA.overview;
-        }
-
-        return data;
-      } catch (error) {
-        console.warn('Dashboard API failed, using mock data');
-        return MOCK_DASHBOARD_DATA.overview;
-      }
+      const response = await reportsApi.getOverview(params);
+      return response?.data;
     },
     staleTime: 5 * 60 * 1000,
     refetchInterval: 30 * 1000,
@@ -79,32 +59,15 @@ export const useDashboardRevenue = (type?: 'daily' | 'weekly' | 'monthly' | 'yea
   return useQuery({
     queryKey: ['dashboard', 'revenue', params],
     queryFn: async () => {
-      try {
-        const response = await reportsApi.getRevenueReport(params);
-        let data = response?.data;
+      const response = await reportsApi.getRevenueReport(params);
+      let data = response?.data;
 
-        // Unwrap data if it's nested
-        if (data && !Array.isArray(data) && (data as any).data) {
-          data = (data as any).data;
-        }
-
-        // Kiểm tra xem có dữ liệu không
-        if (!Array.isArray(data) || data.length === 0) {
-          return MOCK_DASHBOARD_DATA.revenue;
-        }
-
-        // Kiểm tra xem dữ liệu có thực sự có giá trị không (tránh chart phẳng lỳ ở mức 0)
-        const totalRevenue = data.reduce((sum, item) => sum + (item.total || 0), 0);
-        if (totalRevenue === 0) {
-          console.log('Revenue data is empty/zero, using mock data');
-          return MOCK_DASHBOARD_DATA.revenue;
-        }
-
-        return data;
-      } catch (error) {
-        console.warn('Revenue API failed, using mock data');
-        return MOCK_DASHBOARD_DATA.revenue;
+      // Unwrap data if it's nested
+      if (data && !Array.isArray(data) && (data as any).data) {
+        data = (data as any).data;
       }
+
+      return data || [];
     },
     staleTime: 5 * 60 * 1000,
     enabled: !!filters,
@@ -118,17 +81,12 @@ export const useDashboardActivity = () => {
   return useQuery({
     queryKey: ['dashboard', 'activity'],
     queryFn: async () => {
-      try {
-        const response = await reportsApi.getActivity();
-        const data = response?.data;
-        if (Array.isArray(data)) return data;
-        if (Array.isArray((data as any)?.data)) return (data as any).data;
+      const response = await reportsApi.getActivity();
+      const data = response?.data;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray((data as any)?.data)) return (data as any).data;
 
-        return MOCK_DASHBOARD_DATA.activity;
-      } catch (error) {
-        console.warn('Activity API failed, using mock data');
-        return MOCK_DASHBOARD_DATA.activity;
-      }
+      return [];
     },
     staleTime: 2 * 60 * 1000,
     refetchInterval: 60 * 1000,

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userApi } from '../api';
 import type { CreateUserRequest, UpdateUserRequest, UserSearchParams } from '../types';
-import { MOCK_USER_LIST_RESPONSE, MOCK_USERS } from '@/data/commonMockData';
+
 
 // Query keys
 export const userKeys = {
@@ -17,16 +17,8 @@ export const useUsers = (searchParams?: Partial<UserSearchParams>) => {
   return useQuery({
     queryKey: userKeys.list(searchParams || {}),
     queryFn: async () => {
-      try {
-        const response = await userApi.getUsers(searchParams);
-        if (!response?.data?.data || response.data.data.length === 0) {
-          return MOCK_USER_LIST_RESPONSE;
-        }
-        return response;
-      } catch (error) {
-        console.warn('Users API failed, using mock data');
-        return MOCK_USER_LIST_RESPONSE;
-      }
+      const response = await userApi.getUsers(searchParams);
+      return response;
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -37,14 +29,8 @@ export const useUserQuery = (id: string) => {
   return useQuery({
     queryKey: userKeys.detail(id),
     queryFn: async () => {
-      try {
-        const response = await userApi.getUser(id);
-        return response;
-      } catch (error) {
-        console.warn('User details API failed, using mock data');
-        const mockUser = MOCK_USERS.find(u => u.id === id) || MOCK_USERS[0];
-        return { data: mockUser, message: 'Success', error: '', statusCode: 200 };
-      }
+      const response = await userApi.getUser(id);
+      return response;
     },
     enabled: !!id,
     staleTime: 5 * 60 * 1000,

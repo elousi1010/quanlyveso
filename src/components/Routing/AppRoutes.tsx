@@ -4,17 +4,12 @@ import ProtectedRoute from '../Auth/ProtectedRoute';
 import Unauthorized from '../../pages/Unauthorized';
 import DashboardLayout from '../Layout/DashboardLayout';
 
-// Import Dashboard
 import DashboardOverview from '../../pages/Dashboard/DashboardOverview';
-import AgentLevel2Dashboard from '../../pages/Dashboard/AgentLevel2Dashboard';
 
 // Import pages with real APIs
 import PartnerManagement from '../../pages/Partners/PartnerManagement';
 import UserManagement from '../../pages/Users/UserManagement';
 import { PermissionManagement } from '../../pages/Permissions';
-import { AssignPermissionManagement } from '../../pages/Permissions/AssignPermissionManagement';
-import PermissionMatrixPage from '../../pages/Permissions/PermissionMatrixPage';
-import PermissionTemplatesPage from '../../pages/Permissions/PermissionTemplatesPage';
 import { StationManagement } from '../../pages/Stations';
 import { TicketManagement } from '../../pages/Tickets';
 import { TransactionManagement } from '../../pages/Transactions';
@@ -44,14 +39,6 @@ const AppRoutes: React.FC = () => {
                   element={
                     <ProtectedRoute requiredRoles={['admin', 'user', 'owner', 'employee', 'seller']}>
                       <DashboardOverview />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard/agent-level-2"
-                  element={
-                    <ProtectedRoute requiredRoles={['admin', 'owner', 'user']}>
-                      <AgentLevel2Dashboard />
                     </ProtectedRoute>
                   }
                 />
@@ -86,30 +73,6 @@ const AppRoutes: React.FC = () => {
                   element={
                     <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
                       <PermissionManagement />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/permissions/matrix"
-                  element={
-                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
-                      <PermissionMatrixPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/permissions/templates"
-                  element={
-                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
-                      <PermissionTemplatesPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/assign-permissions"
-                  element={
-                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
-                      <AssignPermissionManagement />
                     </ProtectedRoute>
                   }
                 />

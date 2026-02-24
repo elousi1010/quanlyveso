@@ -22,7 +22,7 @@ import type {
   UpdateTicketDto,
   TicketSearchParams
 } from './types';
-import { MOCK_LOTTERY_RESULTS } from '@/data/mockLotteryResults';
+
 
 /**
  * TicketManagement Component
@@ -170,7 +170,7 @@ export const TicketManagement: React.FC = () => {
       {showSettlement ? (
         <WinningStats
           tickets={tickets}
-          results={lotteryResults || MOCK_LOTTERY_RESULTS}
+          results={lotteryResults || []}
           loading={isLoading || isLotteryLoading}
         />
       ) : (
