@@ -96,6 +96,17 @@ export const PARTNER_TABLE_COLUMNS: SimpleTableColumn[] = [
     ),
   },
   {
+    key: 'credit_limit',
+    label: 'Hạn mức nợ',
+    minWidth: 150,
+    align: 'right',
+    render: (creditLimit: number) => (
+      <Text strong style={{ color: '#1890ff' }}>
+        {formatCurrency(creditLimit || 0)}
+      </Text>
+    ),
+  },
+  {
     key: 'status_risk',
     label: 'Rủi ro',
     minWidth: 140,

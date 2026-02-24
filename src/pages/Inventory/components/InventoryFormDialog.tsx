@@ -12,6 +12,7 @@ import {
   Flex,
   theme as antdTheme,
   Divider,
+  Alert,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import CommonDrawer from '@/components/common/CommonDrawer';
@@ -137,6 +138,24 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
     }));
   }, []);
 
+  const [isTimeUp, setIsTimeUp] = useState(false);
+  useEffect(() => {
+    const checkTime = () => {
+      const now = new Date();
+      if (now.getHours() >= 15) {
+        setIsTimeUp(true);
+      } else {
+        setIsTimeUp(false);
+      }
+    };
+    checkTime();
+    const timer = setInterval(checkTime, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const isReturnTicket = formData.sub_type.includes('return');
+  const isSubmitDisabled = formData.tickets.length === 0 || (isReturnTicket && isTimeUp);
+
   const handleSubmit = useCallback(() => {
     if (formData.tickets.length === 0) {
       return;
@@ -155,9 +174,62 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
 
   const columns = [
     {
-      title: 'Mã Vé',
+      title: 'Mã Series (Lẻ)',
       dataIndex: 'code',
       key: 'code',
+      width: 140,
+      render: (_: any, record: any, index: number) => (
+        <Input
+          value={record.code}
+          onChange={(e) => {
+            handleTicketChange(index, 'code', e.target.value);
+            handleTicketChange(index, 'is_block', false);
+          }}
+          placeholder="Mã/Ký hiệu"
+        />
+      )
+    },
+    {
+      title: 'Seri Đầu (Lốc)',
+      key: 'start_code',
+      width: 120,
+      render: (_: any, record: any, index: number) => (
+        <Input
+          value={record.start_code}
+          onChange={(e) => {
+            handleTicketChange(index, 'start_code', e.target.value);
+            const startStr = String(e.target.value || '');
+            const endStr = String(record.end_code || '');
+            if (startStr && endStr && !isNaN(Number(startStr)) && !isNaN(Number(endStr))) {
+              const qty = Math.abs(Number(endStr) - Number(startStr)) + 1;
+              handleTicketChange(index, 'quantity', qty);
+              handleTicketChange(index, 'is_block', true);
+            }
+          }}
+          placeholder="000000"
+        />
+      )
+    },
+    {
+      title: 'Seri Cuối (Lốc)',
+      key: 'end_code',
+      width: 120,
+      render: (_: any, record: any, index: number) => (
+        <Input
+          value={record.end_code}
+          onChange={(e) => {
+            handleTicketChange(index, 'end_code', e.target.value);
+            const endStr = String(e.target.value || '');
+            const startStr = String(record.start_code || '');
+            if (startStr && endStr && !isNaN(Number(startStr)) && !isNaN(Number(endStr))) {
+              const qty = Math.abs(Number(endStr) - Number(startStr)) + 1;
+              handleTicketChange(index, 'quantity', qty);
+              handleTicketChange(index, 'is_block', true);
+            }
+          }}
+          placeholder="000099"
+        />
+      )
     },
     {
       title: 'Giá',
@@ -208,7 +280,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
       open={open}
       onClose={onClose}
       title="Quản lý Kho"
-      width={700}
+      width={900}
       loading={loading}
     >
       <div style={{ padding: '24px', height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -304,6 +376,16 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
           justifyContent: 'flex-end',
           gap: '12px'
         }}>
+          {isReturnTicket && isTimeUp && (
+            <div style={{ flex: 1 }}>
+              <Alert
+                message="Đã quá 15:00, không thể thao tác trả vé."
+                type="error"
+                showIcon
+                style={{ padding: '4px 12px' }}
+              />
+            </div>
+          )}
           <Button onClick={onClose} disabled={loading}>
             Hủy
           </Button>
@@ -311,7 +393,7 @@ export const InventoryFormDialog: React.FC<InventoryFormDialogProps> = ({
             type="primary"
             onClick={handleSubmit}
             loading={loading}
-            disabled={formData.tickets.length === 0}
+            disabled={isSubmitDisabled}
             style={{ minWidth: '120px' }}
           >
             {formData.type === 'import' ? 'Nhập Kho' : 'Xuất Kho'}

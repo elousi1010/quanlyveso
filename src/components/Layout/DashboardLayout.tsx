@@ -36,11 +36,14 @@ import {
   MoonOutlined,
   SunOutlined,
   DownOutlined,
+  GiftOutlined,
+  BookOutlined,
+  FieldTimeOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthState } from '../../hooks/useAuthState';
 import { useTheme } from '../../contexts/ThemeContext';
-import { PERMISSIONS } from '../../types/auth';
+import { PERMISSIONS, ROLE_PERMISSIONS } from '../../types/auth';
 import { getRoleDisplayName } from '../../utils/roleMapping';
 
 const { Header, Sider, Content } = Layout;
@@ -76,19 +79,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     if (!user) return false;
     if (user.role === 'admin' || user.role === 'user' || user.role === 'owner') return true;
 
-    const rolePermissions: Record<string, string[]> = {
-      employee: [
-        PERMISSIONS.MANAGE_TICKETS,
-        PERMISSIONS.MANAGE_TRANSACTIONS,
-        PERMISSIONS.VIEW_DASHBOARD,
-      ],
-      seller: [
-        PERMISSIONS.MANAGE_TICKETS,
-        PERMISSIONS.VIEW_DASHBOARD,
-      ],
-    };
-
-    const userPermissions = rolePermissions[user.role] || [];
+    const userPermissions = ROLE_PERMISSIONS[user.role as keyof typeof ROLE_PERMISSIONS] || [];
     return userPermissions.includes(permission);
   };
 
@@ -146,6 +137,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             permission: PERMISSIONS.MANAGE_TICKETS,
           },
           {
+            key: '/prize-claims',
+            icon: <GiftOutlined />,
+            label: 'Đổi Số Trúng',
+            permission: PERMISSIONS.MANAGE_TICKETS, // Cùng nhóm quyền vé số
+          },
+          {
             key: '/inventory',
             icon: <DatabaseOutlined />,
             label: 'Kho Hàng',
@@ -156,6 +153,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             icon: <MoneyCollectOutlined />,
             label: 'Công Nợ',
             permission: PERMISSIONS.MANAGE_PARTNERS,
+          },
+          {
+            key: '/cashbooks',
+            icon: <BookOutlined />,
+            label: 'Sổ Quỹ Tiền Mặt',
+            permission: PERMISSIONS.MANAGE_PARTNERS,
+          },
+          {
+            key: '/shifts',
+            icon: <FieldTimeOutlined />,
+            label: 'Bàn Giao Ca',
+            permission: PERMISSIONS.MANAGE_EMPLOYEES,
           },
         ]
       },

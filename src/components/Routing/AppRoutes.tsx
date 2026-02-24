@@ -12,6 +12,9 @@ import UserManagement from '../../pages/Users/UserManagement';
 import { PermissionManagement } from '../../pages/Permissions';
 import { StationManagement } from '../../pages/Stations';
 import { TicketManagement } from '../../pages/Tickets';
+import { PrizeClaimManagement } from '../../pages/PrizeClaims';
+import { CashbookManagement } from '../../pages/Cashbooks';
+import { ShiftManagement } from '../../pages/Shifts';
 import { TransactionManagement } from '../../pages/Transactions';
 import { InventoryManagement } from '../../pages/Inventory';
 import { InventoryTransactionPage } from '../../pages/InventoryTransaction';
@@ -89,6 +92,30 @@ const AppRoutes: React.FC = () => {
                   element={
                     <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
                       <TicketManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/prize-claims"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'owner', 'user']}>
+                      <PrizeClaimManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/cashbooks"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'owner', 'user']}>
+                      <CashbookManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/shifts"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'owner', 'user']}>
+                      <ShiftManagement />
                     </ProtectedRoute>
                   }
                 />

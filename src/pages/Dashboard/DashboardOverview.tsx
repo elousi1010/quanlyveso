@@ -22,6 +22,7 @@ import {
   DatabaseOutlined,
   ShoppingCartOutlined,
   UserOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import {
@@ -130,6 +131,40 @@ const DashboardOverview: React.FC = () => {
 
   // Refs for debouncing
   const debounceRef = useRef<number | null>(null);
+
+  // Countdown Timer Logic for returning tickets
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+  const [isTimeUp, setIsTimeUp] = useState(false);
+
+  useEffect(() => {
+    // Deadline is 15:00:00 every day
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const deadline = new Date(now);
+      deadline.setHours(15, 0, 0, 0);
+
+      // If past 15:00, set next day
+      if (now.getTime() > deadline.getTime()) {
+        setIsTimeUp(true);
+        return { hours: 0, minutes: 0, seconds: 0 };
+      }
+
+      setIsTimeUp(false);
+      const diff = deadline.getTime() - now.getTime();
+      return {
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / 1000 / 60) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Format today's date for API
   const todayStr = now.toISOString().split('T')[0];
@@ -309,6 +344,77 @@ const DashboardOverview: React.FC = () => {
           />
         </Space>
       </Flex>
+
+      {/* Trang Trí CSS riêng cho Pulse */}
+      <style>
+        {`
+          @keyframes pulse-clock {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); color: #ffeb3b; }
+            100% { opacity: 1; transform: scale(1); }
+          }
+        `}
+      </style>
+
+      {/* Return Tickets Countdown Banner */}
+      <div style={{
+        background: isTimeUp ? (isDark ? '#4a0404' : '#fff1f0') : 'linear-gradient(90deg, #1890ff 0%, #096dd9 100%)',
+        borderRadius: '12px',
+        padding: '16px 24px',
+        marginBottom: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '16px',
+        border: isTimeUp ? '1px solid #ffa39e' : 'none',
+        boxShadow: isTimeUp ? '0 0 10px rgba(255, 77, 79, 0.4)' : '0 4px 10px rgba(24, 144, 255, 0.3)',
+      }}>
+        <Flex align="center" gap={12}>
+          <div style={{
+            fontSize: '28px',
+            color: isTimeUp ? '#ff4d4f' : '#fff',
+            animation: (!isTimeUp && timeLeft.hours === 0 && timeLeft.minutes < 30) ? 'pulse-clock 1s infinite' : 'none'
+          }}>
+            <ClockCircleOutlined />
+          </div>
+          <div>
+            <Text strong style={{ color: isTimeUp ? '#cf1322' : '#fff', fontSize: '16px', display: 'block' }}>
+              {isTimeUp ? 'Đã Quá Giờ Trả Vé Đài' : 'Thời Gian Trả Vé Đài Hôm Nay'}
+            </Text>
+            <Text style={{ color: isTimeUp ? '#ff4d4f' : 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
+              {isTimeUp ? 'Hệ thống đã tự động khóa chức năng nhập vé trả lại.' : 'Đại lý vui lòng hoàn tất trả vé trước 15:00 hàng ngày.'}
+            </Text>
+          </div>
+        </Flex>
+
+        {!isTimeUp && (
+          <Flex gap={8}>
+            {[
+              { label: 'GIỜ', value: timeLeft.hours },
+              { label: 'PHÚT', value: timeLeft.minutes },
+              { label: 'GIÂY', value: timeLeft.seconds }
+            ].map((time, idx) => (
+              <div key={idx} style={{
+                background: 'rgba(255,255,255,0.2)',
+                backdropFilter: 'blur(4px)',
+                borderRadius: '8px',
+                padding: '4px 12px',
+                minWidth: '64px',
+                textAlign: 'center',
+                border: '1px solid rgba(255,255,255,0.3)'
+              }}>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>
+                  {time.value.toString().padStart(2, '0')}
+                </div>
+                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.9)', fontWeight: 600 }}>
+                  {time.label}
+                </div>
+              </div>
+            ))}
+          </Flex>
+        )}
+      </div>
 
       {/* Stats Grid */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>

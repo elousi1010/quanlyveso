@@ -3,6 +3,9 @@ export interface Ticket {
   quantity: number;
   code: string;
   note?: string;
+  is_block?: boolean;
+  start_code?: string;
+  end_code?: string;
 }
 
 export interface Inventory {
