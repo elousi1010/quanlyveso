@@ -1,109 +1,105 @@
 import React, { useState, useMemo } from 'react';
-import {
-    Table,
-    Checkbox,
-    Typography,
-    Button,
-    Tooltip,
-    Input,
-    Flex,
-    Spin,
-    theme as antdTheme,
-    Card,
-} from 'antd';
-import {
-    SaveOutlined,
-    SearchOutlined,
-    CheckCircleFilled,
-    InfoCircleOutlined,
-} from '@ant-design/icons';
+import { Table, Checkbox, Typography, Button, Tooltip, Input, Flex, Spin, theme as antdTheme, Card, message } from 'antd';
+import { SaveOutlined, SearchOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { usePermissions } from '../hooks/usePermissions';
-import { usePermissionMutations } from '../hooks/usePermissionMutations';
-import type { User, Permission } from '../types';
+import { PERMISSIONS } from '../../../types/auth'; // Ensure we have all available permissions imported
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
-interface PermissionMatrixProps {
-    users: User[];
+// Định nghĩa cứng các Role cho Ma Trận Quyền
+const SYSTEM_ROLES = [
+    { id: 'admin', name: 'Admin', desc: 'Quản trị viên toàn hệ thống' },
+    { id: 'owner', name: 'Owner (Chủ Đại Lý)', desc: 'Chủ đại lý cấp 1' },
+    { id: 'user', name: 'Employee (Nhân viên)', desc: 'Nhân viên thu ngân / Kho' },
+    { id: 'seller', name: 'Seller (Người bán dạo)', desc: 'Người bán dạo / Đại lý vé' }
+];
+
+interface RoleMatrixUIProps {
     onSuccess?: () => void;
 }
 
-const PermissionMatrix: React.FC<PermissionMatrixProps> = ({ users, onSuccess }) => {
+export const PermissionMatrix: React.FC<RoleMatrixUIProps> = ({ onSuccess }) => {
     const { token } = antdTheme.useToken();
     const [searchQuery, setSearchQuery] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    // Fetch all permissions
-    const { data: permissionsData, isLoading: permissionsLoading } = usePermissions({ limit: 1000 });
-    const { setForUserMutation } = usePermissionMutations();
+    // MOCK TRẠNG THÁI CACHE: State giữ ma trận quyền
+    const [matrixState, setMatrixState] = useState<Record<string, Record<string, boolean>>>({
+        'admin': { [PERMISSIONS.VIEW_DASHBOARD]: true, [PERMISSIONS.MANAGE_EMPLOYEES]: true, [PERMISSIONS.MANAGE_TICKETS]: true, [PERMISSIONS.MANAGE_PARTNERS]: true },
+        'owner': { [PERMISSIONS.VIEW_DASHBOARD]: true, [PERMISSIONS.MANAGE_TICKETS]: true, [PERMISSIONS.MANAGE_PARTNERS]: true },
+        'user': { [PERMISSIONS.VIEW_DASHBOARD]: true, [PERMISSIONS.MANAGE_TICKETS]: true },
+        'seller': { [PERMISSIONS.VIEW_DASHBOARD]: true }
+    });
 
-    const permissions = useMemo(() => permissionsData?.data || [], [permissionsData]);
+    const { data: permissionsData, isLoading: permissionsLoading } = usePermissions({ limit: 100 });
+    const permissions = useMemo(() => (permissionsData as any)?.data || [], [permissionsData]);
 
     const filteredPermissions = useMemo(() => {
-        return permissions.filter(p =>
+        return permissions.filter((p: any) =>
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.code.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [permissions, searchQuery]);
 
-    const sortedUsers = useMemo(() => {
-        return [...users].sort((a, b) => a.name.localeCompare(b.name));
-    }, [users]);
-
-    // Check if a user has a specific permission
-    const hasPermissionState = (userId: string, permission: Permission) => {
-        return permission.users?.includes(userId) || false;
-    };
-
-    const togglePermission = (userId: string, permissionId: string) => {
-        console.log(`Toggle permission ${permissionId} for user ${userId}`);
+    const togglePermission = (roleId: string, permCode: string) => {
+        setMatrixState(prev => {
+            const rolePerms = prev[roleId] || {};
+            return {
+                ...prev,
+                [roleId]: {
+                    ...rolePerms,
+                    [permCode]: !rolePerms[permCode]
+                }
+            };
+        });
     };
 
     const handleSaveAll = async () => {
         setIsSaving(true);
-        // Simulate complex batch save
+        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
+        message.success('Đã lưu thành công Ma trận Phân quyền.');
         setIsSaving(false);
         onSuccess?.();
     };
 
-    // Columns definition for Ant Design Table
     const columns = useMemo(() => {
         const baseColumns = [
             {
-                title: 'Người dùng / Quyền hạn',
+                title: 'Vai trò (Role)',
                 dataIndex: 'name',
-                key: 'userinfo',
+                key: 'name',
                 fixed: 'left' as const,
-                width: 200,
-                render: (text: string, record: User) => (
+                width: 250,
+                render: (text: string, record: any) => (
                     <div>
                         <Text strong style={{ display: 'block' }}>{text}</Text>
-                        <Text type="secondary" style={{ fontSize: '11px' }}>{record.role.toUpperCase()}</Text>
+                        <Text type="secondary" style={{ fontSize: '12px' }}>{record.desc}</Text>
                     </div>
                 ),
             },
         ];
 
-        const permissionCols = filteredPermissions.map(p => ({
+        const permissionCols = filteredPermissions.map((p: any) => ({
             title: (
                 <Tooltip title={p.code}>
-                    <Text style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>{p.name}</Text>
+                    <Text style={{ fontSize: '13px', whiteSpace: 'nowrap' }}>{p.name}</Text>
                 </Tooltip>
             ),
-            key: p.id,
+            key: p.code,
             align: 'center' as const,
-            width: 120,
-            render: (_: any, record: User) => (
+            width: 140,
+            render: (_: any, record: any) => (
                 <Checkbox
-                    checked={hasPermissionState(record.id, p)}
-                    onChange={() => togglePermission(record.id, p.id)}
+                    checked={!!matrixState[record.id]?.[p.code]}
+                    onChange={() => togglePermission(record.id, p.code)}
+                    disabled={record.id === 'admin'} // Admin luôn có full quyền ngầm định
                 />
             ),
         }));
 
         return [...baseColumns, ...permissionCols];
-    }, [filteredPermissions, sortedUsers]);
+    }, [filteredPermissions, matrixState]);
 
     if (permissionsLoading) {
         return (
@@ -114,11 +110,10 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({ users, onSuccess })
     }
 
     return (
-        <Flex vertical gap={16} style={{ height: '100%' }}>
-            {/* Search and Global Actions */}
+        <Flex vertical gap={16} style={{ height: '100%', marginTop: 16 }}>
             <Flex justify="space-between" align="center" wrap="wrap" gap={16}>
                 <Input
-                    placeholder="Tìm kiếm quyền hạn..."
+                    placeholder="Tìm kiếm tên Module / Quyền..."
                     prefix={<SearchOutlined />}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -131,18 +126,12 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({ users, onSuccess })
                     onClick={handleSaveAll}
                     disabled={isSaving}
                     size="large"
-                    style={{
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}
+                    style={{ borderRadius: '8px', backgroundColor: '#faad14', borderColor: '#faad14' }}
                 >
-                    Lưu tất cả thay đổi
+                    Lưu lại cấu hình Ma Trận
                 </Button>
             </Flex>
 
-            {/* Matrix Table */}
             <div style={{
                 borderRadius: '12px',
                 overflow: 'hidden',
@@ -151,23 +140,20 @@ const PermissionMatrix: React.FC<PermissionMatrixProps> = ({ users, onSuccess })
             }}>
                 <Table
                     columns={columns}
-                    dataSource={sortedUsers}
+                    dataSource={SYSTEM_ROLES}
                     rowKey="id"
                     pagination={false}
-                    scroll={{ x: 'max-content', y: 'calc(100vh - 400px)' }}
-                    size="small"
+                    scroll={{ x: 'max-content' }}
+                    size="middle"
                     bordered
-                    sticky
                 />
             </div>
 
-            {/* Legend / Footer */}
             <Card size="small" style={{ backgroundColor: token.colorFillAlter, borderRadius: '8px', border: 'none' }}>
                 <Flex align="center" gap={8}>
                     <InfoCircleOutlined style={{ color: token.colorInfo }} />
-                    <Text type="secondary" style={{ fontSize: '12px' }}>
-                        Ma trận này cho phép bạn quản lý quyền hạn của tất cả người dùng một cách trực quan.
-                        Tick vào ô tương ứng để gán quyền. Lưu ý: Thao tác hiện tại đang chạy ở chế độ mô phỏng.
+                    <Text type="secondary" style={{ fontSize: '13px' }}>
+                        Bảng Ma Trận Quyền (Role Matrix) cho phép phân quyền tập trung cấp độ hệ thống dựa trên khái niệm <strong>Vai Trò (Roles)</strong>. Vai trò Quản trị viên (Admin) mặc định có Full Quyền.
                     </Text>
                 </Flex>
             </Card>

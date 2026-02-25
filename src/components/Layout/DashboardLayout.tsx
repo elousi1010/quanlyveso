@@ -111,6 +111,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             label: 'Tổng Quan',
             permission: PERMISSIONS.VIEW_DASHBOARD,
           },
+          {
+            key: '/command-center',
+            icon: <EnvironmentOutlined />,
+            label: 'Đại Lý & Bản Đồ',
+            permission: PERMISSIONS.VIEW_DASHBOARD, // or a specific permission
+          },
         ]
       },
       {

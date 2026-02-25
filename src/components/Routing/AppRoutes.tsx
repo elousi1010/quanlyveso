@@ -19,6 +19,7 @@ import { TransactionManagement } from '../../pages/Transactions';
 import { InventoryManagement } from '../../pages/Inventory';
 import { InventoryTransactionPage } from '../../pages/InventoryTransaction';
 import { PartnerDebtManagement } from '../../pages/PartnerDebt';
+import CommandCenterDashboard from '../../pages/CommandCenter/CommandCenterDashboard';
 
 const AppRoutes: React.FC = () => {
   return (
@@ -164,6 +165,14 @@ const AppRoutes: React.FC = () => {
                   element={
                     <ProtectedRoute requiredRoles={['admin', 'user', 'owner']}>
                       <PartnerDebtManagement />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/command-center"
+                  element={
+                    <ProtectedRoute requiredRoles={['admin', 'user', 'owner', 'seller']}>
+                      <CommandCenterDashboard />
                     </ProtectedRoute>
                   }
                 />

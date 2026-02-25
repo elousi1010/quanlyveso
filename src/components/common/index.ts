@@ -5,6 +5,7 @@ export { default as CommonFormDrawer } from './CommonFormDrawer';
 export { default as CommonDetailDrawer } from './CommonDetailDrawer';
 export { default as CommonDrawer } from './CommonDrawer';
 export { default as CommonViewEditDrawer } from './CommonViewEditDrawer';
+export * from './WithPermission';
 export { default as CommonDeleteDialog } from './CommonDeleteDialog';
 export { default as CommonSnackbar } from './CommonSnackbar';
 export { default as LoadingScreen } from './LoadingScreen';

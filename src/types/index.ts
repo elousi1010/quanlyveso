@@ -23,9 +23,11 @@ export interface Ticket {
   provinceId: string;
   agentId: string;
   ticketNumber: string;
+  series?: string; // Dải số
+  isFullPack?: boolean; // Cặp nguyên - Cấm xé lẻ nếu chưa được phép
   price: number;
   quantity: number;
-  status: 'available' | 'sold' | 'returned';
+  status: 'available' | 'sold' | 'returned' | 'lost'; // Thêm trạng thái 'lost' (mất/hỏng)
   purchaseDate: Date;
   sellDate?: Date;
   sellerId?: string;
@@ -40,6 +42,9 @@ export interface Seller {
   totalDebt: number;
   isActive: boolean;
   createdAt: Date;
+  lat?: number; // Tọa độ GPS phục vụ Bản đồ
+  lng?: number;
+  workArea?: string; // Tên khu vực phân công
 }
 
 export interface Transaction {
@@ -63,7 +68,8 @@ export interface Debt {
   agentId: string;
   sellerId?: string;
   amount: number;
-  type: 'credit' | 'debit';
+  type: 'credit' | 'debit' | 'winning_settlement'; // Thêm hình thức cấn trừ vé trúng
+  isCarryForward?: boolean; // Đánh dấu nợ gối đầu (chuyển qua ngày hôm sau)
   description: string;
   dueDate: Date;
   status: 'pending' | 'paid' | 'overdue';
@@ -134,3 +140,14 @@ export * from './auth';
 export * from './partner';
 export * from './dashboard';
 export * from './pagination';
+
+export interface Equipment {
+  id: string;
+  sellerId: string;
+  type: 'table' | 'chair' | 'umbrella' | 'shelf' | 'other';
+  name: string;
+  status: 'good' | 'damaged' | 'lost' | 'returned';
+  rentedAt: Date;
+  returnedAt?: Date;
+  notes?: string;
+}

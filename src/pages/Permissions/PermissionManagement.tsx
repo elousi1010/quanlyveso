@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { theme as antdTheme, Alert } from 'antd';
+import { theme as antdTheme, Alert, ConfigProvider, Tabs } from 'antd';
 import {
   CommonHeader,
   CommonSnackbar,
@@ -10,6 +10,7 @@ import {
   PermissionDataGrid,
   PermissionSearchAndFilter,
   PermissionFormDrawerSimple,
+  PermissionMatrix,
 } from './components';
 import UserPermissionAssignment from './components/UserPermissionAssignment';
 import BulkPermissionAssignmentWrapper from './components/BulkPermissionAssignmentWrapper';
@@ -175,22 +176,53 @@ export const PermissionManagement: React.FC = () => {
         />
       </div>
 
-      <div style={{
-        marginTop: '16px',
-        background: token.colorBgContainer,
-        borderRadius: '12px',
-        overflow: 'hidden'
-      }}>
-        <PermissionDataGrid
-          data={permissions}
-          loading={isLoading}
-          onEdit={(p) => openView('edit', p)}
-          onDelete={(p) => openView('delete', p)}
-          onView={(p) => openView('view', p)}
-          onSave={handleUpdateSubmit}
-          selectedRows={selectedRows}
-          onSelectionChange={setSelectedRows}
-        />
+      <div style={{ marginTop: '16px' }}>
+        <ConfigProvider
+          theme={{
+            components: {
+              Tabs: {
+                itemSelectedColor: token.colorPrimary,
+                inkBarColor: token.colorPrimary,
+              }
+            }
+          }}
+        >
+          <Tabs
+            defaultActiveKey="1"
+            type="card"
+            style={{ marginTop: 16 }}
+            items={[
+              {
+                key: '1',
+                label: 'Danh sách Quyền',
+                children: (
+                  <div style={{
+                    marginTop: '16px',
+                    background: token.colorBgContainer,
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}>
+                    <PermissionDataGrid
+                      data={permissions}
+                      loading={isLoading}
+                      onEdit={(p) => openView('edit', p)}
+                      onDelete={(p) => openView('delete', p)}
+                      onView={(p) => openView('view', p)}
+                      onSave={handleUpdateSubmit}
+                      selectedRows={selectedRows}
+                      onSelectionChange={setSelectedRows}
+                    />
+                  </div>
+                )
+              },
+              {
+                key: '2',
+                label: 'Ma Trận Quyền (Role Matrix)',
+                children: <PermissionMatrix />,
+              }
+            ]}
+          />
+        </ConfigProvider>
       </div>
 
       {/* Forms & Dialogs */}

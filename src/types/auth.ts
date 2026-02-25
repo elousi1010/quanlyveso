@@ -28,7 +28,12 @@ export interface Permission {
   id: string;
   name: string;
   description: string;
-  roles: UserRole[];
+  roles: UserRole[]; // Lấy từ backend theo role matrix
+}
+
+export interface RoleMatrix {
+  role: UserRole;
+  permissions: string[];
 }
 
 export const PERMISSIONS = {
@@ -44,6 +49,8 @@ export const PERMISSIONS = {
   MANAGE_PARTNERS: 'manage_partners',
   VIEW_REPORTS: 'view_reports',
   MANAGE_SHIFTS: 'manage_shifts',
+  MANAGE_EQUIPMENT: 'manage_equipment', // Quản lý thiết bị cho mượn
+  MANAGE_ROLE_MATRIX: 'manage_role_matrix', // Quản lý ma trận quyền
 } as const;
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
@@ -61,6 +68,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.MANAGE_PARTNERS,
     PERMISSIONS.VIEW_REPORTS,
     PERMISSIONS.MANAGE_SHIFTS,
+    PERMISSIONS.MANAGE_EQUIPMENT,
+    PERMISSIONS.MANAGE_ROLE_MATRIX,
   ],
   owner: [
     PERMISSIONS.VIEW_DASHBOARD,
@@ -75,6 +84,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.MANAGE_PARTNERS,
     PERMISSIONS.VIEW_REPORTS,
     PERMISSIONS.MANAGE_SHIFTS,
+    PERMISSIONS.MANAGE_EQUIPMENT,
   ],
   employee: [
     PERMISSIONS.MANAGE_TICKETS,
@@ -99,6 +109,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     PERMISSIONS.MANAGE_PARTNERS,
     PERMISSIONS.VIEW_REPORTS,
     PERMISSIONS.MANAGE_SHIFTS,
+    PERMISSIONS.MANAGE_EQUIPMENT,
   ],
 };
 
@@ -127,5 +138,7 @@ export const PLAN_FEATURES: Record<SubscriptionPlan, string[]> = {
     PERMISSIONS.MANAGE_PARTNERS,
     PERMISSIONS.VIEW_REPORTS,
     PERMISSIONS.MANAGE_SHIFTS,
+    PERMISSIONS.MANAGE_EQUIPMENT,
+    PERMISSIONS.MANAGE_ROLE_MATRIX,
   ],
 };

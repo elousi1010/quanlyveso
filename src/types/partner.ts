@@ -27,6 +27,10 @@ export interface Partner {
   address: string;
   level: number;
   debt: number;
+  creditLimit?: number; // Mức tín dụng cho phép tối đa
+  statusRisk?: 'Normal' | 'Warning' | 'High Risk' | 'Blacklisted'; // Hỗ trợ đánh dấu nhãn mức độ rủi ro công nợ
+  lat?: number;
+  lng?: number; // Tọa độ trên bản đồ (Work Area)
   organization_id: string;
   organization: Organization;
 }

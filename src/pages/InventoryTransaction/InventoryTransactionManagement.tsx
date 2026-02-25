@@ -7,8 +7,11 @@ import {
 import {
   InventoryTransactionDataGrid,
   InventoryTransactionSearchAndFilter,
+  InventoryTransactionFormDialog,
 } from './components';
 import { useInventoryTransactions } from './hooks';
+import { useInventoryTransactionMutations } from './hooks/useInventoryTransactionMutations';
+import { isPastTicketReturnCutoff } from '@/utils/businessLogic';
 import type {
   InventoryTransactionItem,
   InventoryTransactionSearchParams,
@@ -37,6 +40,10 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
     message: '',
     severity: 'success' as 'success' | 'error' | 'warning' | 'info',
   });
+
+  // Modal create state
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { createMutation } = useInventoryTransactionMutations();
 
   /**
    * Update searchParams when type prop changes.
@@ -83,15 +90,52 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
     setSnackbar(prev => ({ ...prev, open: false }));
   }, []);
 
-  const title = type === 'import' ? 'Giao Dịch Nhập Kho' : 'Giao Dịch Xuất Kho';
+  const isReturnLocked = type === 'import' && isPastTicketReturnCutoff();
+
+  const handleCreate = useCallback(() => {
+    if (isReturnLocked) {
+      setSnackbar({
+        open: true,
+        message: 'Đã quá thời gian được phép trả vé (15:30). Cắt khung giờ (Cut-off) đã kích hoạt!',
+        severity: 'error'
+      });
+      return;
+    }
+
+    setIsDialogOpen(true);
+  }, [isReturnLocked]);
+
+  const handleDialogSubmit = async (values: any) => {
+    try {
+      await createMutation.mutateAsync(values);
+      setSnackbar({
+        open: true,
+        message: 'Tạo giao dịch thành công',
+        severity: 'success'
+      });
+      refetch();
+      setIsDialogOpen(false); // Close dialog on success
+    } catch (error: any) {
+      setSnackbar({
+        open: true,
+        message: error.response?.data?.message || 'Có lỗi xảy ra khi tạo giao dịch',
+        severity: 'error'
+      });
+      throw error;
+    }
+  };
+
+  const title = type === 'import' ? 'Giao Dịch Nhập/Trả Kho' : 'Giao Dịch Xuất Kho';
 
   return (
     <div style={{ padding: '0 0 24px 0', minHeight: '100%' }}>
       <CommonHeader
         title={title}
-        subtitle={`Quản lý và xem lịch sử các giao dịch ${type === 'import' ? 'nhập' : 'xuất'} kho`}
+        subtitle={`Quản lý và xem lịch sử các giao dịch ${type === 'import' ? 'nhập trả' : 'xuất'} kho`}
         onRefresh={handleRefresh}
         loading={isLoading}
+        onCreate={handleCreate}
+        createButtonText={type === 'import' ? 'Tạo phiếu trả vé' : 'Tạo phiếu xuất vé'}
       />
 
       <div style={{ marginTop: '16px' }}>
@@ -123,6 +167,13 @@ export const InventoryTransactionManagement: React.FC<InventoryTransactionManage
         onClose={handleSnackbarClose}
         message={snackbar.message}
         severity={snackbar.severity}
+      />
+
+      <InventoryTransactionFormDialog
+        open={isDialogOpen}
+        onCancel={() => setIsDialogOpen(false)}
+        onSubmit={handleDialogSubmit}
+        initialType={type}
       />
     </div>
   );

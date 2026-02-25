@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { theme as antdTheme, Alert } from 'antd';
+import { theme as antdTheme, Alert, ConfigProvider, Tabs } from 'antd';
 import {
   CommonHeader,
   CommonSnackbar,
@@ -10,6 +10,7 @@ import {
 import {
   StationDataGrid,
   StationSearchAndFilter,
+  LotteryResultsViewer,
 } from './components';
 import { useStations, useStationMutations } from './hooks';
 import {
@@ -158,25 +159,56 @@ export const StationManagement: React.FC = () => {
         />
       </div>
 
-      <div style={{
-        marginTop: '16px',
-        background: token.colorBgContainer,
-        borderRadius: '12px',
-        overflow: 'hidden'
-      }}>
-        <StationDataGrid
-          data={stations}
-          loading={isLoading}
-          onEdit={(s) => openView('edit', s)}
-          onDelete={(s) => openView('delete', s)}
-          onView={(s) => openView('view', s)}
-          onSave={handleUpdateSubmit}
-          page={(searchParams.page || 1) - 1}
-          rowsPerPage={searchParams.limit || 10}
-          total={total}
-          onPageChange={(page) => setSearchParams(prev => ({ ...prev, page: page + 1 }))}
-          onRowsPerPageChange={(limit) => setSearchParams(prev => ({ ...prev, limit, page: 1 }))}
-        />
+      <div style={{ marginTop: '16px' }}>
+        <ConfigProvider
+          theme={{
+            components: {
+              Tabs: {
+                itemSelectedColor: token.colorPrimary,
+                inkBarColor: token.colorPrimary,
+              }
+            }
+          }}
+        >
+          <Tabs
+            defaultActiveKey="1"
+            type="card"
+            style={{ marginTop: 16 }}
+            items={[
+              {
+                key: '1',
+                label: 'Danh Sách Trạm',
+                children: (
+                  <div style={{
+                    marginTop: '16px',
+                    background: token.colorBgContainer,
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}>
+                    <StationDataGrid
+                      data={stations}
+                      loading={isLoading}
+                      onEdit={(s) => openView('edit', s)}
+                      onDelete={(s) => openView('delete', s)}
+                      onView={(s) => openView('view', s)}
+                      onSave={handleUpdateSubmit}
+                      page={(searchParams.page || 1) - 1}
+                      rowsPerPage={searchParams.limit || 10}
+                      total={total}
+                      onPageChange={(page) => setSearchParams(prev => ({ ...prev, page: page + 1 }))}
+                      onRowsPerPageChange={(limit) => setSearchParams(prev => ({ ...prev, limit, page: 1 }))}
+                    />
+                  </div>
+                )
+              },
+              {
+                key: '2',
+                label: 'Kết Quả Xổ Số & Dò Số',
+                children: <LotteryResultsViewer />,
+              }
+            ]}
+          />
+        </ConfigProvider>
       </div>
 
       {/* Forms & Dialogs */}

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { theme as antdTheme, Alert } from 'antd';
+import { theme as antdTheme, Alert, ConfigProvider, Tabs } from 'antd';
 import {
   CommonFormDrawer,
   CommonViewEditDrawer,
@@ -11,6 +11,8 @@ import {
 import {
   PartnerDebtDataGrid,
   PartnerDebtSearchAndFilter,
+  PartnerDebtAgingReport,
+  PartnerDebtQuickLedger,
 } from './components';
 import { usePartnerDebts, usePartnerDebtMutations } from './hooks';
 import { usePartners } from '../Partners/hooks/usePartners';
@@ -160,18 +162,54 @@ const PartnerDebtManagement: React.FC = () => {
         />
       </div>
 
-      <div style={{
-        marginTop: '16px',
-        background: token.colorBgContainer,
-        borderRadius: '12px',
-        overflow: 'hidden'
-      }}>
-        <PartnerDebtDataGrid
-          data={partnerDebts.map(convertToTableRow)}
-          loading={isLoading}
-          error={null}
-          onView={(item) => openView('view', item.id)}
-        />
+      <div style={{ marginTop: '16px' }}>
+        <ConfigProvider
+          theme={{
+            components: {
+              Tabs: {
+                itemSelectedColor: token.colorPrimary,
+                inkBarColor: token.colorPrimary,
+              }
+            }
+          }}
+        >
+          <Tabs
+            defaultActiveKey="1"
+            type="card"
+            style={{ marginTop: 16 }}
+            items={[
+              {
+                key: '1',
+                label: 'Sổ Quản Lý Nợ',
+                children: (
+                  <div style={{
+                    marginTop: '16px',
+                    background: token.colorBgContainer,
+                    borderRadius: '12px',
+                    overflow: 'hidden'
+                  }}>
+                    <PartnerDebtDataGrid
+                      data={partnerDebts.map(convertToTableRow)}
+                      loading={isLoading}
+                      error={null}
+                      onView={(item) => openView('view', item.id)}
+                    />
+                  </div>
+                ),
+              },
+              {
+                key: '2',
+                label: 'Sổ Nhập Nhanh (Quick Ledger)',
+                children: <PartnerDebtQuickLedger />,
+              },
+              {
+                key: '3',
+                label: 'Báo Cáo Nợ Đọng (Debt Aging)',
+                children: <PartnerDebtAgingReport />,
+              },
+            ]}
+          />
+        </ConfigProvider>
       </div>
 
       {/* Drawers */}
